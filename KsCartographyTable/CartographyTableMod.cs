@@ -1,4 +1,6 @@
-﻿using Kaisentlaia.CartographyTable.BlockEntities;
+﻿using System.Reflection;
+using HarmonyLib;
+using Kaisentlaia.CartographyTable.BlockEntities;
 using Kaisentlaia.CartographyTable.Blocks;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -6,11 +8,16 @@ using Vintagestory.API.Server;
 
 namespace Kaisentlaia.CartographyTable;
 
+[HarmonyPatch]
 public class KsCartographyTableModSystem : ModSystem
 {
         public static ICoreAPI CoreAPI;
         public static ICoreServerAPI CoreServerAPI;
         public static ICoreClientAPI CoreClientAPI;
+        public Harmony harmony;
+        protected const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
+
+        public static bool purgeWpGroups = false;
 
         public override void Start(ICoreAPI api)
         {
@@ -26,6 +33,15 @@ public class KsCartographyTableModSystem : ModSystem
         public override void StartServerSide(ICoreServerAPI api)
         {
             CoreServerAPI = api;
+            //api.Event.PlayerJoin += FixWaypoints;
+            api.ChatCommands.Create("purgewpgroups")
+            .WithDescription("removes groups from all the waypoints created by other mods on the next cartography table interaction")
+            .RequiresPrivilege(Privilege.chat)
+            .RequiresPlayer()
+            .HandleWith((args) => {
+                purgeWpGroups = true;
+                return TextCommandResult.Success("Groups set to be purged from all waypoints. Interact with a cartography table to apply.");
+            });
         }
 
         /// <summary>
@@ -47,5 +63,6 @@ public class KsCartographyTableModSystem : ModSystem
             }
             CoreAPI = null;
             CoreServerAPI = null;
+            harmony?.UnpatchAll(Mod.Info.ModID);
         }
 }

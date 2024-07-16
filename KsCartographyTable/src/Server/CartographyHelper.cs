@@ -91,6 +91,7 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 if (onlyOnSharedMapBySameUser.Count > 0) {
                     CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-waypoints-count", onlyOnSharedMapBySameUser.Count), EnumChatType.Notification);
                 }
+                player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
             } else {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-up-to-date"), EnumChatType.Notification);
             }
@@ -99,6 +100,7 @@ namespace Kaisentlaia.CartographyTable.Utilities
 
         public void updateWaypoints(IServerPlayer player) {
             SetWaypointMapLayer();
+
             var userWaypoints = getUserWaypoints(player);
             var sharedWaypoints = Waypoints;
             var onlyOnSharedMapByOtherUser = sharedWaypoints.FindAll(delegate (CartographyWaypoint SharedWaypoint) {
@@ -140,9 +142,11 @@ namespace Kaisentlaia.CartographyTable.Utilities
 
             if (onlyOnSharedMapByOtherUser.Count > 0 || onBothMapsWithChanges.Count > 0) {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-waypoints", onlyOnSharedMapByOtherUser.Count, onBothMapsWithChanges.Count), EnumChatType.Notification);
+                player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
             } else {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
             }
+
         }
 
         public List<Waypoint> getUserWaypoints(IServerPlayer player) {
@@ -152,11 +156,25 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 if (serverWorldMapManager != null) {
                     var WaypointMapLayer = serverWorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
                     if (WaypointMapLayer != null) {
+                        //fixUserWaypoints(WaypointMapLayer);
                         waypoints = WaypointMapLayer.Waypoints.FindAll(UserWaypoint => UserWaypoint.OwningPlayerUid == player.PlayerUID);
                     }
                 }
             }
             return waypoints;
+        }
+
+        public void PurgeWaypointGroups(IPlayer player) {
+            if (KsCartographyTableModSystem.purgeWpGroups) {
+                SetWaypointMapLayer();
+                var allWaypointsWithGroupId = WaypointMapLayer.Waypoints.FindAll(UserWaypoint => UserWaypoint.OwningPlayerGroupId != -1);
+                if (allWaypointsWithGroupId.Count > 0) {
+                    allWaypointsWithGroupId.Foreach(wp => {
+                        wp.OwningPlayerGroupId = -1;
+                    });
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get($"Groups removed from {allWaypointsWithGroupId.Count} waypoints"), EnumChatType.Notification);
+                }
+            }
         }
     }
 }

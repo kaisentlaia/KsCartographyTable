@@ -63,8 +63,11 @@ namespace Kaisentlaia.CartographyTable.Blocks
             if (BlockEntityCartographyTable != null) {
                 ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
                 if (slot.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "inkandquill" && !byPlayer.Entity.Controls.Sneak) {      
-                    return BlockEntityCartographyTable.OnPlayerInteract(world, byPlayer, blockSel);;
+                    return BlockEntityCartographyTable.OnPlayerInteract(world, byPlayer, blockSel);
+                } else if(KsCartographyTableModSystem.purgeWpGroups) {
+                    return BlockEntityCartographyTable.OnPurgeWaypointGroups(world, byPlayer, blockSel);
                 }
+                return base.OnBlockInteractStart(world, byPlayer, blockSel);
             }
             
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
