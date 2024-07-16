@@ -1,0 +1,13 @@
+{
+    "type": "code",
+    "modid": "kscartographytable",
+    "name": "KsCartographyTable",
+    "authors": [
+        "Kaisentlaia"
+    ],
+    "description": "A cartography table that allows waypoint sharing between players.",
+    "version": "1.0.0",
+    "dependencies": {
+        "game": "1.19.0"
+    }
+}

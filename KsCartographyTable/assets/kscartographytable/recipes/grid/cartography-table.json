@@ -1,0 +1,20 @@
+{
+    "ingredientPattern": "S,C",
+    "ingredients": {
+      "S": {
+        "type": "item",
+        "code": "game:paper-parchment"
+      },
+      "C": {
+        "type": "block",
+        "code": "game:table-normal"
+      }
+    },
+    "width": 1,
+    "height": 2,
+    "output": {
+      "type": "block",
+      "code": "cartography-table",
+      "quantity":  1
+    }
+  }
