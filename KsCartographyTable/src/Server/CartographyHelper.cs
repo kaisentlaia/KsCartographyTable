@@ -129,7 +129,7 @@ namespace Kaisentlaia.CartographyTable.Utilities
 
             onBothMapsWithChanges.Foreach(UserWaypoint => {
                 var edited = sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return samePosition(SharedWaypoint, UserWaypoint);
+                    return SharedWaypoint.CorrespondsTo(UserWaypoint);
                 });
                 UserWaypoint.Color = edited.Color;
                 UserWaypoint.Icon = edited.Icon;
@@ -157,18 +157,6 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 }
             }
             return waypoints;
-        }
-
-        private bool samePosition(Waypoint firstWaypoint, Waypoint secondWaypoint) {
-            return firstWaypoint.Position.Equals(secondWaypoint.Position);
-        }
-
-        private bool sameData(Waypoint firstWaypoint, Waypoint secondWaypoint) {
-            return firstWaypoint.Icon == secondWaypoint.Icon && firstWaypoint.Color == secondWaypoint.Color && firstWaypoint.Title == secondWaypoint.Title && firstWaypoint.Pinned == secondWaypoint.Pinned;
-        }
-
-        private bool isOwner(IServerPlayer player, Waypoint waypoint) {
-            return waypoint.OwningPlayerUid == player.PlayerUID;
         }
     }
 }
