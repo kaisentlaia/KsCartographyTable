@@ -81,19 +81,18 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 }
             });
 
-            // TODO put in lang
             if (onlyOnUserMap.Count > 0 || onBothMapsWithChanges.Count > 0 || onlyOnSharedMapBySameUser.Count > 0) {
                 if (onlyOnUserMap.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, $"You copied {onlyOnUserMap.Count} new waypoints to the cartography table.", EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-new-waypoints-count", onlyOnUserMap.Count), EnumChatType.Notification);
                 }
                 if (onBothMapsWithChanges.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, $"You modified {onBothMapsWithChanges.Count} waypoints on the cartography table.", EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-edited-waypoints-count", onBothMapsWithChanges.Count), EnumChatType.Notification);
                 }
                 if (onlyOnSharedMapBySameUser.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, $"You removed {onlyOnSharedMapBySameUser.Count} waypoints from the cartography table.", EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-waypoints-count", onlyOnSharedMapBySameUser.Count), EnumChatType.Notification);
                 }
             } else {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, "The cartography table is already up to date.", EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-up-to-date"), EnumChatType.Notification);
             }
             return sharedWaypoints;
         }
@@ -139,11 +138,10 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 UserWaypoint.OwningPlayerUid = player.PlayerUID;
             });
 
-            // TODO put in lang
             if (onlyOnSharedMapByOtherUser.Count > 0 || onBothMapsWithChanges.Count > 0) {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, $"You copied {onlyOnSharedMapByOtherUser.Count} new waypoints and edited {onBothMapsWithChanges.Count} waypoints on your map.", EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-waypoints", onlyOnSharedMapByOtherUser.Count, onBothMapsWithChanges.Count), EnumChatType.Notification);
             } else {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, "Your map is already up to date.", EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
             }
         }
 

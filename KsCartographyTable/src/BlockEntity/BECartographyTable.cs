@@ -70,12 +70,10 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             return true;
         }
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc) {
-            // TODO put in lang 
-            // Lang.Get("petai:gui-pet-owner", owner?.PlayerName),
             if (Waypoints != null && Waypoints.Count > 0) {
-                dsc.AppendLine(Lang.Get("There are {0} waypoints on the map.\n", Waypoints.Count));
+                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Waypoints.Count));
             } else {
-                dsc.AppendLine(Lang.Get("The map is empty.\n"));
+                dsc.AppendLine(Lang.Get("kscartographytable:gui-empty-map"));
             }
         }
 
