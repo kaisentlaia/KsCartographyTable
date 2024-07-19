@@ -24,7 +24,6 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public CartographyHelper CartographyHelper;
-
         private List<CartographyWaypoint> Waypoints;
 
         public override void Initialize(ICoreAPI api)

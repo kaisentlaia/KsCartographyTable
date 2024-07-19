@@ -57,7 +57,6 @@ namespace Kaisentlaia.CartographyTable.Blocks
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             // TODO prevent multiple consequent executions
-            //api.Logger.Notification($"OnBlockInteractStart");
             BlockEntityCartographyTable BlockEntityCartographyTable = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntityCartographyTable;
 
             if (BlockEntityCartographyTable != null) {

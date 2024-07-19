@@ -5,11 +5,9 @@ using System;
 namespace Kaisentlaia.CartographyTable.GameContent
 {
     public class CartographyWaypoint : Waypoint {
-        public String CreatedByPlayerUid;
-        public String ModifiedByPlayerUid;
-
-        public String SharedTitle;
-
+        public string CreatedByPlayerUid;
+        public string ModifiedByPlayerUid;
+        public string SharedTitle;
         public DateTime? Created;
         public DateTime? Modified;
 
@@ -20,11 +18,6 @@ namespace Kaisentlaia.CartographyTable.GameContent
                 CreatedByPlayerUid = player.PlayerUID;
             }
             if (waypoint != null) {
-                /*try {
-                    SourceWaypoint = JsonUtil.FromString<CartographyWaypoint>(waypoint.Text);
-                } catch (Exception ex) {
-
-                }*/
                 Color = waypoint.Color;
                 Guid = waypoint.Guid;
                 Icon = waypoint.Icon;
@@ -37,20 +30,6 @@ namespace Kaisentlaia.CartographyTable.GameContent
                 OwningPlayerGroupId = waypoint.OwningPlayerGroupId;
                 OwningPlayerUid = waypoint.OwningPlayerUid;
                 Position = waypoint.Position;
-
-                /*if (SourceWaypoint?.CreatedBy != null) {
-                    CreatedBy = SourceWaypoint?.CreatedBy;
-                    ModifiedBy = player;
-                } else if (player != null) {
-                    CreatedBy = player;
-                }
-
-                if (SourceWaypoint?.Created != null) {
-                    Created = SourceWaypoint.Created;
-                    Modified = DateTime.Now;
-                } else {
-                    Created = DateTime.Now;
-                }*/
             }
         }
 

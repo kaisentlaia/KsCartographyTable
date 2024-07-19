@@ -16,7 +16,6 @@ public class KsCartographyTableModSystem : ModSystem
         public static ICoreClientAPI CoreClientAPI;
         public Harmony harmony;
         protected const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-
         public static bool purgeWpGroups = false;
 
         public override void Start(ICoreAPI api)
@@ -33,7 +32,6 @@ public class KsCartographyTableModSystem : ModSystem
         public override void StartServerSide(ICoreServerAPI api)
         {
             CoreServerAPI = api;
-            //api.Event.PlayerJoin += FixWaypoints;
             api.ChatCommands.Create("purgewpgroups")
             .WithDescription("removes groups from all the waypoints created by other mods on the next cartography table interaction")
             .RequiresPrivilege(Privilege.chat)
