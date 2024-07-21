@@ -24,7 +24,7 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public CartographyHelper CartographyHelper;
-        private List<CartographyWaypoint> Waypoints;
+        private CartographyMap Map;
 
         public override void Initialize(ICoreAPI api)
         {
@@ -32,7 +32,7 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
 
             if(Api.Side == EnumAppSide.Server) {
                 CoreServerAPI = Api as ICoreServerAPI;
-                CartographyHelper = new CartographyHelper(CoreServerAPI, Waypoints);
+                CartographyHelper = new CartographyHelper(CoreServerAPI);
             }
             if(Api.Side == EnumAppSide.Client) {
                 CoreClientAPI = Api as ICoreClientAPI;
@@ -42,9 +42,8 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         public override void OnBlockPlaced(ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(byItemStack);
-            Waypoints = new List<CartographyWaypoint>();
             if (CartographyHelper != null) {
-                CartographyHelper.SetWaypoints(Waypoints);
+                CartographyHelper.Map = new CartographyMap();
             }
         }
 
@@ -60,11 +59,12 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         {
             if (CoreServerAPI != null) {
                 if (!byPlayer.Entity.Controls.Sprint) {
-                    CartographyHelper.SetWaypoints(Waypoints);
-                    Waypoints = CartographyHelper.shareWaypoints(byPlayer as IServerPlayer);
+                    CartographyHelper.Map = Map;
+                    Map = CartographyHelper.updateTableMap(byPlayer as IServerPlayer);
                     MarkDirty();
                 } else if (byPlayer.Entity.Controls.Sprint) {
-                    CartographyHelper.updateWaypoints(byPlayer as IServerPlayer);
+                    CartographyHelper.Map = Map;
+                    CartographyHelper.updatePlayerMap(byPlayer as IServerPlayer);
                 }
             }
             if (CoreClientAPI != null) {
@@ -74,8 +74,8 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             return true;
         }
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc) {
-            if (Waypoints != null && Waypoints.Count > 0) {
-                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Waypoints.Count));
+            if (Map != null && Map.Waypoints.Count > 0) {
+                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Map.Waypoints.Count));
             } else {
                 dsc.AppendLine(Lang.Get("kscartographytable:gui-empty-map"));
             }
@@ -85,36 +85,64 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         {
             base.ToTreeAttributes(tree);
             // bytes would be better, but they cause exceptions
-            if (Waypoints != null) {
+            if (Map != null) {
                 try {
-                    tree.SetString("Waypoints", JsonUtil.ToString(Waypoints));
+                    tree.SetString("Waypoints", JsonUtil.ToString(Map.Waypoints));
                 } catch (Exception ex) {
                     Api.Logger.Error(ex.StackTrace);
                     tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
                 }
+                try {
+                    tree.SetString("DeletedWaypoints", JsonUtil.ToString(Map.DeletedWaypoints));
+                } catch (Exception ex) {
+                    Api.Logger.Error(ex.StackTrace);
+                    tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+                }
             } else {
                 tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+                tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
             }
         }
 
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
             base.FromTreeAttributes(tree, worldForResolving);
+            if (Map == null) {
+                Map = new CartographyMap();
+            }
             // bytes would be better, but they cause exceptions
             try {
                 if(tree.HasAttribute("Waypoints")) {
                     var savedWaypoints = tree.GetString("Waypoints");
                     if (savedWaypoints != null) {
-                        Waypoints = JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints); 
+                        Map.Waypoints = JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints); 
                     } else {
-                        Waypoints = new List<CartographyWaypoint>();
+                        Map.Waypoints = new List<CartographyWaypoint>();
                     }
                 } else {
-                    Waypoints = new List<CartographyWaypoint>();
+                    Map.Waypoints = new List<CartographyWaypoint>();
                 }
             } catch (Exception ex) {
                 Api.Logger.Error(ex.StackTrace);
-                Waypoints = new List<CartographyWaypoint>();
+                Map.Waypoints = new List<CartographyWaypoint>();
+            }
+            try {
+                if(tree.HasAttribute("DeletedWaypoints")) {
+                    var deletedWaypoints = tree.GetString("DeletedWaypoints");
+                    if (tree.GetString("DeletedWaypoints") != null) {
+                        Map.DeletedWaypoints = JsonUtil.FromString<List<CartographyWaypoint>>(deletedWaypoints); 
+                    } else {
+                        Map.DeletedWaypoints = new List<CartographyWaypoint>();
+                    }
+                } else {
+                    Map.DeletedWaypoints = new List<CartographyWaypoint>();
+                }
+            } catch (Exception ex) {
+                Api.Logger.Error(ex.StackTrace);
+                Map.DeletedWaypoints = new List<CartographyWaypoint>();
+            }
+            if (CartographyHelper != null) {
+                CartographyHelper.Map = Map;
             }
         }
     }

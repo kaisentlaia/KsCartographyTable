@@ -12,109 +12,90 @@ namespace Kaisentlaia.CartographyTable.Utilities
 {
     public class CartographyHelper {
         ICoreServerAPI CoreServerAPI;
-        List<CartographyWaypoint> Waypoints;
-        WaypointMapLayer WaypointMapLayer;
-        public CartographyHelper(ICoreServerAPI ServerAPI, List<CartographyWaypoint> TableWaypoints) {
-            CoreServerAPI = ServerAPI;
-            Waypoints = TableWaypoints;
-            SetWaypointMapLayer();
-        }
-
-        public void SetWaypoints(List<CartographyWaypoint> newWaypoints) {
-            if (newWaypoints != null) {
-                Waypoints = newWaypoints;
-            } else {
-                Waypoints = new List<CartographyWaypoint>();
+        WorldMapManager WorldMapManager;
+        private CartographyMap map;
+        public CartographyMap Map {
+            get { return map; }
+            set {                
+                if (value != null) {
+                    map = value;
+                } else {
+                    map = new CartographyMap();
+                }
             }
+        }
+        WaypointMapLayer WaypointMapLayer;
+        public CartographyHelper(ICoreServerAPI ServerAPI) {
+            CoreServerAPI = ServerAPI;
+            SetWaypointMapLayer();
         }
 
         private void SetWaypointMapLayer() {
             if(WaypointMapLayer == null) {                
-                var serverWorldMapManager = CoreServerAPI.ModLoader.GetModSystem<WorldMapManager>();
-                if (serverWorldMapManager != null) {
-                    WaypointMapLayer = serverWorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
+                WorldMapManager = CoreServerAPI.ModLoader.GetModSystem<WorldMapManager>();
+                if (WorldMapManager != null) {
+                    WaypointMapLayer = WorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
                 }
             }
         }
 
-        public List<CartographyWaypoint> shareWaypoints(IServerPlayer player) {
+        public CartographyMap updateTableMap(IServerPlayer player) {
             SetWaypointMapLayer();
-            var userWaypoints = getUserWaypoints(player);
-            var sharedWaypoints = Waypoints;  
+            var playerWaypoints = getPlayerWaypoints(player);
+            var playerDeletedWaypoints = GetPlayerDeletedWaypoints(player);
+            var playerMap = new CartographyMap(playerWaypoints, playerDeletedWaypoints, player);
+            var sharedWaypoints = map.Waypoints;
+            var deletedWaypoints = map.DeletedWaypoints;
+
+            var toAdd = playerWaypoints.FindAll(PlayerWaypoint => !map.Contains(PlayerWaypoint));
+            var toUpdate = playerWaypoints.FindAll(PlayerWaypoint => map.Contains(PlayerWaypoint) && !map.Contains(PlayerWaypoint, true));
+            var toDelete = playerDeletedWaypoints.FindAll(PlayerWaypoint => map.Contains(PlayerWaypoint));
             
-            var onlyOnUserMap = userWaypoints.FindAll(delegate (Waypoint UserWaypoint) {
-                return sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint);
-                }) == null;
-            });
-            var onlyOnSharedMapBySameUser = sharedWaypoints.FindAll(delegate (CartographyWaypoint SharedWaypoint) {
-                return SharedWaypoint.OwnedBy(player) && userWaypoints.Find(delegate (Waypoint UserWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint);
-                }) == null;
-            });
-            var onBothMapsWithChanges = userWaypoints.FindAll(delegate (Waypoint UserWaypoint) {
-                return sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint) && !SharedWaypoint.ContentEqualTo(UserWaypoint);
-                }) != null;
+            toAdd.ForEach(PlayerWaypoint => {
+                map.Create(PlayerWaypoint, player);
             });
 
-            onlyOnUserMap.ForEach(UserWaypoint => {
-                sharedWaypoints.Add(new CartographyWaypoint(UserWaypoint, player));
+            toUpdate.ForEach(PlayerWaypoint => {
+                map.Update(PlayerWaypoint, player);
             });
 
-            onlyOnSharedMapBySameUser.ForEach(SharedWaypoint => {
-                sharedWaypoints.Remove(SharedWaypoint);
+            toDelete.ForEach(waypoint => {
+                map.Delete(waypoint);
+                ClearDeletedWaypoint(waypoint);
             });
 
-            onBothMapsWithChanges.Foreach(UserWaypoint => {
-                var toEdit = sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint);
-                });
-                if (toEdit != null) {
-                    toEdit.Color = UserWaypoint.Color;
-                    toEdit.Icon = UserWaypoint.Icon;
-                    toEdit.Pinned = UserWaypoint.Pinned;
-                    toEdit.Title = UserWaypoint.Title;
-                    toEdit.OwningPlayerUid = player.PlayerUID;
-                    toEdit.Modified = DateTime.Now;
-                    toEdit.ModifiedByPlayerUid = player.PlayerUID;
+            if (toAdd.Count > 0 || toUpdate.Count > 0 || toDelete.Count > 0) {
+                if (toAdd.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-new-waypoints-count", toAdd.Count), EnumChatType.Notification);
                 }
-            });
-
-            if (onlyOnUserMap.Count > 0 || onBothMapsWithChanges.Count > 0 || onlyOnSharedMapBySameUser.Count > 0) {
-                if (onlyOnUserMap.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-new-waypoints-count", onlyOnUserMap.Count), EnumChatType.Notification);
+                if (toUpdate.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-edited-waypoints-count", toUpdate.Count), EnumChatType.Notification);
                 }
-                if (onBothMapsWithChanges.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-edited-waypoints-count", onBothMapsWithChanges.Count), EnumChatType.Notification);
-                }
-                if (onlyOnSharedMapBySameUser.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-waypoints-count", onlyOnSharedMapBySameUser.Count), EnumChatType.Notification);
+                if (toDelete.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-waypoints-count", toDelete.Count), EnumChatType.Notification);
                 }
                 player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
             } else {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-up-to-date"), EnumChatType.Notification);
             }
-            return sharedWaypoints;
+            return map;
         }
 
-        public void updateWaypoints(IServerPlayer player) {
+        public void updatePlayerMap(IServerPlayer player) {
             SetWaypointMapLayer();
 
-            var userWaypoints = getUserWaypoints(player);
-            var sharedWaypoints = Waypoints;
-            var onlyOnSharedMapByOtherUser = sharedWaypoints.FindAll(delegate (CartographyWaypoint SharedWaypoint) {
-                return !SharedWaypoint.CreatedBy(player) && userWaypoints.Find(delegate (Waypoint UserWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint) && SharedWaypoint.ContentEqualTo(UserWaypoint);
-                }) == null;
-            });
-            var onBothMapsWithChanges = userWaypoints.FindAll(delegate (Waypoint UserWaypoint) {
-                return sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint) && !SharedWaypoint.ContentEqualTo(UserWaypoint);
-                }) != null;
-            });
+            var playerWaypoints = getPlayerWaypoints(player);
+            var worldDeletedWaypoints = GetPlayerDeletedWaypoints();
+            var playerMap = new CartographyMap(playerWaypoints, worldDeletedWaypoints, player);
+            var sharedWaypoints = map.Waypoints;
+            var deletedWaypoints = map.DeletedWaypoints;
 
-            onlyOnSharedMapByOtherUser.ForEach(SharedWaypoint => {
+            var onlyOnTableMapToAdd = sharedWaypoints.FindAll(SharedWaypoint => !playerMap.Contains(SharedWaypoint));
+            var onBothMaps = sharedWaypoints.FindAll(SharedWaypoint => playerMap.Contains(SharedWaypoint));
+            var onBothMapsToEdit = sharedWaypoints.FindAll(SharedWaypoint => playerMap.Contains(SharedWaypoint) && !playerMap.Contains(SharedWaypoint, true));
+            var onlyOnPlayerMapToDelete = playerWaypoints.FindAll(PlayerWaypoint => !map.Contains(PlayerWaypoint) && map.HasDeleted(PlayerWaypoint));
+
+            onlyOnTableMapToAdd.ForEach(SharedWaypoint => {
                 Waypoint waypoint = new Waypoint()
                 {
                     Color = SharedWaypoint.Color,
@@ -129,37 +110,43 @@ namespace Kaisentlaia.CartographyTable.Utilities
                 WaypointMapLayer.AddWaypoint(waypoint, player);
             });
 
-            onBothMapsWithChanges.Foreach(UserWaypoint => {
-                var edited = sharedWaypoints.Find(delegate (CartographyWaypoint SharedWaypoint) {
-                    return SharedWaypoint.CorrespondsTo(UserWaypoint);
-                });
-                UserWaypoint.Color = edited.Color;
-                UserWaypoint.Icon = edited.Icon;
-                UserWaypoint.Pinned = edited.Pinned;
-                UserWaypoint.Title = edited.Title;
-                UserWaypoint.OwningPlayerUid = player.PlayerUID;
+            onBothMapsToEdit.Foreach(SharedWaypoint => {
+                var PlayerWaypoint = WaypointMapLayer.Waypoints.Find(waypoint => SharedWaypoint.CorrespondsTo(waypoint));
+                if (PlayerWaypoint != null) {
+                    PlayerWaypoint.Color = SharedWaypoint.Color;
+                    PlayerWaypoint.Icon = SharedWaypoint.Icon;
+                    PlayerWaypoint.Pinned = SharedWaypoint.Pinned;
+                    PlayerWaypoint.Title = SharedWaypoint.Title;
+                    PlayerWaypoint.OwningPlayerUid = player.PlayerUID;
+                }
             });
 
-            if (onlyOnSharedMapByOtherUser.Count > 0 || onBothMapsWithChanges.Count > 0) {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-waypoints", onlyOnSharedMapByOtherUser.Count, onBothMapsWithChanges.Count), EnumChatType.Notification);
+            onlyOnPlayerMapToDelete.Foreach(PlayerWaypoint => {
+                var toDelete = WaypointMapLayer.Waypoints.Find(waypoint => waypoint.Position.Equals(PlayerWaypoint.Position));
+                WaypointMapLayer.Waypoints.Remove(toDelete);
+            });
+
+            if (onlyOnTableMapToAdd.Count > 0 || onBothMapsToEdit.Count > 0 || onlyOnPlayerMapToDelete.Count > 0) {
+                if (onlyOnTableMapToAdd.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-new-user-waypoints", onlyOnTableMapToAdd.Count, onBothMapsToEdit.Count), EnumChatType.Notification);
+                }
+                if (onBothMapsToEdit.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-edited-user-waypoints", onBothMapsToEdit.Count, onBothMapsToEdit.Count), EnumChatType.Notification);
+                }
+                if (onlyOnPlayerMapToDelete.Count > 0) {
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-user-waypoints", onlyOnPlayerMapToDelete.Count), EnumChatType.Notification);
+                }
                 player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
+                ResendWaypoints(player);
             } else {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
             }
-
         }
 
-        public List<Waypoint> getUserWaypoints(IServerPlayer player) {
+        public List<Waypoint> getPlayerWaypoints(IServerPlayer player) {
             List<Waypoint> waypoints = new List<Waypoint>();
-            if(CoreServerAPI != null) {
-                var serverWorldMapManager = CoreServerAPI.ModLoader.GetModSystem<WorldMapManager>();
-                if (serverWorldMapManager != null) {
-                    var WaypointMapLayer = serverWorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
-                    if (WaypointMapLayer != null) {
-                        //fixUserWaypoints(WaypointMapLayer);
-                        waypoints = WaypointMapLayer.Waypoints.FindAll(UserWaypoint => UserWaypoint.OwningPlayerUid == player.PlayerUID);
-                    }
-                }
+            if (WaypointMapLayer != null) {
+                waypoints = WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerUid == player.PlayerUID);
             }
             return waypoints;
         }
@@ -167,7 +154,7 @@ namespace Kaisentlaia.CartographyTable.Utilities
         public void PurgeWaypointGroups(IPlayer player) {
             if (KsCartographyTableModSystem.purgeWpGroups) {
                 SetWaypointMapLayer();
-                var allWaypointsWithGroupId = WaypointMapLayer.Waypoints.FindAll(UserWaypoint => UserWaypoint.OwningPlayerGroupId != -1);
+                var allWaypointsWithGroupId = WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerGroupId != -1);
                 if (allWaypointsWithGroupId.Count > 0) {
                     allWaypointsWithGroupId.Foreach(wp => {
                         wp.OwningPlayerGroupId = -1;
@@ -175,6 +162,61 @@ namespace Kaisentlaia.CartographyTable.Utilities
                     CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get($"Groups removed from {allWaypointsWithGroupId.Count} waypoints"), EnumChatType.Notification);
                 }
             }
+        }
+
+        private List<Waypoint> GetPlayerDeletedWaypoints(IPlayer player = null) {
+            byte[] data = CoreServerAPI.WorldManager.SaveGame.GetData("deletedWaypoints");
+            var deletedWaypoints = data == null ? new List<Waypoint>() : SerializerUtil.Deserialize<List<Waypoint>>(data);
+            if(player != null) {
+                deletedWaypoints = deletedWaypoints.FindAll(waypoint => waypoint.OwningPlayerUid == player.PlayerUID);
+            }
+            return deletedWaypoints;
+        }
+
+        public void MarkDeleted(IServerPlayer player, int index) {
+            SetWaypointMapLayer();
+            Waypoint[] array = WaypointMapLayer.Waypoints.Where((Waypoint p) => p.OwningPlayerUid == player.PlayerUID).ToArray();
+            if (array.Length > 0 && index >=0 && index < array.Length) {
+                Waypoint waypoint = array[index];
+                var deletedWaypoints = GetPlayerDeletedWaypoints();
+                if (deletedWaypoints.Find(dwp => dwp.Guid == waypoint.Guid) == null) {
+                    deletedWaypoints.Add(waypoint);
+                }
+                CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(deletedWaypoints));
+            }
+        }
+
+        public void ClearDeletedWaypoint(Waypoint waypoint) {
+            SetWaypointMapLayer();
+            var deletedWaypoints = GetPlayerDeletedWaypoints();
+            var toClear = deletedWaypoints.FindAll(dwp => dwp.Guid == waypoint.Guid);
+            toClear.ForEach(wp => deletedWaypoints.Remove(wp));
+            CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(deletedWaypoints));
+        }
+
+        public void ClearAllDeletedWaypoints() {
+            CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(new List<Waypoint>()));
+        }
+
+        public void WipeWaypoints() {
+            SetWaypointMapLayer();
+            WaypointMapLayer.Waypoints.Clear();
+            WaypointMapLayer.ownWaypoints.Clear();
+        }
+
+        public void ResendWaypoints(IServerPlayer toPlayer)
+        {
+            SetWaypointMapLayer();
+            Dictionary<int, PlayerGroupMembership> playerGroupMemberships = toPlayer.ServerData.PlayerGroupMemberships;
+            List<Waypoint> list = new List<Waypoint>();
+            foreach (Waypoint waypoint in WaypointMapLayer.Waypoints)
+            {
+                if (!(toPlayer.PlayerUID != waypoint.OwningPlayerUid) || playerGroupMemberships.ContainsKey(waypoint.OwningPlayerGroupId))
+                {
+                    list.Add(waypoint);
+                }
+            }
+            WorldMapManager.SendMapDataToClient(WaypointMapLayer, toPlayer, SerializerUtil.Serialize(list));
         }
     }
 }

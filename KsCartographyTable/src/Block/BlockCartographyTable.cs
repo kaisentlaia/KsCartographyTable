@@ -1,20 +1,12 @@
-//Here are the imports for this script. Most of these will add automatically.
 using Vintagestory.API.Common;
 using Vintagestory.API.Util;
 using Vintagestory.API.Client;
 using System.Collections.Generic;
 using Kaisentlaia.CartographyTable.BlockEntities;
 
-/*
-* The namespace the class will be in. This is essentially the folder the script is found in.
-* If you need to use the BlockCartographyTable class in any other script, you will have to add 'using VSTutorial.Blocks' to that script.
-*/
+
 namespace Kaisentlaia.CartographyTable.Blocks
 {
-    /*
-    * The class definition. Here, you define BlockCartographyTable as a child of Block, which
-    * means you can 'override' many of the functions within the general Block class. 
-    */
     internal class BlockCartographyTable : Block
     {
         WorldInteraction[] interactions;
@@ -61,8 +53,12 @@ namespace Kaisentlaia.CartographyTable.Blocks
 
             if (BlockEntityCartographyTable != null) {
                 ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
+
                 if (slot.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "inkandquill" && !byPlayer.Entity.Controls.Sneak) {      
                     return BlockEntityCartographyTable.OnPlayerInteract(world, byPlayer, blockSel);
+                } else if(byPlayer.Entity.LeftHandItemSlot?.Itemstack?.Collectible?.FirstCodePart() == "resin" && slot.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "parchment") {   
+                    // TODO wipe table map  
+                    return base.OnBlockInteractStart(world, byPlayer, blockSel);
                 } else if(KsCartographyTableModSystem.purgeWpGroups) {
                     return BlockEntityCartographyTable.OnPurgeWaypointGroups(world, byPlayer, blockSel);
                 }
