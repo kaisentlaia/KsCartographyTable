@@ -1,5 +1,6 @@
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using Vintagestory.API.Common;
 using Vintagestory.GameContent;
 
@@ -32,8 +33,8 @@ namespace Kaisentlaia.CartographyTable.GameContent
         }
 
         public CartographyMap(List<Waypoint> InitialWaypoints = null, List<Waypoint> InitialDeletedWaypoints = null, IPlayer player = null) {
-            Waypoints = null;
-            DeletedWaypoints = null;
+            waypoints = new List<CartographyWaypoint>();
+            deletedWaypoints = new List<CartographyWaypoint>();
             if (InitialWaypoints != null && player != null) {
                 InitialWaypoints.ForEach(waypoint => {
                     waypoints.Add(new CartographyWaypoint(waypoint, player));
@@ -48,69 +49,55 @@ namespace Kaisentlaia.CartographyTable.GameContent
 
         public void Create(Waypoint waypoint, IPlayer player) {
             if(Contains(waypoint)) {
-                // failsafe, already exists, avoid duplication
                 Update(waypoint, player);
             } else {
                 waypoints.Add(new CartographyWaypoint(waypoint, player));
             }
             if (HasDeleted(waypoint)) {
-                Console.WriteLine("warning - added waypoint present in deleted waypoints");
                 Undelete(waypoint);
             }
         }
 
         public void Update(Waypoint waypoint, IPlayer player) {
-            if(Contains(waypoint)) {
-                var toEdit = Find(waypoint);
-                if (toEdit != null) {
-                    toEdit.Color = waypoint.Color;
-                    toEdit.Icon = waypoint.Icon;
-                    toEdit.Pinned = waypoint.Pinned;
-                    toEdit.Title = waypoint.Title;
-                    toEdit.OwningPlayerUid = player.PlayerUID;
-                    toEdit.Modified = DateTime.Now;
-                    toEdit.ModifiedByPlayerUid = player.PlayerUID;
-                } else {
-                    // failsafe, didn't exist
-                    Console.WriteLine("warning - no waypoint to edit");
-                    Create(waypoint, player);
-                }
+            var existing = Find(waypoint);
+            if (existing != null) {
+                existing.Color = waypoint.Color;
+                existing.Icon = waypoint.Icon;
+                existing.Pinned = waypoint.Pinned;
+                existing.Title = waypoint.Title;
+                existing.OwningPlayerUid = player.PlayerUID;
+                existing.Modified = DateTime.Now;
+                existing.ModifiedByPlayerUid = player.PlayerUID;
             } else {
-                // failsafe, didn't exist
                 waypoints.Add(new CartographyWaypoint(waypoint, player));
-                Create(waypoint, player);
             }
-            if (deletedWaypoints.Find(dwp => dwp.CorrespondsTo(waypoint)) != null) {
-                Console.WriteLine("warning - created waypoint present in deleted waypoints");
+            if (deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
                 Undelete(waypoint);
             }
         }
 
         public void Delete(Waypoint waypoint) {
-            var toDelete = Find(waypoint);
+            var toDelete = waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
             if (toDelete != null) {
-                if(!HasDeleted(waypoint)) {
+                if (!deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
                     deletedWaypoints.Add(toDelete);
                 }
-                if(Contains(waypoint)) {
-                    waypoints.Remove(toDelete);
-                }
+                waypoints.Remove(toDelete);
             }
         }
 
         private void Undelete(Waypoint waypoint) {
-            var toUndelete = FindDeleted(waypoint);
-            if(toUndelete != null) {
+            var toUndelete = deletedWaypoints.FirstOrDefault(dwp => dwp.Guid == waypoint.Guid);
+            if (toUndelete != null) {
                 deletedWaypoints.Remove(toUndelete);
             }
-
         }
 
         public CartographyWaypoint Find(Waypoint waypoint) {
-            return waypoints.Find(wp => wp.CorrespondsTo(waypoint));
+            return waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
         }
         public CartographyWaypoint FindDeleted(Waypoint waypoint) {
-            return deletedWaypoints.Find(wp => wp.CorrespondsTo(waypoint));
+            return deletedWaypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
         }
 
         public bool Contains(Waypoint waypoint, bool sameContent = false) {
@@ -132,7 +119,7 @@ namespace Kaisentlaia.CartographyTable.GameContent
         }
 
         public bool HasDeleted(Waypoint waypoint) {
-            return FindDeleted(waypoint) != null;
+            return deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid);
         }
     }
 }

@@ -34,7 +34,7 @@ namespace Kaisentlaia.CartographyTable.GameContent
         }
 
         public bool CorrespondsTo(Waypoint waypoint) {
-            return Position.Equals(waypoint.Position);
+            return Guid == waypoint.Guid;
         }
 
         public bool CreatedBy(IPlayer player) {

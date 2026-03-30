@@ -78,3 +78,5 @@ _\*Blackjack and hookers not included._
 
 1.  v1.0.0 - Initial release
 2.  v1.0.1 - Deleted waypoints will be removed from the player's map on update - experimental
+3.  v1.0.2 - Added interaction cooldown to prevent spam, added map wipe with resin
+4.  v1.0.3 - Bug fixes: Fixed null reference in CartographyMap, removed duplicate waypoint creation, corrected chat message parameters, fixed waypoint tracking using GUID instead of position, improved sync logic between tables and player maps

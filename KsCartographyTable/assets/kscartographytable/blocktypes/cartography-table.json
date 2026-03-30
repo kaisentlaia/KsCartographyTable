@@ -3,7 +3,7 @@
 	"class": "kscartographytable.cartography-table",
     "entityClass": "kscartographytable.cartography-table-entity",
 	"blockmaterial": "wood",
-	"creativeinventory": { "general": ["*"], "blocks": ["*"] },
+	"creativeinventory": { "general": ["*"], "kscartographytable": ["*"] },
 	"texturesByType": {
 		"*": {
 			"sides": { "base": "block/cartography-table/sides" },

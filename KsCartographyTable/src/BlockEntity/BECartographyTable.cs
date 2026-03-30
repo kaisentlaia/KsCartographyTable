@@ -23,7 +23,6 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
     {        
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
-        public CartographyHelper CartographyHelper;
         private CartographyMap Map;
 
         public override void Initialize(ICoreAPI api)
@@ -32,7 +31,6 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
 
             if(Api.Side == EnumAppSide.Server) {
                 CoreServerAPI = Api as ICoreServerAPI;
-                CartographyHelper = new CartographyHelper(CoreServerAPI);
             }
             if(Api.Side == EnumAppSide.Client) {
                 CoreClientAPI = Api as ICoreClientAPI;
@@ -42,16 +40,49 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         public override void OnBlockPlaced(ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(byItemStack);
-            if (CartographyHelper != null) {
-                CartographyHelper.Map = new CartographyMap();
+            if (Map == null) {
+                Map = new CartographyMap();
             }
         }
 
         internal bool OnPurgeWaypointGroups(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (CoreServerAPI != null && KsCartographyTableModSystem.purgeWpGroups) {
-                CartographyHelper.PurgeWaypointGroups(byPlayer);
+                KsCartographyTableModSystem.CartographyHelper.PurgeWaypointGroups(byPlayer);
             }
+            return true;
+        }
+
+        internal bool OnWipeTableMap(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (CoreServerAPI != null) 
+            {
+                if (Map != null && Map.Waypoints.Count > 0)
+                {
+                    int waypointCount = Map.Waypoints.Count;
+                    KsCartographyTableModSystem.CartographyHelper.WipeTableMap(Map);
+                    Map = new CartographyMap();
+                    MarkDirty();
+                    
+                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, 
+                        Lang.Get("kscartographytable:message-table-map-wiped", waypointCount), 
+                        EnumChatType.Notification);
+                    
+                    byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), byPlayer);
+                }
+                else
+                {
+                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, 
+                        Lang.Get("kscartographytable:message-table-map-already-empty"), 
+                        EnumChatType.Notification);
+                }
+            }
+            
+            if (CoreClientAPI != null) 
+            {
+                CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
+            }
+
             return true;
         }
 
@@ -59,12 +90,10 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         {
             if (CoreServerAPI != null) {
                 if (!byPlayer.Entity.Controls.Sprint) {
-                    CartographyHelper.Map = Map;
-                    Map = CartographyHelper.updateTableMap(byPlayer as IServerPlayer);
+                    KsCartographyTableModSystem.CartographyHelper.UpdateTableMap(Map, byPlayer as IServerPlayer);
                     MarkDirty();
                 } else if (byPlayer.Entity.Controls.Sprint) {
-                    CartographyHelper.Map = Map;
-                    CartographyHelper.updatePlayerMap(byPlayer as IServerPlayer);
+                    KsCartographyTableModSystem.CartographyHelper.UpdatePlayerMap(Map, byPlayer as IServerPlayer);
                 }
             }
             if (CoreClientAPI != null) {
@@ -73,6 +102,7 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
 
             return true;
         }
+        
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc) {
             if (Map != null && Map.Waypoints.Count > 0) {
                 dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Map.Waypoints.Count));
@@ -84,18 +114,17 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
-            // bytes would be better, but they cause exceptions
             if (Map != null) {
                 try {
                     tree.SetString("Waypoints", JsonUtil.ToString(Map.Waypoints));
                 } catch (Exception ex) {
-                    Api.Logger.Error(ex.StackTrace);
+                    Api.Logger.Error("Failed to serialize waypoints: {0}", ex);
                     tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
                 }
                 try {
                     tree.SetString("DeletedWaypoints", JsonUtil.ToString(Map.DeletedWaypoints));
                 } catch (Exception ex) {
-                    Api.Logger.Error(ex.StackTrace);
+                    Api.Logger.Error("Failed to serialize deleted waypoints: {0}", ex);
                     tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
                 }
             } else {
@@ -110,39 +139,31 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             if (Map == null) {
                 Map = new CartographyMap();
             }
-            // bytes would be better, but they cause exceptions
             try {
                 if(tree.HasAttribute("Waypoints")) {
                     var savedWaypoints = tree.GetString("Waypoints");
-                    if (savedWaypoints != null) {
-                        Map.Waypoints = JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints); 
-                    } else {
-                        Map.Waypoints = new List<CartographyWaypoint>();
-                    }
+                    Map.Waypoints = savedWaypoints != null 
+                        ? JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints) 
+                        : new List<CartographyWaypoint>();
                 } else {
                     Map.Waypoints = new List<CartographyWaypoint>();
                 }
             } catch (Exception ex) {
-                Api.Logger.Error(ex.StackTrace);
+                Api.Logger.Error("Failed to deserialize waypoints: {0}", ex);
                 Map.Waypoints = new List<CartographyWaypoint>();
             }
             try {
                 if(tree.HasAttribute("DeletedWaypoints")) {
                     var deletedWaypoints = tree.GetString("DeletedWaypoints");
-                    if (tree.GetString("DeletedWaypoints") != null) {
-                        Map.DeletedWaypoints = JsonUtil.FromString<List<CartographyWaypoint>>(deletedWaypoints); 
-                    } else {
-                        Map.DeletedWaypoints = new List<CartographyWaypoint>();
-                    }
+                    Map.DeletedWaypoints = deletedWaypoints != null 
+                        ? JsonUtil.FromString<List<CartographyWaypoint>>(deletedWaypoints) 
+                        : new List<CartographyWaypoint>();
                 } else {
                     Map.DeletedWaypoints = new List<CartographyWaypoint>();
                 }
             } catch (Exception ex) {
-                Api.Logger.Error(ex.StackTrace);
+                Api.Logger.Error("Failed to deserialize deleted waypoints: {0}", ex);
                 Map.DeletedWaypoints = new List<CartographyWaypoint>();
-            }
-            if (CartographyHelper != null) {
-                CartographyHelper.Map = Map;
             }
         }
     }
