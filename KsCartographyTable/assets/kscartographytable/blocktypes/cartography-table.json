@@ -6,10 +6,8 @@
 	"creativeinventory": { "general": ["*"], "kscartographytable": ["*"] },
 	"texturesByType": {
 		"*": {
-			"sides": { "base": "block/cartography-table/sides" },
-			"top": { "base": "block/cartography-table/top" },
-			"bottom": { "base": "block/cartography-table/bottom" },
-			"legs": { "base": "block/cartography-table/legs" }
+			"top_double": { "base": "block/cartography-table/top_double" },
+			"top_double_noborder": { "base": "block/cartography-table/top_double_noborder" }
 		}
 	},
 	"shape": { "base": "block/cartography-table" },
