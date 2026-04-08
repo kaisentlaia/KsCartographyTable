@@ -1,23 +1,27 @@
 {
 	"code": "cartography-table",
 	"class": "kscartographytable.cartography-table",
-    "entityClass": "kscartographytable.cartography-table-entity",
+	"entityClass": "kscartographytable.cartography-table-entity",
+	"behaviors": [
+		{
+			"name": "Multiblock",
+			"properties": { "sizex": 2, "sizey": 1, "sizez": 1, "cposition": { "x": 0, "y": 0, "z": 0 } }
+		}
+	],
+	"collisionSelectionBox": {
+		"x1": 0.0625, "y1": 0, "z1": 0.0625, "x2": 1, "y2": 0.8125, "z2": 0.9375
+	},
+	"fileReplaceMode": "ReplaceAll",
 	"blockmaterial": "wood",
 	"creativeinventory": { "general": ["*"], "kscartographytable": ["*"] },
-	"texturesByType": {
-		"*": {
-			"top_double": { "base": "block/cartography-table/top_double" },
-			"top_double_noborder": { "base": "block/cartography-table/top_double_noborder" }
-		}
-	},
-	"shape": { "base": "block/cartography-table" },
+	"shape": { "base": "kscartographytable:block/cartography-table" },
 	"replaceable": 900,
 	"resistance": 1.5,
-	"lightAbsorption": 1,
+	"lightAbsorption": 0,
 	"sidesolid": {
 		"up": true,
 		"all": false
-	},	
+	},
 	"sideopaque": {
 		"up": true,
 		"all": false

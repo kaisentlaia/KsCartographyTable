@@ -77,7 +77,7 @@ public class KsCartographyTableModSystem : ModSystem
 
         private static bool IsMapDisallowed()
         {
-            return !CoreAPI.World.Config.GetBool("allowMap", defaultValue: true))
+            return !CoreAPI.World.Config.GetBool("allowMap", defaultValue: true);
         }
 
         [HarmonyPrefix]

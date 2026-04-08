@@ -1,4 +1,5 @@
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.API.Client;
 using System.Collections.Generic;
@@ -99,6 +100,24 @@ namespace Kaisentlaia.CartographyTable.Blocks
             }
         }
 
+        private static BlockEntityCartographyTable FindBlockEntity(IWorldAccessor world, BlockPos pos)
+        {
+            var entity = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCartographyTable;
+            if (entity != null) return entity;
+
+            // Secondary multiblock position — search adjacent blocks for the entity
+            BlockPos[] adjacents = [
+                pos.AddCopy(1, 0, 0), pos.AddCopy(-1, 0, 0),
+                pos.AddCopy(0, 0, 1), pos.AddCopy(0, 0, -1)
+            ];
+            foreach (var adjacent in adjacents)
+            {
+                entity = world.BlockAccessor.GetBlockEntity(adjacent) as BlockEntityCartographyTable;
+                if (entity != null) return entity;
+            }
+            return null;
+        }
+
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             // Prevent multiple rapid interactions
@@ -107,7 +126,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
                 return true; // Block the interaction but return true to prevent other handlers
             }
 
-            BlockEntityCartographyTable BlockEntityCartographyTable = world.BlockAccessor.GetBlockEntity(blockSel.Position) as BlockEntityCartographyTable;
+            BlockEntityCartographyTable BlockEntityCartographyTable = FindBlockEntity(world, blockSel.Position);
 
             if (BlockEntityCartographyTable != null) {
                 ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
