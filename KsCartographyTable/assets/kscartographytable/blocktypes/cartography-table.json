@@ -1,11 +1,23 @@
 {
-	"code": "cartography-table",
+	"code": "cartographytable",
 	"class": "kscartographytable.cartography-table",
 	"entityClass": "kscartographytable.cartography-table-entity",
+	"variantgroups": [
+		{ "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
+	],
 	"behaviors": [
 		{
+			"name": "HorizontalOrientable",
+			"properties": { "dropBlockFace": "north" }
+		},
+		{
 			"name": "Multiblock",
-			"properties": { "sizex": 2, "sizey": 1, "sizez": 1, "cposition": { "x": 0, "y": 0, "z": 0 } }
+			"propertiesByType": {
+				"*-north": { "sizex": 2, "sizey": 1, "sizez": 1, "cposition": { "x": 0, "y": 0, "z": 0 } },
+				"*-east":  { "sizex": 1, "sizey": 1, "sizez": 2, "cposition": { "x": 0, "y": 0, "z": 0 } },
+				"*-south": { "sizex": 2, "sizey": 1, "sizez": 1, "cposition": { "x": 1, "y": 0, "z": 0 } },
+				"*-west":  { "sizex": 1, "sizey": 1, "sizez": 2, "cposition": { "x": 0, "y": 0, "z": 1 } }
+			}
 		}
 	],
 	"collisionSelectionBox": {
@@ -13,8 +25,26 @@
 	},
 	"fileReplaceMode": "ReplaceAll",
 	"blockmaterial": "wood",
-	"creativeinventory": { "general": ["*"], "kscartographytable": ["*"] },
-	"shape": { "base": "kscartographytable:block/cartography-table" },
+	"creativeinventory": { "general": ["*-north"], "kscartographytable": ["*-north"] },
+	"textures": {
+		"oak": { "base": "game:block/wood/debarked/oak" },
+		"top_double": { "base": "kscartographytable:block/cartography-table/top_double" },
+		"top_double_noborder": { "base": "kscartographytable:block/cartography-table/top_double_noborder" },
+		"cartography-tools": { "base": "game:item/lore/cartography-tools" },
+		"feather": { "base": "game:item/tool/feather" },
+		"map1": { "base": "game:item/lore/map1" },
+		"map2": { "base": "game:item/lore/map2" },
+		"blue-back": { "base": "game:item/lore/largebook/blue-back" },
+		"blue-front": { "base": "game:item/lore/largebook/blue-front" },
+		"normal-brickred": { "base": "game:item/lore/normal-brickred" },
+		"pages-aged": { "base": "game:item/lore/pages-aged" }
+	},
+	"shapeByType": {
+		"*-north": { "base": "kscartographytable:block/cartography-table", "rotateY": 0   },
+		"*-east":  { "base": "kscartographytable:block/cartography-table", "rotateY": 270 },
+		"*-south": { "base": "kscartographytable:block/cartography-table", "rotateY": 180 },
+		"*-west":  { "base": "kscartographytable:block/cartography-table", "rotateY": 90  }
+	},
 	"replaceable": 900,
 	"resistance": 1.5,
 	"lightAbsorption": 0,

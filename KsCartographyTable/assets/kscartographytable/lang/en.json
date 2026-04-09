@@ -1,6 +1,10 @@
 {
 	"game:tabname-kscartographytable": "K's Cartography",
-	"block-cartography-table": "Cartography table",
+	"block-cartographytable": "Cartography table",
+	"block-cartographytable-north": "Cartography table",
+	"block-cartographytable-east": "Cartography table",
+	"block-cartographytable-south": "Cartography table",
+	"block-cartographytable-west": "Cartography table",
 	"blockdesc-cartography-table": "A tool to copy waypoints to and from a shared map.",
     "blockhelp-cartography-table-share-map": "Update the cartography table's map",
     "blockhelp-cartography-table-update-map": "Update your map",

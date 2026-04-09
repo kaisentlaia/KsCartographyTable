@@ -1,6 +1,10 @@
 {
 	"game:tabname-kscartographytable": "K's Cartography",
-	"block-cartography-table": "Tavolo da cartografia",
+	"block-cartographytable": "Tavolo da cartografia",
+	"block-cartographytable-north": "Tavolo da cartografia",
+	"block-cartographytable-east": "Tavolo da cartografia",
+	"block-cartographytable-south": "Tavolo da cartografia",
+	"block-cartographytable-west": "Tavolo da cartografia",
 	"blockdesc-cartography-table": "Uno strumento per copiare i punti di riferimento da e verso una mappa condivisa.",
     "blockhelp-cartography-table-share-map": "Aggiorna la mappa del tavolo da cartografia",
     "blockhelp-cartography-table-update-map": "Aggiorna la tua mappa",

@@ -3,7 +3,16 @@
     "allow": [
       "WebFetch(domain:raw.githubusercontent.com)",
       "WebFetch(domain:github.com)",
-      "WebFetch(domain:api.github.com)"
+      "WebFetch(domain:api.github.com)",
+      "WebSearch",
+      "WebFetch(domain:wiki.vintagestory.at)",
+      "WebFetch(domain:mods.vintagestory.at)",
+      "Bash(cd /tmp)",
+      "Bash(curl -L -o lathemod.zip \"https://mods.vintagestory.at/download/53752/lathemod_1.0.3.zip\")",
+      "Bash(unzip -o lathemod.zip -d lathemod)",
+      "Bash(python3 -m json.tool)",
+      "Bash(python3 -c ':*)",
+      "Bash(curl -s \"https://raw.githubusercontent.com/Craluminum-Mods/Heraldry/1.21/Heraldry/assets/heraldry/blocktypes/heraldryworkbench.json\")"
     ]
   }
 }
