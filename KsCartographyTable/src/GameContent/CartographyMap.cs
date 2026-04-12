@@ -31,12 +31,20 @@ namespace Kaisentlaia.CartographyTable.GameContent
                 }
             }
         }
+        private int exploredAreasCount = 0;
+        public int ExploredAreasCount
+        {
+            get { return exploredAreasCount; }
+            set { exploredAreasCount = value; }
+        }
 
         public CartographyMap(List<Waypoint> InitialWaypoints = null, List<Waypoint> InitialDeletedWaypoints = null, IPlayer player = null) {
             waypoints = new List<CartographyWaypoint>();
             deletedWaypoints = new List<CartographyWaypoint>();
-            if (InitialWaypoints != null && player != null) {
-                InitialWaypoints.ForEach(waypoint => {
+            if (InitialWaypoints != null && player != null)
+            {
+                InitialWaypoints.ForEach(waypoint =>
+                {
                     waypoints.Add(new CartographyWaypoint(waypoint, player));
                 });
             }

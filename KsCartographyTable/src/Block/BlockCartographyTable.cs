@@ -9,7 +9,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
 {
     internal class BlockCartographyTable : Block
     {
-        WorldInteraction[] interactions;
+        protected WorldInteraction[] interactions;
         private Dictionary<string, long> lastInteractionTimes = new Dictionary<string, long>();
         private const long InteractionCooldownMs = 500;
         private const long EntryExpirationMs = 60000;
@@ -66,7 +66,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
 
         }
 
-        private bool CanInteract(IPlayer player)
+        public bool CanInteract(IPlayer player)
         {
             string playerKey = player.PlayerUID;
             long currentTime = api.World.ElapsedMilliseconds;
@@ -100,7 +100,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
             }
         }
 
-        private static BlockEntityCartographyTable FindBlockEntity(IWorldAccessor world, BlockPos pos)
+        public static BlockEntityCartographyTable FindBlockEntity(IWorldAccessor world, BlockPos pos)
         {
             var entity = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCartographyTable;
             if (entity != null) return entity;

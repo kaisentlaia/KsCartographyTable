@@ -1,0 +1,16 @@
+{
+  "ingredientPattern": "CPP,TTQ",
+  "ingredients": {
+    "C": { "type": "item", "code": "game:candle" },
+    "P": { "type": "item", "code": "game:paper-parchment" },
+    "T": { "type": "block", "code": "game:table-normal" },
+    "Q": { "type": "item", "code": "game:inkandquill" }
+  },
+  "width": 3,
+  "height": 2,
+  "output": {
+    "type": "item",
+    "code": "advancedcartographytable-north",
+    "quantity": 1
+  }
+}
