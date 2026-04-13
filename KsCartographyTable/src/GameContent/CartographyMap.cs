@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
+using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace Kaisentlaia.CartographyTable.GameContent
@@ -37,6 +38,14 @@ namespace Kaisentlaia.CartographyTable.GameContent
             get { return exploredAreasCount; }
             set { exploredAreasCount = value; }
         }
+
+        private List<ulong> exploredAreasIds = new List<ulong>();
+        public List<ulong> ExploredAreasIds
+        {
+            get { return exploredAreasIds; }
+            set { exploredAreasIds = value; }
+        }
+
 
         public CartographyMap(List<Waypoint> InitialWaypoints = null, List<Waypoint> InitialDeletedWaypoints = null, IPlayer player = null) {
             waypoints = new List<CartographyWaypoint>();

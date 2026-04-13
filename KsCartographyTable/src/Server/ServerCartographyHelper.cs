@@ -56,13 +56,14 @@ namespace Kaisentlaia.CartographyTable.Server
             if (mapDBServer != null)
             {
                 mapDBServer.SetMapPieces(packet.Pieces);
+                mapDBServer.SetMapPiecesForPlayer(packet.Pieces, fromPlayer);
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, "Server received " + packet.Pieces.Count + " map pieces", EnumChatType.Notification);
             }
 
             if (packet.IsFinalBatch) {
                 BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
                 if (blockEntity != null) {
-                    blockEntity.UpdateMapExploredAreasCount(mapDBServer.GetMapPieceCount());
+                    blockEntity.UpdateMapExploredAreas(mapDBServer.GetAllMapPieces());
                 }
                 CoreServerAPI.Logger.Notification("Finished downloading map pieces from server.");
             }
@@ -120,20 +121,20 @@ namespace Kaisentlaia.CartographyTable.Server
                 }
                 player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
             } else {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-up-to-date"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-waypoints-up-to-date"), EnumChatType.Notification);
             }
         }
 
         public void UpdatePlayerMap(CartographyMap map, IServerPlayer player, Block block, BlockPos blockPos)
         {
-            int updatedChunks = 0;
+            Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
             if (block.GetType() == typeof(BlockAdvancedCartographyTable))
             {
                 EnsureMapDBServerInitialized(block.Id.ToString());
 
                 if (mapDBServer != null)
                 {
-                    Dictionary<FastVec2i, MapPieceDB> pieces = mapDBServer.GetAllMapPieces();
+                    pieces = mapDBServer.GetAllMapPieces();
                     const int maxChunksPerPacket = 100;
 
                     if (pieces.Count > maxChunksPerPacket)
@@ -154,7 +155,7 @@ namespace Kaisentlaia.CartographyTable.Server
                     {
                         CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true));
                     }
-                    updatedChunks = pieces.Count;
+                    mapDBServer.SetMapPiecesForPlayer(pieces, player);
                 }
                 else
                 {
@@ -248,11 +249,11 @@ namespace Kaisentlaia.CartographyTable.Server
                 player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), player);
                 ResendWaypoints(player);
             } else {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-waypoints-up-to-date"), EnumChatType.Notification);
             }
             
-            if (updatedChunks > 0) {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-explored-chunks", updatedChunks), EnumChatType.Notification);
+            if (pieces.Count > 0) {
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-explored-chunks", pieces.Count), EnumChatType.Notification);
             }
         }
 

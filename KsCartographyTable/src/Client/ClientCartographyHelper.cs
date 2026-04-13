@@ -95,7 +95,17 @@ namespace Kaisentlaia.CartographyTable.Client
 
             if (mapDBclientReader != null)
             {
-                Dictionary<FastVec2i, MapPieceDB> pieces = mapDBclientReader.GetAllMapPieces();
+                List<FastVec2i> playerMapPiecesIds = mapDBclientReader.GetAllMapPiecesIds();
+                HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
+                List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
+                if (filteredMapPiecesPositions.Count == 0 && tableMapPiecesIds.Count > 0)
+                {
+                    CoreClientAPI.Logger.Notification("Nothing to upload");
+                    CoreClientAPI.ShowChatMessage(Lang.Get("kscartographytable:message-table-map-up-to-date"));
+                    return;
+                }
+                Dictionary<FastVec2i, MapPieceDB> pieces = tableMapPiecesIds.Count == 0 ? mapDBclientReader.GetAllMapPieces() : mapDBclientReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
+                
                 const int maxChunksPerPacket = 100;
 
                 if (pieces.Count > maxChunksPerPacket)

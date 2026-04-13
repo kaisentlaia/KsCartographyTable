@@ -4,6 +4,7 @@
 */
 using System;
 using System.Collections.Generic;
+using System.Linq;
 using System.Text;
 using Kaisentlaia.CartographyTable.Blocks;
 using Kaisentlaia.CartographyTable.GameContent;
@@ -11,7 +12,9 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
+using Vintagestory.GameContent;
 
 namespace Kaisentlaia.CartographyTable.BlockEntities
 {
@@ -121,8 +124,9 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             if (Block.GetType() != typeof(BlockAdvancedCartographyTable) && Map != null && Map.Waypoints.Count > 0)
             {
                 dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Map.Waypoints.Count));
-            } else if (Block.GetType() == typeof(BlockAdvancedCartographyTable) && Map != null && (Map.Waypoints.Count > 0 || Map.ExploredAreasCount > 0)) {
-                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-chunks-count", Map.Waypoints.Count, Map.ExploredAreasCount));
+            } else if (Block.GetType() == typeof(BlockAdvancedCartographyTable) && Map != null && (Map.Waypoints.Count > 0 || Map.ExploredAreasIds.Count > 0)) {
+                double km2 = Map.ExploredAreasIds.Count * 0.001024;
+                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-chunks-count", Map.Waypoints.Count, $"{km2:F1}"));
             } else
             {
                 dsc.AppendLine(Lang.Get("kscartographytable:gui-empty-map"));
@@ -154,19 +158,19 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
                 }
                 try
                 {
-                    tree.SetString("ExploredAreasCount", JsonUtil.ToString(Map.ExploredAreasCount));
+                    tree.SetString("ExploredAreasIds", JsonUtil.ToString(Map.ExploredAreasIds));
                 }
                 catch (Exception ex)
                 {
                     Api.Logger.Error("Failed to serialize explored areas count: {0}", ex);
-                    tree.SetString("ExploredAreasCount", JsonUtil.ToString(0));
+                    tree.SetString("ExploredAreasIds", JsonUtil.ToString(new List<FastVec2i>()));
                 }
             }
             else
             {
                 tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
                 tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
-                tree.SetString("ExploredAreasCount", JsonUtil.ToString(0));
+                tree.SetString("ExploredAreasIds", JsonUtil.ToString(new List<FastVec2i>()));
             }
         }
 
@@ -217,28 +221,30 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             }
             try
             {
-                if (tree.HasAttribute("ExploredAreasCount"))
+                if (tree.HasAttribute("ExploredAreasIds"))
                 {
-                    var exploredAreasCountStr = tree.GetString("ExploredAreasCount");
-                    Map.ExploredAreasCount = exploredAreasCountStr != null
-                        ? JsonUtil.FromString<int>(exploredAreasCountStr)
-                        : 0;
+                    var exploredAreasIdsStr = tree.GetString("ExploredAreasIds");
+                    Map.ExploredAreasIds = exploredAreasIdsStr != null
+                        ? JsonUtil.FromString<List<ulong>>(exploredAreasIdsStr)
+                        : new List<ulong>();
                 }
                 else
                 {
-                    Map.ExploredAreasCount = 0;
+                    Map.ExploredAreasIds = new List<ulong>();
                 }
             }
             catch (Exception ex)
             {
-                Api.Logger.Error("Failed to deserialize explored areas count: {0}", ex);
-                Map.ExploredAreasCount = 0;
+                Api.Logger.Error("Failed to deserialize explored areas ids: {0}", ex);
+                Map.ExploredAreasIds = new List<ulong>();
             }
         }
-        public void UpdateMapExploredAreasCount(int count) {
+        
+        public void UpdateMapExploredAreas(Dictionary<FastVec2i, MapPieceDB> pieces)
+        {
             if (Map != null)
             {
-                Map.ExploredAreasCount = count;
+                Map.ExploredAreasIds = pieces.Keys.Select(v => v.ToChunkIndex()).ToList();
                 MarkDirty();
             }
         }

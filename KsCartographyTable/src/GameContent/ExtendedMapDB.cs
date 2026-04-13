@@ -45,6 +45,8 @@ public class MapUploadPacket
 class ExtendedMapDB : MapDB
 {
       SqliteCommand getAllMapPiecesCmd;
+      SqliteCommand setPlayerMapPieceCmd;
+      SqliteCommand getMapPieceCmd;
       public ExtendedMapDB(ILogger api) : base(api)
       {
 
@@ -57,6 +59,30 @@ class ExtendedMapDB : MapDB
             getAllMapPiecesCmd = sqliteConn.CreateCommand();
             getAllMapPiecesCmd.CommandText = "SELECT position, data FROM mappiece";
             getAllMapPiecesCmd.Prepare();
+
+            getMapPieceCmd = sqliteConn.CreateCommand();
+            getMapPieceCmd.CommandText = "SELECT position, data FROM mappiece WHERE position=@pos";
+            getMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
+            getMapPieceCmd.Prepare();
+            
+            setPlayerMapPieceCmd = sqliteConn.CreateCommand();
+            setPlayerMapPieceCmd.CommandText = "INSERT OR IGNORE INTO playerchunkmapping (position, playerId) VALUES (@pos, @uid)";
+            setPlayerMapPieceCmd.Parameters.Add("@uid", SqliteType.Text, 1);
+            setPlayerMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
+            setPlayerMapPieceCmd.Prepare();
+      }
+
+      protected override void CreateTablesIfNotExists(SqliteConnection sqliteConn)
+      {
+            base.CreateTablesIfNotExists(sqliteConn);
+
+            using SqliteCommand sqliteCommand3 = sqliteConn.CreateCommand();
+            sqliteCommand3.CommandText = "CREATE TABLE IF NOT EXISTS playerchunkmapping (playerId text NOT NULL, position integer NOT NULL, PRIMARY KEY (playerId, position));";
+            sqliteCommand3.ExecuteNonQuery();
+
+            using SqliteCommand sqliteCommand4 = sqliteConn.CreateCommand();
+            sqliteCommand4.CommandText = "CREATE INDEX IF NOT EXISTS idx_playerchunkmapping ON playerchunkmapping(playerId);";
+            sqliteCommand4.ExecuteNonQuery();
       }
 
       public Dictionary<FastVec2i, MapPieceDB> GetAllMapPieces()
@@ -84,11 +110,82 @@ class ExtendedMapDB : MapDB
 
             return pieces;
       }
+
+      public Dictionary<FastVec2i, MapPieceDB> GetMapPiecesFromPositions(List<FastVec2i> chunkCoords)
+      {
+            Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
+            for (int i = 0; i < chunkCoords.Count; i++)
+            {
+                  getMapPieceCmd.Parameters["@pos"].Value = chunkCoords[i].ToChunkIndex();
+                  using SqliteDataReader sqliteDataReader = getMapPieceCmd.ExecuteReader();
+                  while (sqliteDataReader.Read())
+                  {
+                        object data = sqliteDataReader["data"];
+                        ulong pos = System.Convert.ToUInt64(sqliteDataReader["position"]);
+                        if (data == null)
+                        {
+                              return null;
+                        }
+
+                        int x = (int)(pos & 0x7FFFFFF);           // Lower 27 bits
+                        int z = (int)((pos >> 27) & 0x7FFFFFF);   // Upper 27 bits
+
+                        // Sign extend for negative values (27-bit to 32-bit)
+                        if ((x & 0x4000000) != 0)  // If bit 26 is set (negative)
+                              x |= unchecked((int)0xF8000000);  // Set upper bits to 1
+
+                        if ((z & 0x4000000) != 0)  // If bit 26 is set (negative)
+                              z |= unchecked((int)0xF8000000);  // Set upper bits to 1
+
+                        pieces.Add(new FastVec2i(x, z), SerializerUtil.Deserialize<MapPieceDB>(data as byte[]));
+                  }
+            }
+
+            return pieces;
+      }
+
+      public List<FastVec2i> GetAllMapPiecesIds()
+      {
+            var ids = new List<FastVec2i>();
+            using var sqlite_datareader = getAllMapPiecesCmd.ExecuteReader();
+            while (sqlite_datareader.Read())
+            {
+                  ulong pos = System.Convert.ToUInt64(sqlite_datareader["position"]);
+                  
+                  int x = (int)(pos & 0x7FFFFFF);           // Lower 27 bits
+                  int z = (int)((pos >> 27) & 0x7FFFFFF);   // Upper 27 bits
+
+                  // Sign extend for negative values (27-bit to 32-bit)
+                  if ((x & 0x4000000) != 0)  // If bit 26 is set (negative)
+                        x |= unchecked((int)0xF8000000);  // Set upper bits to 1
+
+                  if ((z & 0x4000000) != 0)  // If bit 26 is set (negative)
+                        z |= unchecked((int)0xF8000000);  // Set upper bits to 
+
+                  ids.Add(new FastVec2i(x, z));
+            }
+
+            return ids;
+      }
       
       public int GetMapPieceCount()
       {
             using var cmd = sqliteConn.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM mappiece";
             return System.Convert.ToInt32(cmd.ExecuteScalar());
+      }
+
+      public void SetMapPiecesForPlayer(Dictionary<FastVec2i, MapPieceDB> pieces, IPlayer player)
+      {
+            using SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction();
+            setPlayerMapPieceCmd.Transaction = sqliteTransaction;
+            foreach (KeyValuePair<FastVec2i, MapPieceDB> piece in pieces)
+            {
+                  setPlayerMapPieceCmd.Parameters["@pos"].Value = piece.Key.ToChunkIndex();
+                  setPlayerMapPieceCmd.Parameters["@uid"].Value = player.PlayerUID;
+                  setPlayerMapPieceCmd.ExecuteNonQuery();
+            }
+
+            sqliteTransaction.Commit();
       }
 }
