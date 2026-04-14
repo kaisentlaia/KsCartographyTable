@@ -13,7 +13,7 @@ namespace Kaisentlaia.CartographyTable.Client
 {
     public class ClientCartographyHelper
     {
-        private ExtendedMapDB mapDBclientReader;
+        private SharedMapDB mapDBclientReader;
 
         private MapDB mapDBclient;
         ICoreClientAPI CoreClientAPI;
@@ -81,7 +81,7 @@ namespace Kaisentlaia.CartographyTable.Client
             if (mapDBclientReader == null)
             {
                 string mapPath = Path.Combine(GamePaths.DataPath, "Maps", CoreClientAPI.World.SavegameIdentifier + ".db");
-                mapDBclientReader = new ExtendedMapDB(CoreClientAPI.World.Logger);
+                mapDBclientReader = new SharedMapDB(CoreClientAPI);
                 string error = null;
                 mapDBclientReader.OpenOrCreate(mapPath, ref error, false, true, false);
 
@@ -97,14 +97,22 @@ namespace Kaisentlaia.CartographyTable.Client
             {
                 List<FastVec2i> playerMapPiecesIds = mapDBclientReader.GetAllMapPiecesIds();
                 HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
-                List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
-                if (filteredMapPiecesPositions.Count == 0 && tableMapPiecesIds.Count > 0)
+                Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
+                if (tableMapPiecesIds.Count == 0)
+                {
+                    pieces = mapDBclientReader.GetAllMapPieces();
+                }
+                else
+                {
+                    List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
+                    pieces = mapDBclientReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
+                }
+                if (pieces.Count == 0)
                 {
                     CoreClientAPI.Logger.Notification("Nothing to upload");
                     CoreClientAPI.ShowChatMessage(Lang.Get("kscartographytable:message-table-map-up-to-date"));
                     return;
                 }
-                Dictionary<FastVec2i, MapPieceDB> pieces = tableMapPiecesIds.Count == 0 ? mapDBclientReader.GetAllMapPieces() : mapDBclientReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
                 
                 const int maxChunksPerPacket = 100;
 

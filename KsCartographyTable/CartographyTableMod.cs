@@ -1,10 +1,8 @@
-﻿using System.Collections.Generic;
-using System.Reflection;
+﻿using System.Reflection;
 using HarmonyLib;
 using Kaisentlaia.CartographyTable.BlockEntities;
 using Kaisentlaia.CartographyTable.Blocks;
 using Kaisentlaia.CartographyTable.Client;
-using Kaisentlaia.CartographyTable.GameContent;
 using Kaisentlaia.CartographyTable.Server;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;

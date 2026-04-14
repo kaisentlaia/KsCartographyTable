@@ -18,7 +18,7 @@
             "preLaunchTask": "build",
             "args": [
                 // "--playStyle" , "preset-surviveandbuild",
-                // "--openWorld" , "modding test world",
+                "--openWorld" , "mod testing",
                 "--tracelog",
                 "--addModPath",
                 "${workspaceFolder}/KsCartographyTable/bin/Debug/Mods"

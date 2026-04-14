@@ -8,15 +8,6 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 
 [ProtoContract]
-public class ExtendedMapPieceDB
-{
-      [ProtoMember(1)]
-      public ulong ChunkIndex { get; set; }
-      [ProtoMember(2)]
-      public byte[] Data { get; set; }
-}
-
-[ProtoContract]
 public class MapUploadPacket
 {
       [ProtoMember(1)]
@@ -42,18 +33,17 @@ public class MapUploadPacket
       }
 }
 
-class ExtendedMapDB : MapDB
+class SharedMapDB : MapDB
 {
       SqliteCommand getAllMapPiecesCmd;
       SqliteCommand setPlayerMapPieceCmd;
       SqliteCommand getMapPieceCmd;
-      public ExtendedMapDB(ILogger api) : base(api)
-      {
-
+      ICoreAPI coreApi;
+      public SharedMapDB(ICoreAPI coreApi) : base(coreApi.World.Logger) {
+            this.coreApi = coreApi;
       }
 
-      public override void OnOpened()
-      {
+      public override void OnOpened() {
             base.OnOpened();
 
             getAllMapPiecesCmd = sqliteConn.CreateCommand();
@@ -65,32 +55,34 @@ class ExtendedMapDB : MapDB
             getMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
             getMapPieceCmd.Prepare();
             
-            setPlayerMapPieceCmd = sqliteConn.CreateCommand();
-            setPlayerMapPieceCmd.CommandText = "INSERT OR IGNORE INTO playerchunkmapping (position, playerId) VALUES (@pos, @uid)";
-            setPlayerMapPieceCmd.Parameters.Add("@uid", SqliteType.Text, 1);
-            setPlayerMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
-            setPlayerMapPieceCmd.Prepare();
+
+            if (coreApi.Side == EnumAppSide.Server) {
+                  setPlayerMapPieceCmd = sqliteConn.CreateCommand();
+                  setPlayerMapPieceCmd.CommandText = "INSERT OR IGNORE INTO playerchunkmapping (position, playerId) VALUES (@pos, @uid)";
+                  setPlayerMapPieceCmd.Parameters.Add("@uid", SqliteType.Text, 1);
+                  setPlayerMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
+                  setPlayerMapPieceCmd.Prepare();
+            }
       }
 
-      protected override void CreateTablesIfNotExists(SqliteConnection sqliteConn)
-      {
+      protected override void CreateTablesIfNotExists(SqliteConnection sqliteConn) {
             base.CreateTablesIfNotExists(sqliteConn);
 
-            using SqliteCommand sqliteCommand3 = sqliteConn.CreateCommand();
-            sqliteCommand3.CommandText = "CREATE TABLE IF NOT EXISTS playerchunkmapping (playerId text NOT NULL, position integer NOT NULL, PRIMARY KEY (playerId, position));";
-            sqliteCommand3.ExecuteNonQuery();
+            if (coreApi.Side == EnumAppSide.Server) {
+                  using SqliteCommand sqliteCommand3 = sqliteConn.CreateCommand();
+                  sqliteCommand3.CommandText = "CREATE TABLE IF NOT EXISTS playerchunkmapping (playerId text NOT NULL, position integer NOT NULL, PRIMARY KEY (playerId, position));";
+                  sqliteCommand3.ExecuteNonQuery();
 
-            using SqliteCommand sqliteCommand4 = sqliteConn.CreateCommand();
-            sqliteCommand4.CommandText = "CREATE INDEX IF NOT EXISTS idx_playerchunkmapping ON playerchunkmapping(playerId);";
-            sqliteCommand4.ExecuteNonQuery();
+                  using SqliteCommand sqliteCommand4 = sqliteConn.CreateCommand();
+                  sqliteCommand4.CommandText = "CREATE INDEX IF NOT EXISTS idx_playerchunkmapping ON playerchunkmapping(playerId);";
+                  sqliteCommand4.ExecuteNonQuery();
+            }
       }
 
-      public Dictionary<FastVec2i, MapPieceDB> GetAllMapPieces()
-      {
+      public Dictionary<FastVec2i, MapPieceDB> GetAllMapPieces() {
             var pieces = new Dictionary<FastVec2i, MapPieceDB>();
             using var sqlite_datareader = getAllMapPiecesCmd.ExecuteReader();
-            while (sqlite_datareader.Read())
-            {
+            while (sqlite_datareader.Read()) {
                   object data = sqlite_datareader["data"];
                   ulong pos = System.Convert.ToUInt64(sqlite_datareader["position"]);
                   if (data == null) return null;
@@ -111,15 +103,12 @@ class ExtendedMapDB : MapDB
             return pieces;
       }
 
-      public Dictionary<FastVec2i, MapPieceDB> GetMapPiecesFromPositions(List<FastVec2i> chunkCoords)
-      {
+      public Dictionary<FastVec2i, MapPieceDB> GetMapPiecesFromPositions(List<FastVec2i> chunkCoords) {
             Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
-            for (int i = 0; i < chunkCoords.Count; i++)
-            {
+            for (int i = 0; i < chunkCoords.Count; i++) {
                   getMapPieceCmd.Parameters["@pos"].Value = chunkCoords[i].ToChunkIndex();
                   using SqliteDataReader sqliteDataReader = getMapPieceCmd.ExecuteReader();
-                  while (sqliteDataReader.Read())
-                  {
+                  while (sqliteDataReader.Read()) {
                         object data = sqliteDataReader["data"];
                         ulong pos = System.Convert.ToUInt64(sqliteDataReader["position"]);
                         if (data == null)
@@ -144,12 +133,10 @@ class ExtendedMapDB : MapDB
             return pieces;
       }
 
-      public List<FastVec2i> GetAllMapPiecesIds()
-      {
+      public List<FastVec2i> GetAllMapPiecesIds() {
             var ids = new List<FastVec2i>();
             using var sqlite_datareader = getAllMapPiecesCmd.ExecuteReader();
-            while (sqlite_datareader.Read())
-            {
+            while (sqlite_datareader.Read()) {
                   ulong pos = System.Convert.ToUInt64(sqlite_datareader["position"]);
                   
                   int x = (int)(pos & 0x7FFFFFF);           // Lower 27 bits
@@ -168,24 +155,61 @@ class ExtendedMapDB : MapDB
             return ids;
       }
       
-      public int GetMapPieceCount()
-      {
+      public int GetMapPieceCount() {
             using var cmd = sqliteConn.CreateCommand();
             cmd.CommandText = "SELECT COUNT(*) FROM mappiece";
             return System.Convert.ToInt32(cmd.ExecuteScalar());
       }
 
-      public void SetMapPiecesForPlayer(Dictionary<FastVec2i, MapPieceDB> pieces, IPlayer player)
-      {
+      public void SetMapPiecesForPlayer(Dictionary<FastVec2i, MapPieceDB> pieces, IPlayer player) {
             using SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction();
             setPlayerMapPieceCmd.Transaction = sqliteTransaction;
-            foreach (KeyValuePair<FastVec2i, MapPieceDB> piece in pieces)
-            {
+            foreach (KeyValuePair<FastVec2i, MapPieceDB> piece in pieces) {
                   setPlayerMapPieceCmd.Parameters["@pos"].Value = piece.Key.ToChunkIndex();
                   setPlayerMapPieceCmd.Parameters["@uid"].Value = player.PlayerUID;
                   setPlayerMapPieceCmd.ExecuteNonQuery();
             }
 
             sqliteTransaction.Commit();
+      }
+
+      public Dictionary<FastVec2i, MapPieceDB> GetNewMapPiecesForPlayer(IPlayer player)
+      {
+            var pieces = new Dictionary<FastVec2i, MapPieceDB>();
+            
+            using (var cmd = sqliteConn.CreateCommand())
+            {
+                  cmd.CommandText = @"
+                        SELECT m.position, m.data 
+                        FROM mappiece m 
+                        LEFT JOIN playerchunkmapping p ON m.position = p.position AND p.playerId = @uid
+                        WHERE p.playerId IS NULL";
+                  cmd.Parameters.AddWithValue("@uid", player.PlayerUID);
+                  
+                  using (var reader = cmd.ExecuteReader())
+                  {
+                        while (reader.Read())
+                        {
+                              ulong pos = System.Convert.ToUInt64(reader["position"]);
+                              object data = reader["data"];
+                              if (data == null) continue;
+
+                              // Decode position from chunk index
+                              int x = (int)(pos & 0x7FFFFFF);
+                              int z = (int)((pos >> 27) & 0x7FFFFFF);
+
+                              // Sign extend for negative values
+                              if ((x & 0x4000000) != 0) 
+                                    x |= unchecked((int)0xF8000000);
+                              if ((z & 0x4000000) != 0) 
+                                    z |= unchecked((int)0xF8000000);
+
+                              var coord = new FastVec2i(x, z);
+                              pieces[coord] = SerializerUtil.Deserialize<MapPieceDB>(data as byte[]);
+                        }
+                  }
+            }
+            
+            return pieces;
       }
 }

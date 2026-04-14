@@ -17,7 +17,7 @@ namespace Kaisentlaia.CartographyTable.Server
         ICoreServerAPI CoreServerAPI;
         WorldMapManager WorldMapManager;
         WaypointMapLayer WaypointMapLayer;
-        private ExtendedMapDB mapDBServer;
+        private SharedMapDB mapDBServer;
 
         public ServerCartographyHelper(ICoreServerAPI ServerAPI) {
             CoreServerAPI = ServerAPI;
@@ -38,7 +38,7 @@ namespace Kaisentlaia.CartographyTable.Server
                 GamePaths.EnsurePathExists(mapFolderPath);
                 string mapPath = Path.Combine(mapFolderPath, blockId + ".db");
                 CoreServerAPI.Logger.Notification("Initializing map database at " + mapPath);
-                mapDBServer = new ExtendedMapDB(CoreServerAPI.World.Logger);
+                mapDBServer = new SharedMapDB(CoreServerAPI);
                 string error = null;
                 mapDBServer.OpenOrCreate(mapPath, ref error, true, true, false);
 
@@ -134,7 +134,7 @@ namespace Kaisentlaia.CartographyTable.Server
 
                 if (mapDBServer != null)
                 {
-                    pieces = mapDBServer.GetAllMapPieces();
+                    pieces = mapDBServer.GetNewMapPiecesForPlayer(player);
                     const int maxChunksPerPacket = 100;
 
                     if (pieces.Count > maxChunksPerPacket)
@@ -153,8 +153,9 @@ namespace Kaisentlaia.CartographyTable.Server
                     }
                     else
                     {
-                        CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true));
+                        CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
                     }
+                    //TODO if count 0 message already up to date
                     mapDBServer.SetMapPiecesForPlayer(pieces, player);
                 }
                 else
