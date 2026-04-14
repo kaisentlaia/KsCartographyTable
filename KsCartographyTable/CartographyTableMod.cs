@@ -15,6 +15,9 @@ namespace Kaisentlaia.CartographyTable;
 public class KsCartographyTableModSystem : ModSystem
 {
     // TODO continuous animation and repeating scribble sound while the explored map is being uploaded/downloaded + block player interactions
+    // TODO probably don't allow two players uploading/downloading at once - to test
+    // TODO change interaction to avoid uploading by mistake? maybe adding a modifier to the upload, download already has a modifier and that's fine
+    // TODO an alternative might be to keep pressing, like when using the quern. Chunks get uploaded only while the interaction continues
     // TODO check that when a second player uploads their map it won't resend all data, only the chunks that aren't on the table yet (already works for the first player, uploading a second time does nothing)
     // TODO grey out the chunks uploaded by other players and never seen by the player who downloads the map (overlay fog of war color)
     // TODO test with huge maps
