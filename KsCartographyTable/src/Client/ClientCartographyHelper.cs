@@ -109,7 +109,6 @@ namespace Kaisentlaia.CartographyTable.Client
                 }
                 if (pieces.Count == 0)
                 {
-                    CoreClientAPI.Logger.Notification("Nothing to upload");
                     CoreClientAPI.ShowChatMessage(Lang.Get("kscartographytable:message-table-map-up-to-date"));
                     return;
                 }
@@ -127,12 +126,14 @@ namespace Kaisentlaia.CartographyTable.Client
                             kvp => kvp.Value
                         );
 
-                        CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count));
+                        bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
+
+                        CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
                     }
                 }
                 else
                 {
-                    CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true));
+                    CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
                 }
             }
             else

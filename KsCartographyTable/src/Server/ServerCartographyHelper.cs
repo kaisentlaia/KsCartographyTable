@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -57,15 +58,20 @@ namespace Kaisentlaia.CartographyTable.Server
             {
                 mapDBServer.SetMapPieces(packet.Pieces);
                 mapDBServer.SetMapPiecesForPlayer(packet.Pieces, fromPlayer);
-                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, "Server received " + packet.Pieces.Count + " map pieces", EnumChatType.Notification);
             }
 
-            if (packet.IsFinalBatch) {
+            if (packet.IsFinalBatch)
+            {
                 BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
-                if (blockEntity != null) {
-                    blockEntity.UpdateMapExploredAreas(mapDBServer.GetAllMapPieces());
+                if (blockEntity != null)
+                {
+                    blockEntity.UpdateMapExploredAreasIds(mapDBServer.GetAllMapPiecesIds());
                 }
-                CoreServerAPI.Logger.Notification("Finished downloading map pieces from server.");
+                if (packet.IsFinalBatch && packet.Total > 0)
+                {                    
+                    double km2 = packet.Total * 0.001024;
+                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-map-explored-chunks", $"{km2:F1}"), EnumChatType.Notification);
+                }
             }
         }
 
@@ -125,45 +131,57 @@ namespace Kaisentlaia.CartographyTable.Server
             }
         }
 
-        public void UpdatePlayerMap(CartographyMap map, IServerPlayer player, Block block, BlockPos blockPos)
+        private bool UpatePlayerExploredMap(CartographyMap map, IServerPlayer player, Block block, BlockPos blockPos)
         {
-            Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
-            if (block.GetType() == typeof(BlockAdvancedCartographyTable))
+            if (block.GetType() != typeof(BlockAdvancedCartographyTable))
             {
-                EnsureMapDBServerInitialized(block.Id.ToString());
+                return false;
+            }
+            
+            EnsureMapDBServerInitialized(block.Id.ToString());
 
-                if (mapDBServer != null)
+            if (mapDBServer != null)
+            {
+                Dictionary<FastVec2i, MapPieceDB> pieces = mapDBServer.GetNewMapPiecesForPlayer(player);
+                if (pieces.Count == 0)
                 {
-                    pieces = mapDBServer.GetNewMapPiecesForPlayer(player);
-                    const int maxChunksPerPacket = 100;
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
+                    return false;
+                }
+                const int maxChunksPerPacket = 100;
 
-                    if (pieces.Count > maxChunksPerPacket)
+                if (pieces.Count > maxChunksPerPacket)
+                {
+                    var piecesList = pieces.ToList(); // Convert to list for indexed access
+
+                    for (int i = 0; i < piecesList.Count; i += maxChunksPerPacket)
                     {
-                        var piecesList = pieces.ToList(); // Convert to list for indexed access
+                        var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
+                            kvp => kvp.Key,
+                            kvp => kvp.Value
+                        );
 
-                        for (int i = 0; i < piecesList.Count; i += maxChunksPerPacket)
-                        {
-                            var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
-                                kvp => kvp.Key,
-                                kvp => kvp.Value
-                            );
-
-                            CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
-                        }
+                        CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
                     }
-                    else
-                    {
-                        CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
-                    }
-                    //TODO if count 0 message already up to date
-                    mapDBServer.SetMapPiecesForPlayer(pieces, player);
                 }
                 else
                 {
-                    CoreServerAPI.Logger.Error("MapDB is null");
+                    CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
                 }
+                mapDBServer.SetMapPiecesForPlayer(pieces, player);
+                double km2 = pieces.Count * 0.001024;
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-explored-chunks", $"{km2:F1}"), EnumChatType.Notification);
             }
+            else
+            {
+                CoreServerAPI.Logger.Error("SharedMapDB is null");
+                return false;
+            }
+            return true;
+        }
 
+        private bool UpatePlayerWaypoints(CartographyMap map, IServerPlayer player, Block block, BlockPos blockPos)
+        {            
             SetWaypointMapLayer();
 
             var playerWaypoints = GetPlayerWaypoints(player);
@@ -237,25 +255,38 @@ namespace Kaisentlaia.CartographyTable.Server
             if (onlyOnTableMapToAdd.Count > 0 || onBothMapsToEdit.Count > 0 || anyDeleted)
             {
                 string waypointsMessage = string.Empty;
-                if (onlyOnTableMapToAdd.Count > 0) {
+                if (onlyOnTableMapToAdd.Count > 0)
+                {
                     waypointsMessage = Lang.Get("kscartographytable:message-new-user-waypoints", onlyOnTableMapToAdd.Count);
                 }
-                if (onBothMapsToEdit.Count > 0) {
+                if (onBothMapsToEdit.Count > 0)
+                {
                     waypointsMessage = Lang.Get("kscartographytable:message-edited-user-waypoints", onBothMapsToEdit.Count);
                 }
-                if (anyDeleted) {
+                if (anyDeleted)
+                {
                     waypointsMessage = Lang.Get("kscartographytable:message-deleted-user-waypoints", onlyOnPlayerMapToDelete.Count);
                 }
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, waypointsMessage, EnumChatType.Notification);
-                player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), player);
+                
                 ResendWaypoints(player);
-            } else {
+            }
+            else
+            {
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-waypoints-up-to-date"), EnumChatType.Notification);
+                return false;
             }
-            
-            if (pieces.Count > 0) {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-explored-chunks", pieces.Count), EnumChatType.Notification);
-            }
+            return true;
+        }
+
+        public void UpdatePlayerMap(CartographyMap map, IServerPlayer player, Block block, BlockPos blockPos)
+        {
+            bool updatedExploredMap = UpatePlayerExploredMap(map, player, block, blockPos);
+            bool updatedWaypoints = UpatePlayerWaypoints(map, player, block, blockPos);
+            if (updatedExploredMap || updatedWaypoints)
+            {
+                player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), player);
+            }            
         }
 
         public List<Waypoint> GetPlayerWaypoints(IServerPlayer player) {

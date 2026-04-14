@@ -26,6 +26,8 @@
     "message-new-user-waypoints": "Hai aggiunto {0} nuovi punti di riferimento alla tua mappa.",
     "message-edited-user-waypoints": "Hai modificato {0} punti di riferimento sulla tua mappa.",
     "message-deleted-user-waypoints": "Hai rimosso {0} punti di riferimento dalla tua mappa.",
+    "message-updated-user-explored-chunks": "You added {0} km² to your explored map.",
+    "message-updated-map-explored-chunks": "You added {0} explored km² to the table's map.",
     "message-table-map-up-to-date": "La mappa esplorata sul tavolo è già aggiornata.",
     "message-user-map-up-to-date": "La tua mappa esplorata è già aggiornata.",
     "message-table-waypoints-up-to-date": "I punti di riferimento sul tavolo sono già aggiornati.",

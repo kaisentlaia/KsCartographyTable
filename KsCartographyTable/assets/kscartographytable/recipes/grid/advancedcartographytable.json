@@ -1,5 +1,5 @@
 {
-  "ingredientPattern": "CPP,TTQ",
+  "ingredientPattern": "CPP,QTT",
   "ingredients": {
     "C": { "type": "item", "code": "game:candle" },
     "P": { "type": "item", "code": "game:paper-parchment" },
@@ -9,8 +9,8 @@
   "width": 3,
   "height": 2,
   "output": {
-    "type": "item",
-    "code": "advancedcartographytable",
+    "type": "block",
+    "code": "advancedcartographytable-north",
     "quantity": 1
   }
 }

@@ -240,11 +240,11 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             }
         }
         
-        public void UpdateMapExploredAreas(Dictionary<FastVec2i, MapPieceDB> pieces)
+        public void UpdateMapExploredAreasIds(List<FastVec2i> piecesIds)
         {
             if (Map != null)
             {
-                Map.ExploredAreasIds = pieces.Keys.Select(v => v.ToChunkIndex()).ToList();
+                Map.ExploredAreasIds = piecesIds.Select(pieceId => pieceId.ToChunkIndex()).ToList();
                 MarkDirty();
             }
         }
