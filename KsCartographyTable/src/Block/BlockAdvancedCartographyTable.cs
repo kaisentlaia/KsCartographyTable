@@ -9,7 +9,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
 {
     internal class BlockAdvancedCartographyTable : BlockCartographyTable
     {
-        internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.2031f, 0.1875f);
+        internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
         
         // Rotation variants for the 4 horizontal orientations
         Vec3f[] candleWickPositionsByRot = new Vec3f[4];

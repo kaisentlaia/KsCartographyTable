@@ -1,6 +1,6 @@
 {
 	"editor": {
-		"collapsedPaths": "Root/candle,Root/cartographybook,Root/inkandquill",
+		"collapsedPaths": "Root/candle,Root/cartographybook,Root/table,Root/inkandquill",
 		"allAngles": false,
 		"entityTextureMode": false
 	},
@@ -189,28 +189,28 @@
 		{
 			"name": "candle",
 			"from": [ 2.0, 16.0, 2.0 ],
-			"to": [ 4.0, 19.0, 4.0 ],
+			"to": [ 4.0, 20.0, 4.0 ],
 			"rotationOrigin": [ 3.0, 16.0, 3.0 ],
 			"rotationY": -22.5,
 			"faces": {
-				"north": { "texture": "#candle", "uv": [ 0.0, 4.5, 2.0, 7.5 ] },
-				"east": { "texture": "#candle", "uv": [ 2.0, 4.5, 4.0, 7.5 ] },
-				"south": { "texture": "#candle", "uv": [ 4.0, 4.5, 6.0, 7.5 ] },
-				"west": { "texture": "#candle", "uv": [ 6.0, 4.5, 8.0, 7.5 ] },
-				"up": { "texture": "#candle", "uv": [ 0.0, 2.5, 2.0, 4.5 ] },
-				"down": { "texture": "#candle", "uv": [ 2.0, 2.5, 4.0, 4.5 ] }
+				"north": { "texture": "#candle", "uv": [ 0.0, 12.0, 2.0, 16.0 ] },
+				"east": { "texture": "#candle", "uv": [ 4.0, 12.0, 6.0, 16.0 ] },
+				"south": { "texture": "#candle", "uv": [ 9.0, 12.0, 11.0, 16.0 ] },
+				"west": { "texture": "#candle", "uv": [ 11.0, 12.0, 13.0, 16.0 ] },
+				"up": { "texture": "#candle", "uv": [ 12.0, 2.0, 14.0, 4.0 ] },
+				"down": { "texture": "#candle", "uv": [ 12.0, 14.0, 14.0, 16.0 ] }
 			},
 			"children": [
 				{
-					"name": "top",
-					"from": [ 0.8, 3.0, 0.8 ],
-					"to": [ 1.2, 3.5, 1.2 ],
+					"name": "top14",
+					"from": [ 0.8, 4.0, 0.8 ],
+					"to": [ 1.2, 4.5, 1.2 ],
 					"faces": {
-						"north": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ] },
-						"east": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ] },
-						"south": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ] },
-						"west": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ] },
-						"up": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.0 ] },
+						"north": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ], "glow": 196 },
+						"east": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ], "glow": 196 },
+						"south": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ], "glow": 196 },
+						"west": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.5 ], "glow": 196 },
+						"up": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.0 ], "glow": 196 },
 						"down": { "texture": "#candle", "uv": [ 0.0, 0.0, 0.0, 0.0 ], "enabled": false }
 					}
 				}
