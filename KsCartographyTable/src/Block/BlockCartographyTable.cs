@@ -85,10 +85,8 @@ namespace Kaisentlaia.CartographyTable.Blocks
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (beTable == null) return base.OnBlockInteractStart(world, byPlayer, blockSel);
 
-            ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
-
             // Box 2: Map area - wipe with resin (also checks for resin in hand)
-            if (blockSel.SelectionBoxIndex == 2 && slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "resin") {
+            if (blockSel.SelectionBoxIndex == 2 && HasItemInHand(byPlayer, "resin")) {
                 return beTable.OnWipeTableMap(world, byPlayer, blockSel);
             }
             
@@ -152,13 +150,13 @@ namespace Kaisentlaia.CartographyTable.Blocks
         }
 
         // Helper methods
-        private bool HasItemInHand(IPlayer player, string codePart)
+        public bool HasItemInHand(IPlayer player, string codePart)
         {
             var slot = player.InventoryManager.ActiveHotbarSlot;
             return slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == codePart;
         }
 
-        private ItemStack[] GetResinStacks(IWorldAccessor world)
+        public ItemStack[] GetResinStacks(IWorldAccessor world)
         {
             // Similar to your resin loading logic
             var ink = world.Collectibles.Find(obj => obj.FirstCodePart() == "resin");

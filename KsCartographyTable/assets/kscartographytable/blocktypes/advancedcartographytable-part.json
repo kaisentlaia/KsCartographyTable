@@ -1,0 +1,13 @@
+{
+  "code": "advancedcartographytable-part",
+  "class": "Block",
+  "blockmaterial": "wood",
+  "creativeinventory": {},
+  "sideopaque": { "all": false },
+  "drawtype": "Empty",
+  "selectionbox": null,
+  "sounds": {
+    "place": "game:block/planks",
+    "break": "game:block/planks"
+  }
+}

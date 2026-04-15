@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using Kaisentlaia.CartographyTable.BlockEntities;
 using Vintagestory.API.Client;
@@ -11,7 +12,6 @@ namespace Kaisentlaia.CartographyTable.Blocks
     {
         internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
         
-        // Rotation variants for the 4 horizontal orientations
         Vec3f[] candleWickPositionsByRot = new Vec3f[4];
 
         internal void initRotations()
@@ -28,6 +28,46 @@ namespace Kaisentlaia.CartographyTable.Blocks
             }
         }
 
+        public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
+        {
+            return true; // Essential for boxes outside 0-1 range
+        }
+
+        public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
+        {
+            base.OnBlockPlaced(world, pos, byItemStack);
+            
+            // Place companion block based on orientation
+            BlockPos companionPos = GetCompanionPosition(pos);
+            Block companionBlock = world.GetBlock(new AssetLocation("kscartographytable:advancedcartographytable-part"));
+            world.BlockAccessor.SetBlock(companionBlock.BlockId, companionPos);
+        }
+
+        public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
+        {
+            // Remove companion block
+            BlockPos companionPos = GetCompanionPosition(pos);
+            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == "advancedcartographytable-part")
+            {
+                world.BlockAccessor.SetBlock(0, companionPos);
+            }
+            
+            base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        }
+
+        private BlockPos GetCompanionPosition(BlockPos pos)
+        {
+            string side = Variant["side"];
+            return side switch
+            {
+                "north" => pos.EastCopy(),
+                "south" => pos.WestCopy(),
+                "east" => pos.SouthCopy(),
+                "west" => pos.NorthCopy(),
+                _ => pos.EastCopy()
+            };
+        }
+
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
@@ -36,83 +76,118 @@ namespace Kaisentlaia.CartographyTable.Blocks
             if (api.Side != EnumAppSide.Client) return;
             ICoreClientAPI capi = api as ICoreClientAPI;
 
-            interactions = ObjectCacheUtil.GetOrCreate(api, "advancedCartographyTableBlockInteractions", () =>
-                {
-
-                    List<ItemStack> resinStackList = new List<ItemStack>();
-                    var resin = api.World.Collectibles.Find(obj => obj.FirstCodePart() == "resin");
-                    if (resin != null)
-                    {
-                        List<ItemStack> stacks = resin.GetHandBookStacks(capi);
-                        if (stacks != null) resinStackList.AddRange(stacks);
-                    }
-
-                    return new WorldInteraction[]
-                    {
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-share-map",
-                            HotKeyCode = null,
-                            MouseButton = EnumMouseButton.Right
-                        },
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-update-map",
-                            HotKeyCode = "sprint",
-                            MouseButton = EnumMouseButton.Right
-                        },
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-wipe-map",
-                            HotKeyCode = null,
-                            MouseButton = EnumMouseButton.Right,
-                            Itemstacks = resinStackList.ToArray()
-                        }
-                    };
-                }
-            );
+            // Empty - handled per-box in GetPlacedBlockInteractionHelp
+            interactions = ObjectCacheUtil.GetOrCreate(api, "advancedCartographyTableBlockInteractions", () => Array.Empty<WorldInteraction>());
         }
 
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            // Prevent multiple rapid interactions
-            if (!CanInteract(byPlayer))
+            int boxIndex = blockSel.SelectionBoxIndex;
+
+            switch (boxIndex)
             {
-                return true; // Block the interaction but return true to prevent other handlers
+                case 0: // Table base
+                    return HandleTableInteract(world, byPlayer, blockSel);
+                    
+                case 1: // Ink and quill
+                    return HandleInkInteract(world, byPlayer, blockSel);
+                    
+                case 2: // Book
+                    return HandleBookInteract(world, byPlayer, blockSel);            
+                default:
+                    return base.OnBlockInteractStart(world, byPlayer, blockSel);
             }
+        }
 
-            BlockEntityCartographyTable BlockEntityCartographyTable = FindBlockEntity(world, blockSel.Position);
-
-            if (BlockEntityCartographyTable != null) {
-                ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
-
-                // Wipe table map with resin
-                if (slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "resin") 
-                {
-                    return BlockEntityCartographyTable.OnWipeTableMap(world, byPlayer, blockSel);
-                }
-                // Update cartography table or player map
-                else
-                {      
-                    return BlockEntityCartographyTable.OnPlayerInteract(world, byPlayer, blockSel);
-                }
+        private bool HandleTableInteract(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (!CanInteract(byPlayer)) return true;
+            
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (beTable == null) return false;
+            
+            // Purge waypoint groups if enabled in mod configuration
+            if (KsCartographyTableModSystem.purgeWpGroups) 
+            {
+                return beTable.OnPurgeWaypointGroups(world, byPlayer, blockSel);
             }
             
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        }
+
+        private bool HandleInkInteract(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (!CanInteract(byPlayer)) return true;
+            
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (beTable == null) return false;
+            
+            return beTable.OnPlayerInteract(world, byPlayer, blockSel);
+        }
+
+        private bool HandleBookInteract(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (!CanInteract(byPlayer)) return true;
+            
+            ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
+            
+            // Book area requires resin to wipe the map
+            if (slot?.Itemstack != null && HasItemInHand(byPlayer, "resin"))
+            {
+                BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+                if (beTable == null) return false;
+                
+                return beTable.OnWipeTableMap(world, byPlayer, blockSel);
+            }
+            
+            return false;
+        }
+
+        public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
+        {
+            List<WorldInteraction> help = new List<WorldInteraction>();
+            int boxIndex = selection.SelectionBoxIndex;
+            
+            // Map to logical boxes: 0=table, 1=ink, 2=book
+            int logicalBox = boxIndex switch
+            {
+                0 or 2 => 0,  // Table base (indices 0 and 2)
+                1 => 1,       // Ink/quill (index 1 only)
+                _ => 2        // Book (index 3 only)
+            };
+            
+            switch (logicalBox)
+            {
+                case 0: // Table base
+                    break;
+                    
+                case 1: // Ink and quill are managed in the CartographyTable class
+                    break;
+                    
+                case 2: // Cartography book
+                    help.Add(new WorldInteraction()
+                    {
+                        ActionLangCode = "kscartographytable:blockhelp-cartography-table-wipe-map",
+                        MouseButton = EnumMouseButton.Right,
+                        Itemstacks = GetResinStacks(world)
+                    });
+                    break;
+            }
+
+            return help.ToArray().Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
         }
 
         public override void OnAsyncClientParticleTick(IAsyncParticleManager manager, BlockPos pos, float windAffectednessAtPos, float secondsTicking)
         {
             if (ParticleProperties != null && ParticleProperties.Length > 0)
             {
-                // Determine rotation from block variant (north=0, east=1, south=2, west=3)
                 string side = Variant["side"];
                 int rotIndex = side switch
                 {
                     "east" => 1,
                     "south" => 2,
                     "west" => 3,
-                    _ => 0 // north
+                    _ => 0
                 };
                 
                 Vec3f wickPos = candleWickPositionsByRot[rotIndex];
@@ -121,7 +196,6 @@ namespace Kaisentlaia.CartographyTable.Blocks
                 {
                     AdvancedParticleProperties bps = ParticleProperties[i];
                     bps.WindAffectednesAtPos = windAffectednessAtPos;
-
                     bps.basePos.X = pos.X + wickPos.X;
                     bps.basePos.Y = pos.InternalY + wickPos.Y;
                     bps.basePos.Z = pos.Z + wickPos.Z;
