@@ -4,7 +4,7 @@
 	"block-cartographytable-*": "Tavolo da cartografia",
 	"block-advancedcartographytable": "Tavolo da cartografia avanzato",
 	"block-advancedcartographytable-*": "Tavolo da cartografia avanzato",
-	"blockdesc-cartographytable-*": "Scrivi i tuoi punti di riferimento sul tavolo facendo <hk>rightmouse</hk>-clic su di esso, o <hk>ctrl</hk> + <hk>rightmouse</hk>-clic su di esso per copiare i punti di riferimento dal tavolo alla tua mappa.",
+	"blockdesc-cartographytable-*": "Scrivi i tuoi punti di riferimento sulla mappa del tavolo facendo <hk>rightmouse</hk>-clic sull'inchiostro e penna, <hk>ctrl</hk> + <hk>rightmouse</hk>-clic sull'inchiostro e penna per copiare i punti di riferimento sulla tua mappa, o <hk>rightmouse</hk>-clic sulla mappa mentre tieni premuta la resina per cancellare la mappa del tavolo.",
 	"blockdesc-advancedcartographytable-*": "Copia la tua mappa e i tuoi punti di riferimento sul tavolo facendo <hk>rightmouse</hk>-clic su di esso, o <hk>ctrl</hk> + <hk>rightmouse</hk>-clic su di esso per copiare la mappa condivisa e i punti di riferimento dal tavolo alla tua mappa.",
     "blockhelp-cartography-table-share-map": "Aggiorna la mappa del tavolo da cartografia",
     "blockhelp-cartography-table-update-map": "Aggiorna la tua mappa",

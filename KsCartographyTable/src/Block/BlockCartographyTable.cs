@@ -4,6 +4,7 @@ using Vintagestory.API.Util;
 using Vintagestory.API.Client;
 using System.Collections.Generic;
 using Kaisentlaia.CartographyTable.BlockEntities;
+using System;
 
 namespace Kaisentlaia.CartographyTable.Blocks
 {
@@ -21,39 +22,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
             if (api.Side != EnumAppSide.Client) return;
             ICoreClientAPI capi = api as ICoreClientAPI;
 
-            interactions = ObjectCacheUtil.GetOrCreate(api, "cartographyTableBlockInteractions", () =>
-                {
-                    List<ItemStack> resinStackList = new List<ItemStack>();
-                    var resin = api.World.Collectibles.Find(obj => obj.FirstCodePart() == "resin");
-                    if(resin != null) {
-                        List<ItemStack> stacks = resin.GetHandBookStacks(capi);
-                        if (stacks != null) resinStackList.AddRange(stacks);
-                    }
-
-                    return new WorldInteraction[]
-                    {
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-share-map",
-                            HotKeyCode = null,
-                            MouseButton = EnumMouseButton.Right,
-                        },
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-update-map",
-                            HotKeyCode = "sprint",
-                            MouseButton = EnumMouseButton.Right,
-                        },
-                        new WorldInteraction()
-                        {
-                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-wipe-map",
-                            HotKeyCode = null,
-                            MouseButton = EnumMouseButton.Right,
-                            Itemstacks = resinStackList.ToArray()
-                        }
-                    };
-                }
-            );
+            interactions = ObjectCacheUtil.GetOrCreate(api, "cartographyTableBlockInteractions", () => Array.Empty<WorldInteraction>());
 
         }
 
@@ -111,44 +80,89 @@ namespace Kaisentlaia.CartographyTable.Blocks
 
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            // Prevent multiple rapid interactions
-            if (!CanInteract(byPlayer))
-            {
-                return true; // Block the interaction but return true to prevent other handlers
-            }
+            if (!CanInteract(byPlayer)) return true;
 
-            BlockEntityCartographyTable BlockEntityCartographyTable = FindBlockEntity(world, blockSel.Position);
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (beTable == null) return base.OnBlockInteractStart(world, byPlayer, blockSel);
 
-            if (BlockEntityCartographyTable != null) {
-                ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
+            ItemSlot slot = byPlayer.InventoryManager.ActiveHotbarSlot;
 
-                // Wipe table map with resin
-                if (slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "resin") 
-                {
-                    return BlockEntityCartographyTable.OnWipeTableMap(world, byPlayer, blockSel);
-                }
-                // Update cartography table or player map with ink and quill
-                else if (slot?.Itemstack != null && 
-                         slot.Itemstack.Collectible.FirstCodePart() == "inkandquill" && 
-                         !byPlayer.Entity.Controls.Sneak) 
-                {      
-                    return BlockEntityCartographyTable.OnPlayerInteract(world, byPlayer, blockSel);
-                }
-                // Purge waypoint groups (command-triggered)
-                else if(KsCartographyTableModSystem.purgeWpGroups) 
-                {
-                    return BlockEntityCartographyTable.OnPurgeWaypointGroups(world, byPlayer, blockSel);
-                }
-                
-                return base.OnBlockInteractStart(world, byPlayer, blockSel);
+            // Box 2: Map area - wipe with resin (also checks for resin in hand)
+            if (blockSel.SelectionBoxIndex == 2 && slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == "resin") {
+                return beTable.OnWipeTableMap(world, byPlayer, blockSel);
             }
             
+            // Box 1: Ink and quill area - update maps
+            if (blockSel.SelectionBoxIndex == 1)
+            {
+                return beTable.OnPlayerInteract(world, byPlayer, blockSel);            
+            }
+
+            // table - command to purge waypoint groups
+            if(KsCartographyTableModSystem.purgeWpGroups) 
+            {
+                return beTable.OnPurgeWaypointGroups(world, byPlayer, blockSel);
+            }                    
+
             return base.OnBlockInteractStart(world, byPlayer, blockSel);
+        }
+        
+        public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
+        {
+            return true;
         }
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
-            return interactions.Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
+            List<WorldInteraction> help = new List<WorldInteraction>();
+            
+            switch (selection.SelectionBoxIndex)
+            {
+                case 0: // Table base - no specific interaction help, or add default
+                    break;
+                    
+                case 1: // Ink and quill
+                    help.Add(new WorldInteraction()
+                    {
+                        ActionLangCode = "kscartographytable:blockhelp-cartography-table-share-map",
+                        HotKeyCode = null,
+                        MouseButton = EnumMouseButton.Right,
+                    });
+                    help.Add(new WorldInteraction()
+                    {
+                        ActionLangCode = "kscartographytable:blockhelp-cartography-table-update-map",
+                        HotKeyCode = "sprint",
+                        MouseButton = EnumMouseButton.Right,
+                    });
+                    break;
+                    
+                case 2: // Map
+                    help.Add(new WorldInteraction()
+                    {
+                        ActionLangCode = "kscartographytable:blockhelp-cartography-table-wipe-map",
+                        HotKeyCode = null,
+                        MouseButton = EnumMouseButton.Right,
+                        Itemstacks = GetResinStacks(world)
+                    });
+                    break;
+            }
+
+            // Convert list to array and append base interactions
+            return help.ToArray().Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
+        }
+
+        // Helper methods
+        private bool HasItemInHand(IPlayer player, string codePart)
+        {
+            var slot = player.InventoryManager.ActiveHotbarSlot;
+            return slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == codePart;
+        }
+
+        private ItemStack[] GetResinStacks(IWorldAccessor world)
+        {
+            // Similar to your resin loading logic
+            var ink = world.Collectibles.Find(obj => obj.FirstCodePart() == "resin");
+            return ink?.GetHandBookStacks(world.Api as ICoreClientAPI)?.ToArray();
         }
     }
 }
