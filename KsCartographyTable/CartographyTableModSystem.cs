@@ -22,7 +22,6 @@ public class KsCartographyTableModSystem : ModSystem
     // TODO grey out the chunks uploaded by other players and never seen by the player who downloads the map (overlay fog of war color)
     // TODO test with huge maps
     // TODO alternative recipe (2 cartography tables, 1 ink and quill, 1 candle)
-    // TODO add fire particles to the candle
     // TODO wipe server side map db and table chunk id list on wipe with resin
     // TODO consider if it would be safer to add a delay between packets
     // TODO test recipes in survival
@@ -34,7 +33,7 @@ public class KsCartographyTableModSystem : ModSystem
     // when player 2 first saves their map on a new table, only the data which isn't already on the table gets uploaded
     // when any player updates their map, only chunks they never saw get downloaded 
     // when any player saves their map after exploring new chunks on a table where they already uploaded data, only the new chunks get uploaded
-    // the candle emits light properly
+    // the candle emits light properly ✔
     // the cartography table is craftable as before
     // the advanced cartography table is craftable (2 alternative recipes)
     // any player can wipe the map data (waypoints get wiped from the table, chunk ids get wiped from the table, server side db is dumped)

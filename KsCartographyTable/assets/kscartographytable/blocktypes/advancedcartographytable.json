@@ -80,5 +80,31 @@
 	"fpHandTransform": {
 		"translation": { "x": 0.08, "y": -0.2, "z": 0.6 },
 		"rotation": { "x": 33, "y": 134, "z": -102 }
-	}
+	},
+	"particleProperties": [
+		{
+			"hsvaColor": [{ "avg": 20, "var": 20 }, { "avg": 255, "var": 50 }, { "avg": 255, "var": 50 }, { "avg": 255, "var": 0 }],
+			"opacityEvolve": { "transform": "quadratic", "factor": -16 },
+			"gravityEffect": { "avg": 0, "var": 0 },
+			"velocity": [{ "avg": 0, "var": 0.0125 }, { "avg": 0.03, "var": 0.01 }, { "avg": 0, "var": 0.0125 }],
+			"quantity": { "avg": 0.5 },
+			"size": { "avg": 0.1, "var": 0.05 },
+			"lifeLength": { "avg": 0.25 },
+			"sizeEvolve": { "transform": "linear", "factor": 0.1 },
+			"particleModel": "Quad",
+			"vertexFlags": 255,
+			"windAffectednes": 0.05
+		},
+		{
+			"hsvaColor": [{ "avg": 0, "var": 0 }, { "avg": 0, "var": 0 }, { "avg": 30, "var": 15 }, { "avg": 220, "var": 50 }],
+			"opacityEvolve": { "transform": "quadratic", "factor": -16 },
+			"gravityEffect": { "avg": 0, "var": 0 },
+			"velocity": [{ "avg": 0, "var": 0.025 }, { "avg": 0.1, "var": 0.025 }, { "avg": 0, "var": 0.025 }],
+			"quantity": { "avg": 0.025 },
+			"size": { "avg": 0.1, "var": 0.05 },
+			"sizeEvolve": { "transform": "linear", "factor": 0.25 },
+			"particleModel": "Quad"
+		}
+	],
+	"lightHsv": [7, 7, 10]
 }
