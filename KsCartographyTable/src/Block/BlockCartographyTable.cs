@@ -23,13 +23,6 @@ namespace Kaisentlaia.CartographyTable.Blocks
 
             interactions = ObjectCacheUtil.GetOrCreate(api, "cartographyTableBlockInteractions", () =>
                 {
-                    List<ItemStack> inkAndQuillStackList = new List<ItemStack>();
-                    var inkAndQuill = api.World.Collectibles.Find(obj => obj.FirstCodePart() == "inkandquill");
-                    if(inkAndQuill != null) {
-                        List<ItemStack> stacks = inkAndQuill.GetHandBookStacks(capi);
-                        if (stacks != null) inkAndQuillStackList.AddRange(stacks);
-                    }
-
                     List<ItemStack> resinStackList = new List<ItemStack>();
                     var resin = api.World.Collectibles.Find(obj => obj.FirstCodePart() == "resin");
                     if(resin != null) {
@@ -44,14 +37,12 @@ namespace Kaisentlaia.CartographyTable.Blocks
                             ActionLangCode = "kscartographytable:blockhelp-cartography-table-share-map",
                             HotKeyCode = null,
                             MouseButton = EnumMouseButton.Right,
-                            Itemstacks = inkAndQuillStackList.ToArray()
                         },
                         new WorldInteraction()
                         {
                             ActionLangCode = "kscartographytable:blockhelp-cartography-table-update-map",
                             HotKeyCode = "sprint",
                             MouseButton = EnumMouseButton.Right,
-                            Itemstacks = inkAndQuillStackList.ToArray()
                         },
                         new WorldInteraction()
                         {

@@ -26,19 +26,6 @@
 	"fileReplaceMode": "ReplaceAll",
 	"blockmaterial": "wood",
 	"creativeinventory": { "general": ["*-north"], "kscartographytable": ["*-north"] },
-	"textures": {
-		"oak": { "base": "game:block/wood/debarked/oak" },
-		"top_double": { "base": "kscartographytable:block/cartography-table/top_double" },
-		"top_double_noborder": { "base": "kscartographytable:block/cartography-table/top_double_noborder" },
-		"cartography-tools": { "base": "game:item/lore/cartography-tools" },
-		"feather": { "base": "game:item/tool/feather" },
-		"map1": { "base": "game:item/lore/map1" },
-		"map2": { "base": "game:item/lore/map2" },
-		"blue-back": { "base": "game:item/lore/largebook/blue-back" },
-		"blue-front": { "base": "game:item/lore/largebook/blue-front" },
-		"normal-brickred": { "base": "game:item/lore/normal-brickred" },
-		"pages-aged": { "base": "game:item/lore/pages-aged" }
-	},
 	"shapeByType": {
 		"*-north": { "base": "kscartographytable:block/advancedcartographytable", "rotateY": 0   },
 		"*-east":  { "base": "kscartographytable:block/advancedcartographytable", "rotateY": 270 },

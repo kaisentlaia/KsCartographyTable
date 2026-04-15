@@ -1,0 +1,15 @@
+{
+    "ingredientPattern": "S,C,Q",
+    "ingredients": {
+      "S": { "type": "item", "code": "game:paper-parchment" },
+      "C": { "type": "block", "code": "game:table-normal" },
+      "Q": { "type": "item", "code": "game:inkandquill" }
+    },
+    "width": 1,
+    "height": 3,
+    "output": {
+      "type": "block",
+      "code": "cartographytable-north",
+      "quantity":  1
+    }
+  }

@@ -25,8 +25,9 @@ public class KsCartographyTableModSystem : ModSystem
     // TODO wipe server side map db and table chunk id list on wipe with resin
     // TODO consider if it would be safer to add a delay between packets
     // TODO test recipes in survival
-    // TODO update guide
     // TODO update table description
+    // TODO disable storage on top of tables
+    // TODO different interactions on different areas of the table (see quern)
 
     // TODO test behaviors:
     // when player 1 first saves their map on a new table, all the data gets uploaded
