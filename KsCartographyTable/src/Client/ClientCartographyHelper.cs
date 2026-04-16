@@ -3,11 +3,50 @@ using System.IO;
 using System.Linq;
 using Kaisentlaia.CartographyTable.Blocks;
 using Kaisentlaia.CartographyTable.GameContent;
+using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
+
+public class CoordsPacket
+{
+    [ProtoMember(1)]
+    public double X { get; set; }
+
+    [ProtoMember(2)]
+    public double Y { get; set; }
+
+    [ProtoMember(3)]
+    public double Z { get; set; }
+
+    public CoordsPacket() { }
+
+    public CoordsPacket(double x, double y, double z)
+    {
+        X = x;
+        Y = y;
+        Z = z;
+    }
+}
+
+[ProtoContract]
+public class PalantirTravelPacket
+{
+    [ProtoMember(1)]
+    public List<CoordsPacket> Waypoints { get; set; } = new();
+
+    [ProtoMember(2)]
+    public CoordsPacket PlayerStartingPos { get; set; } = new();
+
+    public PalantirTravelPacket() { }
+    public PalantirTravelPacket(List<CoordsPacket> waypoints, CoordsPacket playerStartingPos)
+    {
+        Waypoints = waypoints;
+        PlayerStartingPos = playerStartingPos;
+    }
+}
 
 namespace Kaisentlaia.CartographyTable.Client
 {
@@ -30,6 +69,14 @@ namespace Kaisentlaia.CartographyTable.Client
             CoreClientAPI.Network.RegisterChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD)
                 .RegisterMessageType<MapUploadPacket>()
                 .SetMessageHandler<MapUploadPacket>(OnMapDownloadRequest);
+
+            if (CoreClientAPI.ModLoader.IsModEnabled("palantir"))
+            {
+                CoreClientAPI.Network.RegisterChannel("kscartographytablepalantir")
+                    .RegisterMessageType<PalantirTravelPacket>();
+                CoreClientAPI.ShowChatMessage("Palantir channel registered");
+            }
+
         }
 
         private void SetChunkMapLayer()
@@ -140,6 +187,13 @@ namespace Kaisentlaia.CartographyTable.Client
             {
                 CoreClientAPI.Logger.Error("MapDB is null");
             }
+        }
+
+        public void Ponder(CartographyMap map, IClientPlayer byPlayer)
+        {
+            List<CoordsPacket> palantirWaypoints = map.GetPalantirWaypoints();
+            PalantirTravelPacket palantirTravel = new PalantirTravelPacket(palantirWaypoints, new CoordsPacket(byPlayer.Entity.Pos.X, byPlayer.Entity.Pos.Y, byPlayer.Entity.Pos.Z));
+            CoreClientAPI.Network.GetChannel("kscartographytablepalantir").SendPacket(palantirTravel);
         }
     }
 }

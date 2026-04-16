@@ -1,7 +1,3 @@
-/*
-* The namespace the class will be in. This is essentially the folder the script is found in.
-* If you need to use the BlockCartographyTable class in any other script, you will have to add 'using VSTutorial.Blocks' to that script.
-*/
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -14,14 +10,9 @@ using Vintagestory.API.Config;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
-using Vintagestory.GameContent;
 
 namespace Kaisentlaia.CartographyTable.BlockEntities
 {
-    /*
-    * The class definition. Here, you define BlockCartographyTable as a child of Block, which
-    * means you can 'override' many of the functions within the general Block class. 
-    */
     public class BlockEntityCartographyTable : BlockEntity
     {
         private ICoreServerAPI CoreServerAPI;
@@ -57,6 +48,16 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
             {
                 KsCartographyTableModSystem.ServerCartographyHelper.PurgeWaypointGroups(byPlayer);
             }
+            return true;
+        }
+
+        internal bool OnPonderMap(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (CoreClientAPI != null)
+            {
+                KsCartographyTableModSystem.ClientCartographyHelper.Ponder(Map, byPlayer as IClientPlayer);
+            }
+
             return true;
         }
 

@@ -15,12 +15,16 @@ namespace Kaisentlaia.CartographyTable.Blocks
         private const long InteractionCooldownMs = 500;
         private const long EntryExpirationMs = 60000;
 
+        private bool enablePalantir = false;
+
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
 
             if (api.Side != EnumAppSide.Client) return;
             ICoreClientAPI capi = api as ICoreClientAPI;
+            
+            enablePalantir = capi.ModLoader.IsModEnabled("palantir");
 
             interactions = ObjectCacheUtil.GetOrCreate(api, "cartographyTableBlockInteractions", () => Array.Empty<WorldInteraction>());
 
@@ -89,6 +93,10 @@ namespace Kaisentlaia.CartographyTable.Blocks
             if (blockSel.SelectionBoxIndex == 2 && HasItemInHand(byPlayer, "resin")) {
                 return beTable.OnWipeTableMap(world, byPlayer, blockSel);
             }
+
+            if (blockSel.SelectionBoxIndex == 2 && HasItemInHand(byPlayer, "palantir")) {
+                return beTable.OnPonderMap(world, byPlayer, blockSel);
+            }
             
             // Box 1: Ink and quill area - update maps
             if (blockSel.SelectionBoxIndex == 1 && HasEmptyHand(byPlayer))
@@ -142,6 +150,16 @@ namespace Kaisentlaia.CartographyTable.Blocks
                         MouseButton = EnumMouseButton.Right,
                         Itemstacks = GetResinStacks(world)
                     });
+                    if (enablePalantir)
+                    {
+                        help.Add(new WorldInteraction()
+                        {
+                            ActionLangCode = "kscartographytable:blockhelp-cartography-table-ponder",
+                            HotKeyCode = null,
+                            MouseButton = EnumMouseButton.Right,
+                            Itemstacks = GetPalantirStacks(world)
+                        });
+                    }
                     break;
             }
 
@@ -161,11 +179,17 @@ namespace Kaisentlaia.CartographyTable.Blocks
             return slot?.Itemstack == null;
         }
 
-
         public ItemStack[] GetResinStacks(IWorldAccessor world)
         {
             // Similar to your resin loading logic
             var ink = world.Collectibles.Find(obj => obj.FirstCodePart() == "resin");
+            return ink?.GetHandBookStacks(world.Api as ICoreClientAPI)?.ToArray();
+        }
+
+        public ItemStack[] GetPalantirStacks(IWorldAccessor world)
+        {
+            // Similar to your resin loading logic
+            var ink = world.Collectibles.Find(obj => obj.FirstCodePart() == "palantir");
             return ink?.GetHandBookStacks(world.Api as ICoreClientAPI)?.ToArray();
         }
     }

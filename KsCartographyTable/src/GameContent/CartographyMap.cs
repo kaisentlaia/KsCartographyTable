@@ -2,7 +2,6 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Vintagestory.API.Common;
-using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace Kaisentlaia.CartographyTable.GameContent
@@ -137,6 +136,11 @@ namespace Kaisentlaia.CartographyTable.GameContent
 
         public bool HasDeleted(Waypoint waypoint) {
             return deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid);
+        }
+
+        public List<CoordsPacket> GetPalantirWaypoints()
+        {
+            return Waypoints.Where(waypoint => waypoint.Icon == "palantir-manual").Select(waypoint => new CoordsPacket(waypoint.Position.X, waypoint.Position.Y, waypoint.Position.Z)).ToList();
         }
     }
 }

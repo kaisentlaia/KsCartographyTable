@@ -7,6 +7,7 @@
     "blockhelp-cartography-table-share-map": "Update the cartography table's map",
     "blockhelp-cartography-table-update-map": "Update your map",
     "blockhelp-cartography-table-wipe-map": "Wipe the table's map",
+    "blockhelp-cartography-table-ponder": "Ponder the map",
     "gui-waypoint-count": "There are {0} waypoints on the map.\n",
     "gui-waypoint-chunks-count": "There are {0} waypoints and {1} km² of explored areas on the map.\n",
     "gui-empty-map": "There is nothing on the map.\n",
