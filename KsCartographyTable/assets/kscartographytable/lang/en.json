@@ -1,11 +1,9 @@
 {
 	"game:tabname-kscartographytable": "K's Cartography",
-	"block-cartographytable": "Cartography table",
 	"block-cartographytable-*": "Cartography table",
-	"block-advancedcartographytable": "Advanced cartography table",
 	"block-advancedcartographytable-*": "Advanced cartography table",
-	"blockdesc-cartographytable-*": "Write your waypoints on the table's map by <hk>rightmouse</hk>-clicking on the ink and quill, <hk>ctrl</hk> + <hk>rightmouse</hk>-click on the ink and quill to copy the waypoints to your map, or <hk>rightmouse</hk>-click on the map while holding resin to wipe the table's map.",
-	"blockdesc-advancedcartographytable-*": "Copy your map and your waypoints on the table by <hk>rightmouse</hk>-clicking on it, or <hk>ctrl</hk> + <hk>rightmouse</hk>-click on it to copy the shared map and waypoints from the table to your map instead.",
+	"blockdesc-cartographytable-*": "<hk>rightmouse</hk>-click with an empty hand on the ink and quill to update the table's map with your waypoints, or <hk>ctrl</hk> + <hk>rightmouse</hk>-click to update your waypoints. <hk>rightmouse</hk>-click on the table's map while holding resin to wipe it clean.",
+	"blockdesc-advancedcartographytable-*": "<hk>rightmouse</hk>-click with an empty hand on the ink and quill to update the table's map with your explored areas and waypoints, or <hk>ctrl</hk> + <hk>rightmouse</hk>-click to update your waypoints and explored areas. <hk>rightmouse</hk>-click on the table's map while holding resin to wipe it clean.",
     "blockhelp-cartography-table-share-map": "Update the cartography table's map",
     "blockhelp-cartography-table-update-map": "Update your map",
     "blockhelp-cartography-table-wipe-map": "Wipe the table's map",

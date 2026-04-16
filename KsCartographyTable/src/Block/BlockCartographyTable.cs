@@ -91,7 +91,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
             }
             
             // Box 1: Ink and quill area - update maps
-            if (blockSel.SelectionBoxIndex == 1)
+            if (blockSel.SelectionBoxIndex == 1 && HasEmptyHand(byPlayer))
             {
                 return beTable.OnPlayerInteract(world, byPlayer, blockSel);            
             }
@@ -155,6 +155,12 @@ namespace Kaisentlaia.CartographyTable.Blocks
             var slot = player.InventoryManager.ActiveHotbarSlot;
             return slot?.Itemstack != null && slot.Itemstack.Collectible.FirstCodePart() == codePart;
         }
+        public bool HasEmptyHand(IPlayer player)
+        {
+            var slot = player.InventoryManager.ActiveHotbarSlot;
+            return slot?.Itemstack == null;
+        }
+
 
         public ItemStack[] GetResinStacks(IWorldAccessor world)
         {
