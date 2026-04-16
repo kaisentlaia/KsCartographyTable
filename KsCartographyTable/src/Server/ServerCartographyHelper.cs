@@ -309,11 +309,19 @@ namespace Kaisentlaia.CartographyTable.Server
             }
         }
 
-        public void WipeTableMap(CartographyMap map) {
-            // TODO db wipe for advanced cartography table
+        public void WipeTableMap(CartographyMap map, Block block) {
             if (map != null) {
                 map.Waypoints.Clear();
                 map.DeletedWaypoints.Clear();
+                if (block.GetType() == typeof(BlockAdvancedCartographyTable))
+                {
+                    EnsureMapDBServerInitialized(block.Id.ToString());
+
+                    if (mapDBServer != null)
+                    {
+                        mapDBServer.Wipe();       
+                    }
+                }
                 CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-wiped", 0), EnumChatType.Notification);
             } else {
                 CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-already-empty"), EnumChatType.Notification);

@@ -200,4 +200,13 @@ class SharedMapDB : MapDB
 
             return pieces;
       }
+
+      public void Wipe()
+      {
+            Purge();
+
+            using SqliteCommand sqliteCommand2 = sqliteConn.CreateCommand();
+            sqliteCommand2.CommandText = "delete FROM playerchunkmapping";
+            sqliteCommand2.ExecuteNonQuery();
+      }
 }

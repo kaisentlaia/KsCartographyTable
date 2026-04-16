@@ -68,7 +68,7 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
                 if (Map != null && Map.Waypoints.Count > 0)
                 {
                     int waypointCount = Map.Waypoints.Count;
-                    KsCartographyTableModSystem.ServerCartographyHelper.WipeTableMap(Map);
+                    KsCartographyTableModSystem.ServerCartographyHelper.WipeTableMap(Map, Block);
                     Map = new CartographyMap();
                     MarkDirty();
 
