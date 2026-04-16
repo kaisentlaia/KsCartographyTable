@@ -118,6 +118,21 @@ namespace Kaisentlaia.CartographyTable.Blocks
             return System.Array.Empty<ItemStack>();
         }
 
+        public override string GetPlacedBlockInfo(IWorldAccessor world, BlockPos pos, IPlayer forPlayer)
+        {
+            BlockPos parentPos = GetParentPosition(world, pos);
+            if (parentPos != null)
+            {
+                Block parentBlock = world.BlockAccessor.GetBlock(parentPos);
+                if (parentBlock != null)
+                {
+                    return parentBlock.GetPlacedBlockInfo(world, parentPos, forPlayer);
+                }
+            }
+            
+            return base.GetPlacedBlockInfo(world, pos, forPlayer);
+        }
+
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
             BlockPos parentPos = GetParentPosition(world, selection.Position);
