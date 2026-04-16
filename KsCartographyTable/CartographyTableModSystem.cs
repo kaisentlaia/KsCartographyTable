@@ -23,7 +23,6 @@ public class KsCartographyTableModSystem : ModSystem
     // TODO wipe server side map db and table chunk id list on wipe with resin
     // TODO consider if it would be safer to add a delay between packets
     // TODO test recipes in survival
-    // TODO replace the old simple cartography table with the new simple cartography table
 
     // TODO test behaviors:
     // when player 1 first saves their map on a new table, all the data gets uploaded
@@ -32,7 +31,8 @@ public class KsCartographyTableModSystem : ModSystem
     // when any player saves their map after exploring new chunks on a table where they already uploaded data, only the new chunks get uploaded
     // the candle emits light properly ✔
     // old cartography table is correctly replaced
-    // the advanced cartography table is craftable (2 alternative recipes)
+    // the cartography table is craftable
+    // the advanced cartography table is craftable
     // any player can wipe the map data (waypoints get wiped from the table, chunk ids get wiped from the table, server side db is dumped)
 
     public static ICoreAPI CoreAPI;
