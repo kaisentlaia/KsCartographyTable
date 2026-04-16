@@ -136,7 +136,7 @@
   "replaceable": 900,
   "resistance": 1.5,
   "lightAbsorption": 0,
-  "sidesolid": { "up": true, "all": false },
+  "sidesolid": { "all": false },
   "sideopaque": { "up": true, "all": false },
   "sounds": {
     "place": "game:block/planks",

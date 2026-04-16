@@ -23,7 +23,6 @@ public class KsCartographyTableModSystem : ModSystem
     // TODO wipe server side map db and table chunk id list on wipe with resin
     // TODO consider if it would be safer to add a delay between packets
     // TODO test recipes in survival
-    // TODO disable storage on top of tables
     // TODO replace the old simple cartography table with the new simple cartography table
 
     // TODO test behaviors:

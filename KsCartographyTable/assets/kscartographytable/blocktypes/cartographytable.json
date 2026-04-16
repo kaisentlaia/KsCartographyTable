@@ -38,7 +38,7 @@
       "rotateY": 90
     }
   },
-  "sidesolid": { "up": true, "all": false },
+  "sidesolid": { "all": false },
   "sideopaque": { "up": true, "all": false },
   "sounds": {
     "place": "game:block/planks",
