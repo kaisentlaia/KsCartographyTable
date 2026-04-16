@@ -142,6 +142,7 @@ namespace Kaisentlaia.CartographyTable.Server
             if (mapDBServer != null)
             {
                 Dictionary<FastVec2i, MapPieceDB> pieces = mapDBServer.GetNewMapPiecesForPlayer(player);
+
                 if (pieces.Count == 0)
                 {
                     CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
@@ -157,7 +158,7 @@ namespace Kaisentlaia.CartographyTable.Server
                     {
                         var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
                             kvp => kvp.Key,
-                            kvp => kvp.Value
+                            kvp => MapColorOverlay.ApplyColorOverlay(kvp.Value)
                         );
 
                         CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
