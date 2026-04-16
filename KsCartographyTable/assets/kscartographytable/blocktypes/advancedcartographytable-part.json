@@ -1,11 +1,111 @@
 {
   "code": "advancedcartographytable-part",
-  "class": "Block",
+  "class": "kscartographytable.advanced-cartography-table-part",
   "blockmaterial": "wood",
   "creativeinventory": {},
   "sideopaque": { "all": false },
   "drawtype": "Empty",
-  "selectionbox": null,
+  "variantgroups": [
+    { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
+  ],
+  "collisionSelectionBoxesByType": {
+    "*-north": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table (shifted -1 X)"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": -0.64,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book (shifted -1 X)"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table (shifted -1 Z)"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.64,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.98,
+        "comment": "Cartography Book (shifted -1 Z)"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table (shifted -1 X)"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": -1.98,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": -0.36,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book (shifted -1 X)"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table (shifted -1 Z)"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -1.98,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": -0.36,
+        "comment": "Cartography Book (shifted -1 Z)"
+      }
+    ]
+  },
   "sounds": {
     "place": "game:block/planks",
     "break": "game:block/planks"

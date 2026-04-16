@@ -39,7 +39,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
             
             // Place companion block based on orientation
             BlockPos companionPos = GetCompanionPosition(pos);
-            Block companionBlock = world.GetBlock(new AssetLocation("kscartographytable:advancedcartographytable-part"));
+            Block companionBlock = world.GetBlock(new AssetLocation("kscartographytable:advancedcartographytable-part-"+LastCodePart()));
             world.BlockAccessor.SetBlock(companionBlock.BlockId, companionPos);
         }
 
@@ -47,7 +47,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
         {
             // Remove companion block
             BlockPos companionPos = GetCompanionPosition(pos);
-            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == "advancedcartographytable-part")
+            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == "advancedcartographytable-part-"+LastCodePart())
             {
                 world.BlockAccessor.SetBlock(0, companionPos);
             }
