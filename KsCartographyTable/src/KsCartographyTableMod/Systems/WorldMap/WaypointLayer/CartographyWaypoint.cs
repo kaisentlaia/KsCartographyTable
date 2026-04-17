@@ -2,7 +2,7 @@ using Vintagestory.GameContent;
 using Vintagestory.API.Common;
 using System;
 
-namespace Kaisentlaia.CartographyTable.GameContent
+namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class CartographyWaypoint : Waypoint {
         public string CreatedByPlayerUid;

@@ -1,8 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Kaisentlaia.CartographyTable.Blocks;
-using Kaisentlaia.CartographyTable.GameContent;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
+using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -10,46 +10,46 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
-public class CoordsPacket
+namespace Kaisentlaia.KsCartographyTableMod.API.Client
 {
-    [ProtoMember(1)]
-    public double X { get; set; }
-
-    [ProtoMember(2)]
-    public double Y { get; set; }
-
-    [ProtoMember(3)]
-    public double Z { get; set; }
-
-    public CoordsPacket() { }
-
-    public CoordsPacket(double x, double y, double z)
+    public class CoordsPacket
     {
-        X = x;
-        Y = y;
-        Z = z;
+        [ProtoMember(1)]
+        public double X { get; set; }
+
+        [ProtoMember(2)]
+        public double Y { get; set; }
+
+        [ProtoMember(3)]
+        public double Z { get; set; }
+
+        public CoordsPacket() { }
+
+        public CoordsPacket(double x, double y, double z)
+        {
+            X = x;
+            Y = y;
+            Z = z;
+        }
     }
-}
 
-[ProtoContract]
-public class PalantirTravelPacket
-{
-    [ProtoMember(1)]
-    public List<CoordsPacket> Waypoints { get; set; } = new();
-
-    [ProtoMember(2)]
-    public CoordsPacket PlayerStartingPos { get; set; } = new();
-
-    public PalantirTravelPacket() { }
-    public PalantirTravelPacket(List<CoordsPacket> waypoints, CoordsPacket playerStartingPos)
+    [ProtoContract]
+    public class PalantirTravelPacket
     {
-        Waypoints = waypoints;
-        PlayerStartingPos = playerStartingPos;
-    }
-}
+        [ProtoMember(1)]
+        public List<CoordsPacket> Waypoints { get; set; } = new();
 
-namespace Kaisentlaia.CartographyTable.Client
-{
+        [ProtoMember(2)]
+        public CoordsPacket PlayerStartingPos { get; set; } = new();
+
+        public PalantirTravelPacket() { }
+        public PalantirTravelPacket(List<CoordsPacket> waypoints, CoordsPacket playerStartingPos)
+        {
+            Waypoints = waypoints;
+            PlayerStartingPos = playerStartingPos;
+        }
+    }
+
     public class ClientCartographyHelper
     {
         private SharedMapDB mapDBclientReader;
@@ -63,18 +63,17 @@ namespace Kaisentlaia.CartographyTable.Client
         {
             CoreClientAPI = api;
 
-            CoreClientAPI.Network.RegisterChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD)
+            CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.UPLOAD_CHANNEL)
                 .RegisterMessageType<MapUploadPacket>();
 
-            CoreClientAPI.Network.RegisterChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD)
+            CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.DOWNLOAD_CHANNEL)
                 .RegisterMessageType<MapUploadPacket>()
                 .SetMessageHandler<MapUploadPacket>(OnMapDownloadRequest);
 
-            if (CoreClientAPI.ModLoader.IsModEnabled("palantir"))
+            if (CoreClientAPI.ModLoader.IsModEnabled(CartographyTableConstants.PALANTIR_MOD_ID))
             {
-                CoreClientAPI.Network.RegisterChannel("kscartographytablepalantir")
+                CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.PALANTIR_CHANNEL)
                     .RegisterMessageType<PalantirTravelPacket>();
-                CoreClientAPI.ShowChatMessage("Palantir channel registered");
             }
 
         }
@@ -156,7 +155,7 @@ namespace Kaisentlaia.CartographyTable.Client
                 }
                 if (pieces.Count == 0)
                 {
-                    CoreClientAPI.ShowChatMessage(Lang.Get("kscartographytable:message-table-map-up-to-date"));
+                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE));
                     return;
                 }
                 
@@ -175,12 +174,12 @@ namespace Kaisentlaia.CartographyTable.Client
 
                         bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
 
-                        CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
+                        CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
                     }
                 }
                 else
                 {
-                    CoreClientAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
+                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
                 }
             }
             else
@@ -193,7 +192,7 @@ namespace Kaisentlaia.CartographyTable.Client
         {
             List<CoordsPacket> palantirWaypoints = map.GetPalantirWaypoints();
             PalantirTravelPacket palantirTravel = new PalantirTravelPacket(palantirWaypoints, new CoordsPacket(byPlayer.Entity.Pos.X, byPlayer.Entity.Pos.Y, byPlayer.Entity.Pos.Z));
-            CoreClientAPI.Network.GetChannel("kscartographytablepalantir").SendPacket(palantirTravel);
+            CoreClientAPI.Network.GetChannel(CartographyTableConstants.PALANTIR_CHANNEL).SendPacket(palantirTravel);
         }
     }
 }

@@ -2,7 +2,7 @@
 using Vintagestory.API.Client;
 using Vintagestory.GameContent;
 
-namespace Kaisentlaia.CartographyTable.GameContent
+namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class GuiDialogCartographyMap : GuiDialogWorldMap
     {

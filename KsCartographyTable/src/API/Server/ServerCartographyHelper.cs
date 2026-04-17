@@ -1,9 +1,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Kaisentlaia.CartographyTable.BlockEntities;
-using Kaisentlaia.CartographyTable.Blocks;
-using Kaisentlaia.CartographyTable.GameContent;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
+using Kaisentlaia.KsCartographyTableMod.GameContent;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
@@ -11,7 +10,7 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-namespace Kaisentlaia.CartographyTable.Server
+namespace Kaisentlaia.KsCartographyTableMod.API.Server
 {
     public class ServerCartographyHelper {
         ICoreServerAPI CoreServerAPI;
@@ -22,11 +21,11 @@ namespace Kaisentlaia.CartographyTable.Server
         public ServerCartographyHelper(ICoreServerAPI ServerAPI) {
             CoreServerAPI = ServerAPI;
 
-            CoreServerAPI.Network.RegisterChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_UPLOAD)
+            CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.UPLOAD_CHANNEL)
                 .RegisterMessageType<MapUploadPacket>()
                 .SetMessageHandler<MapUploadPacket>(OnMapUploadRequest);
 
-            CoreServerAPI.Network.RegisterChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD)
+            CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.DOWNLOAD_CHANNEL)
                 .RegisterMessageType<MapUploadPacket>();
 
             SetWaypointMapLayer();
@@ -34,7 +33,7 @@ namespace Kaisentlaia.CartographyTable.Server
         
         private void EnsureMapDBServerInitialized(string blockId) {
             if (mapDBServer == null) {
-                string mapFolderPath = Path.Combine(GamePaths.DataPath, "ModData", CoreServerAPI.World.SavegameIdentifier, "KsCartographyTable");
+                string mapFolderPath = Path.Combine(GamePaths.DataPath, "ModData", CoreServerAPI.World.SavegameIdentifier, CartographyTableConstants.MOD_ID + "");
                 GamePaths.EnsurePathExists(mapFolderPath);
                 string mapPath = Path.Combine(mapFolderPath, blockId + ".db");
                 CoreServerAPI.Logger.Notification("Initializing map database at " + mapPath);
@@ -69,7 +68,7 @@ namespace Kaisentlaia.CartographyTable.Server
                 if (packet.IsFinalBatch && packet.Total > 0)
                 {                    
                     double km2 = packet.Total * 0.001024;
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-map-explored-chunks", $"{km2:F1}"), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
                 }
             }
         }
@@ -116,17 +115,17 @@ namespace Kaisentlaia.CartographyTable.Server
 
             if (toAdd.Count > 0 || toUpdate.Count > 0 || toDelete.Count > 0) {
                 if (toAdd.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-new-waypoints-count", toAdd.Count), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_ADDED, toAdd.Count), EnumChatType.Notification);
                 }
                 if (toUpdate.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-edited-waypoints-count", toUpdate.Count), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_EDITED, toUpdate.Count), EnumChatType.Notification);
                 }
                 if (toDelete.Count > 0) {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-deleted-waypoints-count", toDelete.Count), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, toDelete.Count), EnumChatType.Notification);
                 }
                 player.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"),player);
             } else {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-waypoints-up-to-date"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
             }
         }
 
@@ -145,7 +144,7 @@ namespace Kaisentlaia.CartographyTable.Server
 
                 if (pieces.Count == 0)
                 {
-                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-map-up-to-date"), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_MAP_UP_TO_DATE), EnumChatType.Notification);
                     return false;
                 }
                 const int maxChunksPerPacket = 100;
@@ -161,16 +160,16 @@ namespace Kaisentlaia.CartographyTable.Server
                             kvp => MapColorOverlay.ApplyColorOverlay(kvp.Value)
                         );
 
-                        CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
+                        CoreServerAPI.Network.GetChannel(CartographyTableConstants.DOWNLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
                     }
                 }
                 else
                 {
-                    CoreServerAPI.Network.GetChannel("cartographytablechannel" + EnumCartographyMapChannels.CHANNEL_DOWNLOAD).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
+                    CoreServerAPI.Network.GetChannel(CartographyTableConstants.DOWNLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
                 }
                 mapDBServer.SetMapPiecesForPlayer(pieces, player);
                 double km2 = pieces.Count * 0.001024;
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-updated-user-explored-chunks", $"{km2:F1}"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
             }
             else
             {
@@ -257,15 +256,15 @@ namespace Kaisentlaia.CartographyTable.Server
                 string waypointsMessage = string.Empty;
                 if (onlyOnTableMapToAdd.Count > 0)
                 {
-                    waypointsMessage = Lang.Get("kscartographytable:message-new-user-waypoints", onlyOnTableMapToAdd.Count);
+                    waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_ADDED, onlyOnTableMapToAdd.Count);
                 }
                 if (onBothMapsToEdit.Count > 0)
                 {
-                    waypointsMessage = Lang.Get("kscartographytable:message-edited-user-waypoints", onBothMapsToEdit.Count);
+                    waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_EDITED, onBothMapsToEdit.Count);
                 }
                 if (anyDeleted)
                 {
-                    waypointsMessage = Lang.Get("kscartographytable:message-deleted-user-waypoints", onlyOnPlayerMapToDelete.Count);
+                    waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_DELETED, onlyOnPlayerMapToDelete.Count);
                 }
                 CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, waypointsMessage, EnumChatType.Notification);
                 
@@ -273,7 +272,7 @@ namespace Kaisentlaia.CartographyTable.Server
             }
             else
             {
-                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-user-waypoints-up-to-date"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
                 return false;
             }
             return true;
@@ -323,9 +322,9 @@ namespace Kaisentlaia.CartographyTable.Server
                         mapDBServer.Wipe();       
                     }
                 }
-                CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-wiped", 0), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED, 0), EnumChatType.Notification);
             } else {
-                CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get("kscartographytable:message-table-map-already-empty"), EnumChatType.Notification);
+                CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY), EnumChatType.Notification);
             }
         }
 

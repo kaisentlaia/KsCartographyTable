@@ -1,18 +1,21 @@
-using System;
-using System.Collections.Generic;
-using Kaisentlaia.CartographyTable.BlockEntities;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Util;
 
-namespace Kaisentlaia.CartographyTable.Blocks
+namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     internal class BlockAdvancedCartographyTable : BlockCartographyTable
     {
         internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
         
         Vec3f[] candleWickPositionsByRot = new Vec3f[4];
+
+        public override void OnLoaded(ICoreAPI api)
+        {
+            base.OnLoaded(api);
+            initRotations();
+        }
 
         internal void initRotations()
         {
@@ -28,18 +31,19 @@ namespace Kaisentlaia.CartographyTable.Blocks
             }
         }
 
-        public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
-        {
-            return true; // Essential for boxes outside 0-1 range
-        }
-
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(world, pos, byItemStack);
             
             // Place companion block based on orientation
             BlockPos companionPos = GetCompanionPosition(pos);
-            Block companionBlock = world.GetBlock(new AssetLocation("kscartographytable:advancedcartographytable-part-"+LastCodePart()));
+            Block companionBlock = world.GetBlock(new AssetLocation(CartographyTableConstants.MOD_ID + ":" + CartographyTableConstants.ADVANCED_PREFIX + CartographyTableConstants.ADVANCED_PART_SUFFIX + LastCodePart()));
+
+            if (companionBlock == null)
+            {
+                world.Logger.Error("Companion block for advanced cartography table not found");
+                return;
+            }
             world.BlockAccessor.SetBlock(companionBlock.BlockId, companionPos);
         }
 
@@ -47,7 +51,7 @@ namespace Kaisentlaia.CartographyTable.Blocks
         {
             // Remove companion block
             BlockPos companionPos = GetCompanionPosition(pos);
-            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == "advancedcartographytable-part-"+LastCodePart())
+            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == CartographyTableConstants.ADVANCED_PREFIX + CartographyTableConstants.ADVANCED_PART_SUFFIX  + LastCodePart())
             {
                 world.BlockAccessor.SetBlock(0, companionPos);
             }
@@ -66,18 +70,6 @@ namespace Kaisentlaia.CartographyTable.Blocks
                 "west" => pos.NorthCopy(),
                 _ => pos.EastCopy()
             };
-        }
-
-        public override void OnLoaded(ICoreAPI api)
-        {
-            base.OnLoaded(api);
-            initRotations();
-
-            if (api.Side != EnumAppSide.Client) return;
-            ICoreClientAPI capi = api as ICoreClientAPI;
-
-            // Empty - handled per-box in GetPlacedBlockInteractionHelp
-            interactions = ObjectCacheUtil.GetOrCreate(api, "advancedCartographyTableBlockInteractions", () => Array.Empty<WorldInteraction>());
         }
 
         public override void OnAsyncClientParticleTick(IAsyncParticleManager manager, BlockPos pos, float windAffectednessAtPos, float secondsTicking)

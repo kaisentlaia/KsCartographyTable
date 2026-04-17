@@ -1,10 +1,11 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using Kaisentlaia.KsCartographyTableMod.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.GameContent;
 
-namespace Kaisentlaia.CartographyTable.GameContent
+namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class CartographyMap {
         private List<CartographyWaypoint> waypoints;

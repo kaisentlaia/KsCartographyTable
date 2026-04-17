@@ -2,8 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
-using Kaisentlaia.CartographyTable.Blocks;
-using Kaisentlaia.CartographyTable.GameContent;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -11,7 +10,7 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 
-namespace Kaisentlaia.CartographyTable.BlockEntities
+namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
@@ -72,17 +71,13 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
                     Map = new CartographyMap();
                     MarkDirty();
 
-                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup,
-                        Lang.Get("kscartographytable:message-table-map-wiped", waypointCount),
-                        EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED, waypointCount), EnumChatType.Notification);
 
                     byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), byPlayer);
                 }
                 else
                 {
-                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup,
-                        Lang.Get("kscartographytable:message-table-map-already-empty"),
-                        EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED), EnumChatType.Notification);
                 }
             }
 
@@ -124,13 +119,13 @@ namespace Kaisentlaia.CartographyTable.BlockEntities
         {
             if (Block.GetType() != typeof(BlockAdvancedCartographyTable) && Map != null && Map.Waypoints.Count > 0)
             {
-                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-count", Map.Waypoints.Count));
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, Map.Waypoints.Count));
             } else if (Block.GetType() == typeof(BlockAdvancedCartographyTable) && Map != null && (Map.Waypoints.Count > 0 || Map.ExploredAreasIds.Count > 0)) {
                 double km2 = Map.ExploredAreasIds.Count * 0.001024;
-                dsc.AppendLine(Lang.Get("kscartographytable:gui-waypoint-chunks-count", Map.Waypoints.Count, $"{km2:F1}"));
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, Map.Waypoints.Count, $"{km2:F1}"));
             } else
             {
-                dsc.AppendLine(Lang.Get("kscartographytable:gui-empty-map"));
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_EMPTY));
             }
         }
 

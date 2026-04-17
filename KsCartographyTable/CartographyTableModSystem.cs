@@ -1,15 +1,14 @@
 ﻿using System.Reflection;
 using HarmonyLib;
-using Kaisentlaia.CartographyTable.BlockEntities;
-using Kaisentlaia.CartographyTable.Blocks;
-using Kaisentlaia.CartographyTable.Client;
-using Kaisentlaia.CartographyTable.Server;
+using Kaisentlaia.KsCartographyTableMod.API.Client;
+using Kaisentlaia.KsCartographyTableMod.GameContent;
+using Kaisentlaia.KsCartographyTableMod.API.Server;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
-namespace Kaisentlaia.CartographyTable;
+namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 
 [HarmonyPatch]
 public class KsCartographyTableModSystem : ModSystem
@@ -40,6 +39,8 @@ public class KsCartographyTableModSystem : ModSystem
     public static ServerCartographyHelper ServerCartographyHelper;
     public static ClientCartographyHelper ClientCartographyHelper;
     public static bool purgeWpGroups = false;
+
+    public static ModCompatibilityManager ModCompatibilityManager;
 
     public override void Start(ICoreAPI api)
     {
@@ -98,6 +99,7 @@ public class KsCartographyTableModSystem : ModSystem
     {
         CoreClientAPI = api;
         ClientCartographyHelper = new ClientCartographyHelper(CoreClientAPI);
+        ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
     }
 
     [HarmonyPrefix]
