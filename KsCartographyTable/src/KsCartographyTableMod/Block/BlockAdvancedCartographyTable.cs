@@ -5,7 +5,6 @@ using Vintagestory.API.MathTools;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
-    // TODO bug: it should be impossible to place an advanced table if the block on the right is occupied, right now the block on the right gets deleted when the right part of the table gets placed
     internal class BlockAdvancedCartographyTable : BlockCartographyTable
     {
         internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
@@ -30,6 +29,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 Vec4f rotated = m.TransformVector(new Vec4f(candleWickPosition.X, candleWickPosition.Y, candleWickPosition.Z, 1));
                 candleWickPositionsByRot[i] = new Vec3f(rotated.X, rotated.Y, rotated.Z);
             }
+        }
+
+        public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
+        {
+            // Get the position where the companion block would go
+            BlockPos companionPos = GetCompanionPosition(blockSel.Position);
+            
+            // Check if companion position is clear
+            if (!world.BlockAccessor.GetBlock(companionPos).IsReplacableBy(this))
+            {
+                failureCode = "notenoughspace"; // Standard VS failure code
+                return false;
+            }
+            
+            // Check base position too (VS normally does this, but we're overriding)
+            if (!world.BlockAccessor.GetBlock(blockSel.Position).IsReplacableBy(this))
+            {
+                failureCode = "notenoughspace";
+                return false;
+            }
+            
+            // Both positions clear, proceed with placement
+            return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
         }
 
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
@@ -61,7 +83,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         }
 
         private BlockPos GetCompanionPosition(BlockPos pos)
-        {
+        {            
             string side = Variant["side"];
             return side switch
             {

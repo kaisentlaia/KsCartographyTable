@@ -31,19 +31,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return entity;
             }
 
-            // TODO is this needed?
-            // Secondary multiblock position — search adjacent blocks for the entity
-            BlockPos[] adjacents = [
-                pos.AddCopy(1, 0, 0), pos.AddCopy(-1, 0, 0),
-                pos.AddCopy(0, 0, 1), pos.AddCopy(0, 0, -1)
-            ];
-            foreach (var adjacent in adjacents)
-            {
-                entity = world.BlockAccessor.GetBlockEntity(adjacent) as BlockEntityCartographyTable;
-                if (entity != null) {
-                    return entity;
-                }
-            }
             return null;
         }
 
