@@ -129,5 +129,39 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			}
 			return false;
 		}
+
+        public void CleanupMapData(Block block, BlockPos pos)
+        {
+			if (block.GetType() == typeof(BlockAdvancedCartographyTable))
+			{
+				SharedMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+
+                if (mapDB != null)
+                {
+                    mapDB?.Dispose();
+                    // Delete the .db file from disk
+                    string mapPath = Path.Combine(GamePaths.DataPath, "ModData",
+                        CoreServerAPI.World.SavegameIdentifier,
+                        CartographyTableConstants.MOD_ID,
+                        block.Id + ".db");
+
+                    if (File.Exists(mapPath))
+                    {
+                        File.Delete(mapPath);
+                    }
+
+                    tableDBConnections.Remove(block.Id.ToString());
+				}
+			}
+        }
+
+        public void Dispose()
+        {
+            tableDBConnections.Values.ToList().ForEach(connection =>
+            {
+                connection.Close();
+                connection.Dispose();
+            });
+        }
 	}
 }

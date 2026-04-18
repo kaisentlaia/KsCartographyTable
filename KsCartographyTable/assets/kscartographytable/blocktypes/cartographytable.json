@@ -10,6 +10,7 @@
   "shape": { "base": "block/cartographytable" },
   "replaceable": 900,
   "resistance": 1.5,
+	"maxStackSize": 1,
   "lightAbsorption": 1,
   "variantgroups": [
     { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }

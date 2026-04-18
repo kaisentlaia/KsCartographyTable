@@ -117,10 +117,8 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void Dispose()
     {
-        if (CoreClientAPI != null)
-        {
-            CoreClientAPI = null;
-        }
+        ServerCartographyService.Dispose();
+        CoreClientAPI = null;
         CoreAPI = null;
         CoreServerAPI = null;
         harmony?.UnpatchAll(Mod.Info.ModID);

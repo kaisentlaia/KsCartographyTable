@@ -28,21 +28,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 CoreClientAPI = Api as ICoreClientAPI;
             }
-
-            EnsureMap();
         }
 
-        private void EnsureMap()
+        public void EnsureMap()
         {
             if (map == null)
             {
                 map = new CartographyMap(Api);
             }
-        }
-
-        public override void OnBlockPlaced(ItemStack byItemStack = null)
-        {
-            base.OnBlockPlaced(byItemStack);
         }
 
         internal bool OnPurgeWaypointGroups(IPlayer byPlayer)
@@ -56,6 +49,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnPonderMap(IPlayer byPlayer)
         {
+            EnsureMap();
             if (CoreClientAPI != null)
             {
                 KsCartographyTableModSystem.ClientCartographyService.Ponder(map, byPlayer as IClientPlayer);
@@ -66,6 +60,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnWipeTableMap(IPlayer byPlayer, BlockPos blockPos)
         {
+            EnsureMap();
             if (CoreServerAPI != null)
             {
                 KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(map, Block, byPlayer, blockPos);
@@ -82,6 +77,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnUpdateTableMap(IPlayer byPlayer, BlockSelection blockSel)
         {
+            EnsureMap();
             if (CoreServerAPI != null)
             {
                 KsCartographyTableModSystem.ServerCartographyService.UpdateTableMap(map, byPlayer as IServerPlayer);
@@ -98,6 +94,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnUpdatePlayerMap(IPlayer byPlayer, BlockSelection blockSel)
         {
+            EnsureMap();
             if (CoreServerAPI != null)
             {
                 KsCartographyTableModSystem.ServerCartographyService.UpdatePlayerMap(map, byPlayer as IServerPlayer, Block, blockSel.Position);
@@ -127,15 +124,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
-            EnsureMap();
             base.ToTreeAttributes(tree);
-            map.Serialize(tree);
+            if (map != null)
+            {
+                map.Serialize(tree);
+            }
         }
 
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
         {
-            EnsureMap();
             base.FromTreeAttributes(tree, worldForResolving);
+            EnsureMap();
             map.Deserialize(tree);
         }
         

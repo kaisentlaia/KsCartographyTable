@@ -74,10 +74,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public CartographyMap(List<Waypoint> initialWaypoints = null, List<Waypoint> initialDeletedWaypoints = null, IPlayer player = null)
         {
-            waypoints = initialWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
+            Waypoints = initialWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
                 ?? new List<CartographyWaypoint>();
 
-            deletedWaypoints = initialDeletedWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
+            DeletedWaypoints = initialDeletedWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
                 ?? new List<CartographyWaypoint>();
         }
 
@@ -105,33 +105,33 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             } else {
                 waypoints.Add(new CartographyWaypoint(waypoint, player));
             }
-            if (deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
+            if (DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
                 Undelete(waypoint);
             }
         }
 
         public void Delete(Waypoint waypoint) {
-            var toDelete = waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
+            var toDelete = Waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
             if (toDelete != null) {
-                if (!deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
-                    deletedWaypoints.Add(toDelete);
+                if (!DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
+                    DeletedWaypoints.Add(toDelete);
                 }
                 waypoints.Remove(toDelete);
             }
         }
 
         private void Undelete(Waypoint waypoint) {
-            var toUndelete = deletedWaypoints.FirstOrDefault(dwp => dwp.Guid == waypoint.Guid);
+            var toUndelete = DeletedWaypoints.FirstOrDefault(dwp => dwp.Guid == waypoint.Guid);
             if (toUndelete != null) {
-                deletedWaypoints.Remove(toUndelete);
+                DeletedWaypoints.Remove(toUndelete);
             }
         }
 
         public CartographyWaypoint Find(Waypoint waypoint) {
-            return waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
+            return Waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
         }
         public CartographyWaypoint FindDeleted(Waypoint waypoint) {
-            return deletedWaypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
+            return DeletedWaypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
         }
 
         public bool Contains(Waypoint waypoint) {
@@ -158,7 +158,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         }
 
         public bool HasDeleted(Waypoint waypoint) {
-            return deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid);
+            return DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid);
         }
 
         public List<CoordsPacket> GetPalantirWaypoints()
@@ -173,7 +173,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 tree.SetString("Waypoints", JsonUtil.ToString(Waypoints));
             }
             catch (Exception ex)
-            {                
+            {
                 api.Logger.Error("Failed to serialize waypoints: {0}", ex);
                 tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
             }
@@ -182,7 +182,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 tree.SetString("DeletedWaypoints", JsonUtil.ToString(DeletedWaypoints));
             }
             catch (Exception ex)
-            {                
+            {
                 api.Logger.Error("Failed to serialize deleted waypoints: {0}", ex);
                 tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
             }
@@ -191,7 +191,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 tree.SetString("ExploredAreasIds", JsonUtil.ToString(ExploredAreasIds));
             }
             catch (Exception ex)
-            {                
+            {
                 api.Logger.Error("Failed to serialize explored areas ids: {0}", ex);
                 tree.SetString("ExploredAreasIds", JsonUtil.ToString(new List<FastVec2i>()));
             }

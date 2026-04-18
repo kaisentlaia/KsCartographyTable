@@ -188,10 +188,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			});
 
 			if (toAdd.Count > 0 || toUpdate.Count > 0 || toDelete.Count > 0)
-            {
-                return new WaypointsUpdated(toAdd.Count, toUpdate.Count, toDelete.Count);
-            }
-			return new WaypointsUpdated(0,0,0);
+			{
+				return new WaypointsUpdated(toAdd.Count, toUpdate.Count, toDelete.Count);
+			}
+			return new WaypointsUpdated(0, 0, 0);
 		}
 
 		private List<Waypoint> GetPlayerDeletedWaypoints(IPlayer player = null)
@@ -237,23 +237,23 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(deletedWaypoints));
 			}
 		}
-		
+
 		public int Wipe(CartographyMap map)
 		{
 			int wiped = 0;
 			if (map?.Waypoints.Count > 0)
-            {
+			{
 				wiped += map.Waypoints.Count;
 				map.Waypoints.Clear();
-            }
+			}
 			if (map?.DeletedWaypoints.Count > 0)
-            {
+			{
 				wiped += map.Waypoints.Count;
 				map.DeletedWaypoints.Clear();
-            }
+			}
 			return wiped;
 		}
-		
+
 		public List<Waypoint> GetWaypointsWithGroupId()
 		{
 			return WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerGroupId != -1);
