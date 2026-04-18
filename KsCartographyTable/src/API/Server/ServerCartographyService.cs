@@ -123,10 +123,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			}
 		}
 
-		public void WipeTableMap(CartographyMap map, Block block, IPlayer byPlayer)
+		public void WipeTableMap(CartographyMap map, Block block, IPlayer byPlayer, BlockPos blockPos)
 		{
 			int waypointsWiped = tableWaypointManager.Wipe(map);
-			bool mapWiped = tableMapManager.Wipe(block);
+			bool mapWiped = tableMapManager.Wipe(block, blockPos);
 			if (waypointsWiped > 0 || mapWiped)
 			{
 				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED, waypointsWiped), EnumChatType.Notification);

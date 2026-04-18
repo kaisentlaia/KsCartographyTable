@@ -11,6 +11,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class CartographyMap {
         private List<CartographyWaypoint> waypoints;
+        
+        /// <summary>
+        /// Gets the mutable list of waypoints. 
+        /// Intended to be modified by TableWaypointManager during sync operations.
+        /// Other code should use CreateOrUpdate(), Update(), Delete() domain methods.
+        /// </summary>
         public List<CartographyWaypoint> Waypoints
         {
             get
@@ -21,10 +27,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 }
                 return waypoints;
             }
-            set {                
-                if (value != null) {
+            set
+            {
+                if (value != null)
+                {
                     waypoints = value;
-                } else {
+                }
+                else
+                {
                     waypoints = new List<CartographyWaypoint>();
                 }
             }
@@ -47,12 +57,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     deletedWaypoints = new List<CartographyWaypoint>();
                 }
             }
-        }
-        private int exploredAreasCount = 0;
-        public int ExploredAreasCount
-        {
-            get { return exploredAreasCount; }
-            set { exploredAreasCount = value; }
         }
 
         private List<ulong> exploredAreasIds = new List<ulong>();

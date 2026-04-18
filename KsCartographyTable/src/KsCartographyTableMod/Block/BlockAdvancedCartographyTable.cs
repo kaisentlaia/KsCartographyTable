@@ -5,10 +5,11 @@ using Vintagestory.API.MathTools;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
+    // TODO bug: it should be impossible to place an advanced table if the block on the right is occupied, right now the block on the right gets deleted when the right part of the table gets placed
     internal class BlockAdvancedCartographyTable : BlockCartographyTable
     {
         internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
-        
+
         Vec3f[] candleWickPositionsByRot = new Vec3f[4];
 
         public override void OnLoaded(ICoreAPI api)
@@ -34,7 +35,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
         {
             base.OnBlockPlaced(world, pos, byItemStack);
-            
+
             // Place companion block based on orientation
             BlockPos companionPos = GetCompanionPosition(pos);
             Block companionBlock = world.GetBlock(new AssetLocation(CartographyTableConstants.MOD_ID + ":" + CartographyTableConstants.ADVANCED_PREFIX + CartographyTableConstants.ADVANCED_PART_SUFFIX + LastCodePart()));
@@ -51,11 +52,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             // Remove companion block
             BlockPos companionPos = GetCompanionPosition(pos);
-            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == CartographyTableConstants.ADVANCED_PREFIX + CartographyTableConstants.ADVANCED_PART_SUFFIX  + LastCodePart())
+            if (world.BlockAccessor.GetBlock(companionPos).Code.Path == CartographyTableConstants.ADVANCED_PREFIX + CartographyTableConstants.ADVANCED_PART_SUFFIX + LastCodePart())
             {
                 world.BlockAccessor.SetBlock(0, companionPos);
             }
-            
+
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
         }
 
@@ -84,7 +85,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     "west" => 3,
                     _ => 0
                 };
-                
+
                 Vec3f wickPos = candleWickPositionsByRot[rotIndex];
 
                 for (int i = 0; i < ParticleProperties.Length; i++)

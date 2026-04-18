@@ -13,13 +13,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 [HarmonyPatch]
 public class KsCartographyTableModSystem : ModSystem
 {
-    // TODO continuous animation and repeating scribble sound while the explored map is being uploaded/downloaded + block player interactions
-    // TODO probably don't allow two players uploading/downloading at once - to test
-    // TODO an alternative might be to keep pressing, like when using the quern. Chunks get uploaded only while the interaction continues
-    // TODO check that when a second player uploads their map it won't resend all data, only the chunks that aren't on the table yet (already works for the first player, uploading a second time does nothing)
-    // TODO test with huge maps
-    // TODO consider if it would be safer to add a delay between packets
+
     // TODO adjust collision boxes
+    // TODO update it labels
 
     // TODO test behaviors:
     // when player 1 first saves their map on a new table, all the data gets uploaded

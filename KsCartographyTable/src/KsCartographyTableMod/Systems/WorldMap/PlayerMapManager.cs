@@ -49,7 +49,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		{
 			get
 			{
-				if (PlayerMapDbReader == null)
+				if (playerMapDbReader == null)
 				{
                     string mapPath = Path.Combine(GamePaths.DataPath, "Maps", CoreClientAPI.World.SavegameIdentifier + ".db");
                     playerMapDbReader = new SharedMapDB(CoreClientAPI);
@@ -72,65 +72,56 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return false;
             }
 
-            if (playerMapDbReader != null)
+            List<FastVec2i> playerMapPiecesIds = PlayerMapDbReader.GetAllMapPiecesIds();
+            HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
+            Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
+            if (tableMapPiecesIds.Count == 0)
             {
-                List<FastVec2i> playerMapPiecesIds = playerMapDbReader.GetAllMapPiecesIds();
-                HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
-                Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
-                if (tableMapPiecesIds.Count == 0)
-                {
-                    pieces = playerMapDbReader.GetAllMapPieces();
-                }
-                else
-                {
-                    List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
-                    pieces = playerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
-                }
-                if (pieces.Count == 0)
-                {
-                    return false;
-                }
-                
-                const int maxChunksPerPacket = 100;
-
-                if (pieces.Count > maxChunksPerPacket)
-                {
-                    var piecesList = pieces.ToList(); // Convert to list for indexed access
-
-                    for (int i = 0; i < piecesList.Count; i += maxChunksPerPacket)
-                    {
-                        var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
-                            kvp => kvp.Key,
-                            kvp => kvp.Value
-                        );
-
-                        bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
-
-                        CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
-                    }
-                }
-                else
-                {
-                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
-                }
+                pieces = PlayerMapDbReader.GetAllMapPieces();
             }
             else
             {
-                CoreClientAPI.Logger.Error("MapDB is null");
+                List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
+                pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
+            }
+            if (pieces.Count == 0)
+            {
+                return false;
+            }
+            
+            const int maxChunksPerPacket = 100;
+
+            if (pieces.Count > maxChunksPerPacket)
+            {
+                var piecesList = pieces.ToList(); // Convert to list for indexed access
+
+                for (int i = 0; i < piecesList.Count; i += maxChunksPerPacket)
+                {
+                    var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
+                        kvp => kvp.Key,
+                        kvp => kvp.Value
+                    );
+
+                    bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
+
+                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
+                }
+                return true;
+            }
+            else
+            {
+                CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
             }
             return false;
         }
 
         internal void UpdateMap(MapUploadPacket packet)
         {
-            if (playerMapDb != null)
-            {
-                playerMapDb.SetMapPieces(packet.Pieces);
+            PlayerMapDbReader.SetMapPieces(packet.Pieces);
 
-                if (packet.IsFinalBatch)
-                {
-                    CoreClientAPI.Logger.Notification("Finished downloading map pieces from server.");
-                }
+            if (packet.IsFinalBatch)
+            {
+                CoreClientAPI.Logger.Notification("Finished downloading map pieces from server.");
             }
         }
     }

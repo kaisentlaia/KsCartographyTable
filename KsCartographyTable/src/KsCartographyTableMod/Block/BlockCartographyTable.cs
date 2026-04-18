@@ -6,6 +6,7 @@ using Kaisentlaia.KsCartographyTableMod.API.Utils;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
+    // TODO when deleting the table close the connection and delete the db file
     internal class BlockCartographyTable : Block
     {
         private BlockInteractionRouterService blockInteractionRouterService;
@@ -48,7 +49,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 byPlayer,
                 blockSel,
                 beTable,
-                sel => beTable?.OnWipeTableMap(byPlayer),
+                sel => beTable?.OnWipeTableMap(byPlayer, blockSel.Position),
                 sel => beTable?.OnPonderMap(byPlayer),
                 sel => beTable?.OnUpdatePlayerMap(byPlayer, sel),
                 sel => beTable?.OnUpdateTableMap(byPlayer, sel)

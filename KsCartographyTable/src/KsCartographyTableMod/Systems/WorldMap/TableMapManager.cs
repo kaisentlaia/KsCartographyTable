@@ -113,7 +113,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return 0;
             }
         }
-		public bool Wipe(Block block)
+		public bool Wipe(Block block, BlockPos blockPos)
 		{
 			if (block.GetType() == typeof(BlockAdvancedCartographyTable))
 			{
@@ -122,6 +122,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				if (mapDB != null)
 				{
 					mapDB.Wipe();
+					BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
+                    blockEntity.UpdateMapExploredAreasIds(new List<FastVec2i>());
 					return true;       
 				}
 			}

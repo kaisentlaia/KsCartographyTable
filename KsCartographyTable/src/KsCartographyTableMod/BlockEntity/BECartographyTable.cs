@@ -64,11 +64,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        internal bool OnWipeTableMap(IPlayer byPlayer)
+        internal bool OnWipeTableMap(IPlayer byPlayer, BlockPos blockPos)
         {
             if (CoreServerAPI != null)
             {
-                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(map, Block, byPlayer);
+                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(map, Block, byPlayer, blockPos);
                 MarkDirty();
             }
 
