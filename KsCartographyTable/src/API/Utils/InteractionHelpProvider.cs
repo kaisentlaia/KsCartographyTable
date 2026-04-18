@@ -59,6 +59,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
           Itemstacks = ItemDetector.GetItemStacks(world, "resin")
         }
       };
+
       if (KsCartographyTableModSystem.ModCompatibilityManager.IsPalantirEnabled)
       {
           interactions.Add(new WorldInteraction()

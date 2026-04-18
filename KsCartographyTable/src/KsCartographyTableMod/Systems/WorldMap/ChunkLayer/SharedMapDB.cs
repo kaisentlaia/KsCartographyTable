@@ -41,7 +41,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
       }
 
-      class SharedMapDB : MapDB
+      public class SharedMapDB : MapDB
       {
             SqliteCommand getAllMapPiecesCmd;
             SqliteCommand setPlayerExploredMapPieceCmd;

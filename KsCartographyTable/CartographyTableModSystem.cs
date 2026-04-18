@@ -39,6 +39,7 @@ public class KsCartographyTableModSystem : ModSystem
     public static ServerCartographyHelper ServerCartographyHelper;
     public static ClientCartographyHelper ClientCartographyHelper;
     public static bool purgeWpGroups = false;
+    private TableWaypointManager tableWaypointManager;
 
     public static ModCompatibilityManager ModCompatibilityManager;
 
@@ -58,6 +59,7 @@ public class KsCartographyTableModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         CoreServerAPI = api;
+        tableWaypointManager = new TableWaypointManager(CoreServerAPI);
         ServerCartographyHelper = new ServerCartographyHelper(CoreServerAPI);
         api.ChatCommands.Create("purgewpgroups")
         .WithDescription("Removes groups from all the waypoints created by other mods on the next cartography table interaction")
@@ -72,7 +74,7 @@ public class KsCartographyTableModSystem : ModSystem
         .RequiresPrivilege(Privilege.root)
         .RequiresPlayer()
         .HandleWith((args) => {
-            ServerCartographyHelper.ClearAllDeletedWaypoints();
+            tableWaypointManager.ClearAllDeletedWaypoints();
             return TextCommandResult.Success("Data cleared.");
         });
         api.ChatCommands.Create("wipewaypoints")
@@ -81,7 +83,7 @@ public class KsCartographyTableModSystem : ModSystem
         .RequiresPlayer()
         .HandleWith((args) => {
             ServerCartographyHelper.WipeWaypoints();
-            ServerCartographyHelper.ResendWaypoints(args.Caller.Player as IServerPlayer);
+            tableWaypointManager.ResendWaypointsToPlayer(args.Caller.Player as IServerPlayer);
             return TextCommandResult.Success("Waypoints wiped");
         });
         if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
@@ -98,8 +100,8 @@ public class KsCartographyTableModSystem : ModSystem
     public override void StartClientSide(ICoreClientAPI api)
     {
         CoreClientAPI = api;
-        ClientCartographyHelper = new ClientCartographyHelper(CoreClientAPI);
         ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
+        ClientCartographyHelper = new ClientCartographyHelper(CoreClientAPI);
     }
 
     [HarmonyPrefix]

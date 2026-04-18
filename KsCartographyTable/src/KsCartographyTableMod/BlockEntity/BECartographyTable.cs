@@ -89,6 +89,38 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
+        internal bool OnUpdateTableMap(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (CoreServerAPI != null)
+            {
+                KsCartographyTableModSystem.ServerCartographyHelper.UpdateTableMap(Map, byPlayer as IServerPlayer);
+                MarkDirty();
+            }
+            if (CoreClientAPI != null)
+            {
+                CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
+                KsCartographyTableModSystem.ClientCartographyHelper.UpdateTableMap(Map, Block, blockSel.Position);
+            }
+
+            return true;
+        }
+
+        internal bool OnUpdatePlayerMap(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (CoreServerAPI != null)
+            {
+                KsCartographyTableModSystem.ServerCartographyHelper.UpdatePlayerMap(Map, byPlayer as IServerPlayer, Block, blockSel.Position);
+            }
+            if (CoreClientAPI != null)
+            {
+                CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
+                KsCartographyTableModSystem.ClientCartographyHelper.UpdateTableMap(Map, Block, blockSel.Position);
+            }
+
+            return true;
+        }
+
+
         internal bool OnPlayerInteract(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (CoreServerAPI != null)
@@ -108,7 +140,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
                 if (!byPlayer.Entity.Controls.Sprint)
                 {
-                    KsCartographyTableModSystem.ClientCartographyHelper.UpdateTableMap(Map, byPlayer as IClientPlayer, Block, blockSel.Position);
+                    KsCartographyTableModSystem.ClientCartographyHelper.UpdateTableMap(Map, Block, blockSel.Position);
                 }
             }
 

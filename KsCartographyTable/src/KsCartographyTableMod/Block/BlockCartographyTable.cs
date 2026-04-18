@@ -63,7 +63,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 beTable,
                 sel => beTable?.OnWipeTableMap(world, byPlayer, sel),
                 sel => beTable?.OnPonderMap(world, byPlayer, sel),
-                sel => beTable?.OnPlayerInteract(world, byPlayer, sel)
+                sel => beTable?.OnUpdatePlayerMap(world, byPlayer, sel),
+                sel => beTable?.OnUpdateTableMap(world, byPlayer, sel)
             );
         }
 
