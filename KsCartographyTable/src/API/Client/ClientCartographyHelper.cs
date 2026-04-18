@@ -11,6 +11,7 @@ using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Client
 {
+    [ProtoContract]
     public class CoordsPacket
     {
         [ProtoMember(1)]

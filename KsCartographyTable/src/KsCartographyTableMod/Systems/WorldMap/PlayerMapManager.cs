@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -36,7 +35,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		{
 			get
 			{
-				if (PlayerMapDb == null)
+				if (playerMapDb == null)
 				{
                     var mapDbField = typeof(ChunkMapLayer).GetField("mapdb", System.Reflection.BindingFlags.NonPublic | System.Reflection.BindingFlags.Instance);
                     playerMapDb = mapDbField?.GetValue(ChunkMapLayer) as MapDB;
