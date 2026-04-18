@@ -19,6 +19,7 @@ public class KsCartographyTableModSystem : ModSystem
     // TODO check that when a second player uploads their map it won't resend all data, only the chunks that aren't on the table yet (already works for the first player, uploading a second time does nothing)
     // TODO test with huge maps
     // TODO consider if it would be safer to add a delay between packets
+    // TODO adjust collision boxes
 
     // TODO test behaviors:
     // when player 1 first saves their map on a new table, all the data gets uploaded
@@ -36,8 +37,8 @@ public class KsCartographyTableModSystem : ModSystem
     public static ICoreClientAPI CoreClientAPI;
     public Harmony harmony;
     protected const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
-    public static ServerCartographyHelper ServerCartographyHelper;
-    public static ClientCartographyHelper ClientCartographyHelper;
+    public static ServerCartographyService ServerCartographyService;
+    public static ClientCartographyService ClientCartographyService;
     public static bool purgeWpGroups = false;
     private TableWaypointManager tableWaypointManager;
 
@@ -59,8 +60,8 @@ public class KsCartographyTableModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         CoreServerAPI = api;
+        ServerCartographyService = new ServerCartographyService(CoreServerAPI);
         tableWaypointManager = new TableWaypointManager(CoreServerAPI);
-        ServerCartographyHelper = new ServerCartographyHelper(CoreServerAPI);
         api.ChatCommands.Create("purgewpgroups")
         .WithDescription("Removes groups from all the waypoints created by other mods on the next cartography table interaction")
         .RequiresPrivilege(Privilege.chat)
@@ -82,7 +83,7 @@ public class KsCartographyTableModSystem : ModSystem
         .RequiresPrivilege(Privilege.root)
         .RequiresPlayer()
         .HandleWith((args) => {
-            ServerCartographyHelper.WipeWaypoints();
+            ServerCartographyService.WipeWaypoints();
             tableWaypointManager.ResendWaypointsToPlayer(args.Caller.Player as IServerPlayer);
             return TextCommandResult.Success("Waypoints wiped");
         });
@@ -101,7 +102,7 @@ public class KsCartographyTableModSystem : ModSystem
     {
         CoreClientAPI = api;
         ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
-        ClientCartographyHelper = new ClientCartographyHelper(CoreClientAPI);
+        ClientCartographyService = new ClientCartographyService(CoreClientAPI);
     }
 
     [HarmonyPrefix]
@@ -111,7 +112,7 @@ public class KsCartographyTableModSystem : ModSystem
         if (!IsMapDisallowed() && !args.Parsers[0].IsMissing) {
             int index = (int)args.Parsers[0].GetValue();
             IServerPlayer player = args.Caller.Player as IServerPlayer;
-            ServerCartographyHelper.MarkDeleted(player, index);
+            ServerCartographyService.MarkDeleted(player, index);
         }
     }
 

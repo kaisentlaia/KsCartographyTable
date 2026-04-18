@@ -56,7 +56,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
           ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_WIPE,
           HotKeyCode = null,
           MouseButton = EnumMouseButton.Right,
-          Itemstacks = ItemDetector.GetItemStacks(world, "resin")
+          Itemstacks = ItemDetectorService.GetItemStacks(world, "resin")
         }
       };
 
@@ -67,7 +67,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
               ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_PONDER,
               HotKeyCode = null,
               MouseButton = EnumMouseButton.Right,
-              Itemstacks = ItemDetector.GetItemStacks(world, CartographyTableConstants.PALANTIR_BLOCK_CODE)
+              Itemstacks = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.PALANTIR_BLOCK_CODE)
           });
       }
 

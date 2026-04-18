@@ -1,11 +1,9 @@
-
-
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 {
-  public class ItemDetector
+  public class ItemDetectorService
   {
     public static bool HasItemInHand(IPlayer player, string codePart)
     {

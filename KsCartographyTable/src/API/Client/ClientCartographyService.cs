@@ -50,7 +50,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         }
     }
 
-    public class ClientCartographyHelper
+    public class ClientCartographyService
     {
         ICoreClientAPI CoreClientAPI;
         WorldMapManager WorldMapManager;
@@ -73,10 +73,18 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             }
         }
 
-        public ClientCartographyHelper(ICoreClientAPI api)
+        public ClientCartographyService(ICoreClientAPI api)
         {
             CoreClientAPI = api;
 
+            playerMapManager = new PlayerMapManager(CoreClientAPI);
+            playerWaypointManager = new PlayerWaypointManager(CoreClientAPI);
+
+            RegisterChannels();
+        }
+
+        public void RegisterChannels()
+        {
             CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.UPLOAD_CHANNEL)
                 .RegisterMessageType<MapUploadPacket>();
 
@@ -89,15 +97,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                 CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.PALANTIR_CHANNEL)
                     .RegisterMessageType<PalantirTravelPacket>();
             }
-
-			playerMapManager = new PlayerMapManager(CoreClientAPI);
-			playerWaypointManager = new PlayerWaypointManager(CoreClientAPI);
-
         }
 
         public void OnMapDownloadRequest(MapUploadPacket packet)
         {
-			playerMapManager.UpdateMap(packet);
+            playerMapManager.UpdateMap(packet);
         }
 
         public void UpdateTableMap(CartographyMap map, Block block, BlockPos blockPos)

@@ -173,7 +173,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 			toAdd.ForEach(PlayerWaypoint =>
 			{
-				map.Create(PlayerWaypoint, player);
+				map.CreateOrUpdate(PlayerWaypoint, player);
 			});
 
 			toUpdate.ForEach(PlayerWaypoint =>
@@ -237,20 +237,31 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(deletedWaypoints));
 			}
 		}
-		public bool Wipe(CartographyMap map)
+		
+		public int Wipe(CartographyMap map)
 		{
-			bool wiped = false;
+			int wiped = 0;
 			if (map?.Waypoints.Count > 0)
             {
+				wiped += map.Waypoints.Count;
 				map.Waypoints.Clear();
-				wiped = true;
             }
 			if (map?.DeletedWaypoints.Count > 0)
             {
+				wiped += map.Waypoints.Count;
 				map.DeletedWaypoints.Clear();
-				wiped = true;
             }
 			return wiped;
+		}
+		
+		public List<Waypoint> GetWaypointsWithGroupId()
+		{
+			return WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerGroupId != -1);
+		}
+		public void ClearAllWaypoints()
+		{
+			WaypointMapLayer.Waypoints.Clear();
+			WaypointMapLayer.ownWaypoints.Clear();
 		}
 	}
 }

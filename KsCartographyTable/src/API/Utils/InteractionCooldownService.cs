@@ -5,14 +5,14 @@ using Vintagestory.API.Common;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 {
-  public class InteractionCooldownManager
+  public class InteractionCooldownService
   {
     private Dictionary<string, long> lastInteractionTimes = new();
     private const long InteractionCooldownMs = 500;
     private const long EntryExpirationMs = 60000;
     private ICoreAPI api;
 
-    public InteractionCooldownManager(ICoreAPI api) => this.api = api;
+    public InteractionCooldownService(ICoreAPI api) => this.api = api;
 
     public bool CanInteract(IPlayer player)
     {

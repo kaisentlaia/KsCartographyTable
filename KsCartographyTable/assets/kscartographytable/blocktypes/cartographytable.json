@@ -60,30 +60,15 @@
   "collisionSelectionBoxesByType": {
     "*-north": [
       {
-        "x1": 0.0,
-        "y1": 0.0,
-        "z1": 0.0,
-        "x2": 1.0,
-        "y2": 1.0,
-        "z2": 1.0,
+        "x1": 0.0, "y1": 0.0, "z1": 0.0, "x2": 1.0, "y2": 1.0, "z2": 1.0,
         "comment": "Box 0: Table base"
       },
       {
-        "x1": 0.75,
-        "y1": 1.0,
-        "z1": 0.125,
-        "x2": 0.875,
-        "y2": 1.51,
-        "z2": 0.375,
-        "comment": "Box 1: Ink and quill - tall thin box centered on bottle, contains full quill"
+        "x1": 0.72, "y1": 1, "z1": 0.13, "x2": 0.91, "y2": 1.51, "z2": 0.32,
+        "comment": "Box 1: Ink and quill"
       },
       {
-        "x1": 0.2,
-        "y1": 1.0,
-        "z1": 0.18,
-        "x2": 0.8,
-        "y2": 1.08,
-        "z2": 0.92,
+        "x1": 0.2, "y1": 1.0, "z1": 0.18, "x2": 0.8, "y2": 1.08, "z2": 0.92,
         "comment": "Box 2: Map"
       }
     ],

@@ -8,12 +8,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     internal class BlockCartographyTable : Block
     {
-        private InteractionCooldownManager interactionCooldownManager;
-
-        private BlockInteractionRouter blockInteractionRouter;
+        private BlockInteractionRouterService blockInteractionRouterService;
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
+            blockInteractionRouterService = new BlockInteractionRouterService(new InteractionCooldownService(api));
 
             if (api.Side != EnumAppSide.Client) return;
         }
@@ -30,41 +29,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             // TODO is this needed?
             // Secondary multiblock position — search adjacent blocks for the entity
-            BlockPos[] adjacents = [
-                pos.AddCopy(1, 0, 0), pos.AddCopy(-1, 0, 0),
-                pos.AddCopy(0, 0, 1), pos.AddCopy(0, 0, -1)
-            ];
-            foreach (var adjacent in adjacents)
-            {
-                entity = world.BlockAccessor.GetBlockEntity(adjacent) as BlockEntityCartographyTable;
-                if (entity != null) return entity;
-            }
+            // BlockPos[] adjacents = [
+            //     pos.AddCopy(1, 0, 0), pos.AddCopy(-1, 0, 0),
+            //     pos.AddCopy(0, 0, 1), pos.AddCopy(0, 0, -1)
+            // ];
+            // foreach (var adjacent in adjacents)
+            // {
+            //     entity = world.BlockAccessor.GetBlockEntity(adjacent) as BlockEntityCartographyTable;
+            //     if (entity != null) return entity;
+            // }
             return null;
         }
 
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (interactionCooldownManager == null)
-            {
-                interactionCooldownManager = new InteractionCooldownManager(api);
-            }
-            if (blockInteractionRouter == null)
-            {
-                blockInteractionRouter = new BlockInteractionRouter(interactionCooldownManager);
-            }
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (blockInteractionRouter == null)
-            {
-                return base.OnBlockInteractStart(world, byPlayer, blockSel);
-            }
-            return blockInteractionRouter.TryRouteInteraction(
+            return blockInteractionRouterService.TryRouteInteraction(
                 byPlayer,
                 blockSel,
                 beTable,
-                sel => beTable?.OnWipeTableMap(world, byPlayer, sel),
-                sel => beTable?.OnPonderMap(world, byPlayer, sel),
-                sel => beTable?.OnUpdatePlayerMap(world, byPlayer, sel),
-                sel => beTable?.OnUpdateTableMap(world, byPlayer, sel)
+                sel => beTable?.OnWipeTableMap(byPlayer),
+                sel => beTable?.OnPonderMap(byPlayer),
+                sel => beTable?.OnUpdatePlayerMap(byPlayer, sel),
+                sel => beTable?.OnUpdateTableMap(byPlayer, sel)
             );
         }
 

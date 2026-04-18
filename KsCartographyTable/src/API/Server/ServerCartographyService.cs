@@ -5,38 +5,42 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
-using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Server
 {
-	public class ServerCartographyHelper
+	public class ServerCartographyService
 	{
         readonly ICoreServerAPI CoreServerAPI;
 		private readonly TableWaypointManager tableWaypointManager;
 		private readonly TableMapManager tableMapManager;
 
-		public ServerCartographyHelper(ICoreServerAPI ServerAPI)
+		public ServerCartographyService(ICoreServerAPI ServerAPI)
 		{
 			CoreServerAPI = ServerAPI;
 
+			tableMapManager = new TableMapManager(CoreServerAPI);
+			tableWaypointManager = new TableWaypointManager(CoreServerAPI);
+
+			RegisterChannels();
+		}
+
+		public void RegisterChannels()
+		{
 			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.UPLOAD_CHANNEL)
 				.RegisterMessageType<MapUploadPacket>()
 				.SetMessageHandler<MapUploadPacket>(OnMapUploadRequest);
 
 			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.DOWNLOAD_CHANNEL)
 				.RegisterMessageType<MapUploadPacket>();
-
-			tableMapManager = new TableMapManager(CoreServerAPI);
-			tableWaypointManager = new TableWaypointManager(CoreServerAPI);
 		}
 
 		private void OnMapUploadRequest(IServerPlayer fromPlayer, MapUploadPacket packet)
 		{
 			double km2updated = tableMapManager.UpdateMap(fromPlayer, packet);
 			if (km2updated > 0)
-            {                
+			{
 				CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2updated:F1}"), EnumChatType.Notification);
-            }
+			}
 		}
 
 		public void UpdateTableMap(CartographyMap map, IServerPlayer player)
@@ -107,7 +111,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		{
 			if (KsCartographyTableModSystem.purgeWpGroups)
 			{
-				var allWaypointsWithGroupId = tableWaypointManager.WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerGroupId != -1);
+				var allWaypointsWithGroupId = tableWaypointManager.GetWaypointsWithGroupId();
 				if (allWaypointsWithGroupId.Count > 0)
 				{
 					allWaypointsWithGroupId.Foreach(wp =>
@@ -119,13 +123,18 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			}
 		}
 
-		public void WipeTableMap(CartographyMap map, Block block)
+		public void WipeTableMap(CartographyMap map, Block block, IPlayer byPlayer)
 		{
-			bool waypointsWiped = tableWaypointManager.Wipe(map);
+			int waypointsWiped = tableWaypointManager.Wipe(map);
 			bool mapWiped = tableMapManager.Wipe(block);
-			if (waypointsWiped || mapWiped) {
-				CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED, 0), EnumChatType.Notification);
-			} else {
+			if (waypointsWiped > 0 || mapWiped)
+			{
+				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED, waypointsWiped), EnumChatType.Notification);
+
+				byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), byPlayer);
+			}
+			else
+			{
 				CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY), EnumChatType.Notification);
 			}
 		}
@@ -137,8 +146,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
 		public void WipeWaypoints()
 		{
-			tableWaypointManager.WaypointMapLayer.Waypoints.Clear();
-			tableWaypointManager.WaypointMapLayer.ownWaypoints.Clear();
+			tableWaypointManager.ClearAllWaypoints();
 		}
 	}
 }

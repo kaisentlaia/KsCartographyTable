@@ -5,11 +5,11 @@ using Vintagestory.API.Common;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 {
-	public class BlockInteractionRouter
+	public class BlockInteractionRouterService
 	{
-		private InteractionCooldownManager cooldownManager;
+		private InteractionCooldownService cooldownManager;
 
-		public BlockInteractionRouter(InteractionCooldownManager cooldownManager)
+		public BlockInteractionRouterService(InteractionCooldownService cooldownManager)
 		{
 			this.cooldownManager = cooldownManager;
 		}
@@ -30,21 +30,21 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 				return false;
 
 			// Box 2: Map area - wipe with resin
-			if (blockSel.SelectionBoxIndex == 2 && ItemDetector.HasItemInHand(byPlayer, "resin"))
+			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && ItemDetectorService.HasItemInHand(byPlayer, "resin"))
 			{
 				onWipeMap(blockSel);
 				return true;
 			}
 
 			// Palantir interaction
-			if (blockSel.SelectionBoxIndex == 2 && ItemDetector.HasItemInHand(byPlayer, CartographyTableConstants.PALANTIR_BLOCK_CODE))
+			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && ItemDetectorService.HasItemInHand(byPlayer, CartographyTableConstants.PALANTIR_BLOCK_CODE))
 			{
 				onPalantir(blockSel);
 				return true;
 			}
 
 			// Box 1: Ink and quill interaction
-			if (blockSel.SelectionBoxIndex == 1 && ItemDetector.HasEmptyHand(byPlayer))
+			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.InkAndQuill && ItemDetectorService.HasEmptyHand(byPlayer))
 			{
 				if (byPlayer.Entity.Controls.Sprint)
 				{

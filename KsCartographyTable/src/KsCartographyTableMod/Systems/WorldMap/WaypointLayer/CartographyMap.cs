@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Datastructures;
+using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
@@ -11,7 +13,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private List<CartographyWaypoint> waypoints;
         public List<CartographyWaypoint> Waypoints
         {
-            get { return waypoints; }
+            get
+            {
+                if (waypoints == null)
+                {
+                    waypoints = new List<CartographyWaypoint>();
+                }
+                return waypoints;
+            }
             set {                
                 if (value != null) {
                     waypoints = value;
@@ -23,7 +32,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private List<CartographyWaypoint> deletedWaypoints;
         public List<CartographyWaypoint> DeletedWaypoints
         {
-            get { return deletedWaypoints; }
+            get
+            {
+                if (deletedWaypoints == null)
+                {
+                    deletedWaypoints = new List<CartographyWaypoint>();
+                }
+                return deletedWaypoints;
+            }
             set {                
                 if (value != null) {
                     deletedWaypoints = value;
@@ -45,26 +61,23 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return exploredAreasIds; }
             set { exploredAreasIds = value; }
         }
+        ICoreAPI api;
 
-
-        public CartographyMap(List<Waypoint> InitialWaypoints = null, List<Waypoint> InitialDeletedWaypoints = null, IPlayer player = null) {
-            waypoints = new List<CartographyWaypoint>();
-            deletedWaypoints = new List<CartographyWaypoint>();
-            if (InitialWaypoints != null && player != null)
-            {
-                InitialWaypoints.ForEach(waypoint =>
-                {
-                    waypoints.Add(new CartographyWaypoint(waypoint, player));
-                });
-            }
-            if (InitialDeletedWaypoints != null && player != null) {
-                InitialDeletedWaypoints.ForEach(waypoint => {
-                    deletedWaypoints.Add(new CartographyWaypoint(waypoint, player));
-                });
-            }
+        public CartographyMap(ICoreAPI api)
+        {
+            this.api = api;
         }
 
-        public void Create(Waypoint waypoint, IPlayer player) {
+        public CartographyMap(List<Waypoint> initialWaypoints = null, List<Waypoint> initialDeletedWaypoints = null, IPlayer player = null)
+        {
+            waypoints = initialWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
+                ?? new List<CartographyWaypoint>();
+
+            deletedWaypoints = initialDeletedWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
+                ?? new List<CartographyWaypoint>();
+        }
+
+        public void CreateOrUpdate(Waypoint waypoint, IPlayer player) {
             if(Contains(waypoint)) {
                 Update(waypoint, player);
             } else {
@@ -117,9 +130,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return deletedWaypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
         }
 
-        public bool Contains(Waypoint waypoint, bool sameContent = false) {
+        public bool Contains(Waypoint waypoint) {
             var foundWaypoint = Find(waypoint);
-            if (foundWaypoint != null && sameContent) {                
+            return foundWaypoint != null;
+        }
+
+        public bool ContentEquals(Waypoint waypoint) {
+            var foundWaypoint = Find(waypoint);
+            if (foundWaypoint != null) {                
                 return foundWaypoint.ContentEqualTo(waypoint);
             }
             return foundWaypoint != null;
@@ -142,6 +160,98 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public List<CoordsPacket> GetPalantirWaypoints()
         {
             return Waypoints.Where(waypoint => waypoint.Icon == "palantir-manual").Select(waypoint => new CoordsPacket(waypoint.Position.X, waypoint.Position.Y, waypoint.Position.Z)).ToList();
+        }
+
+        public void Serialize(ITreeAttribute tree)
+        {
+            try
+            {
+                tree.SetString("Waypoints", JsonUtil.ToString(Waypoints));
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to serialize waypoints: {0}", ex);
+                tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+            }
+            try
+            {
+                tree.SetString("DeletedWaypoints", JsonUtil.ToString(DeletedWaypoints));
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to serialize deleted waypoints: {0}", ex);
+                tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+            }
+            try
+            {
+                tree.SetString("ExploredAreasIds", JsonUtil.ToString(ExploredAreasIds));
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to serialize explored areas ids: {0}", ex);
+                tree.SetString("ExploredAreasIds", JsonUtil.ToString(new List<FastVec2i>()));
+            }
+        }
+
+        public void Deserialize(ITreeAttribute tree)
+        {
+            try
+            {
+                if (tree.HasAttribute("Waypoints"))
+                {
+                    var savedWaypoints = tree.GetString("Waypoints");
+                    Waypoints = savedWaypoints != null
+                        ? JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints)
+                        : new List<CartographyWaypoint>();
+                }
+                else
+                {
+                    Waypoints = new List<CartographyWaypoint>();
+                }
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to deserialize waypoints: {0}", ex);
+                Waypoints = new List<CartographyWaypoint>();
+            }
+            try
+            {
+                if (tree.HasAttribute("DeletedWaypoints"))
+                {
+                    var deletedWaypoints = tree.GetString("DeletedWaypoints");
+                    DeletedWaypoints = deletedWaypoints != null
+                        ? JsonUtil.FromString<List<CartographyWaypoint>>(deletedWaypoints)
+                        : new List<CartographyWaypoint>();
+                }
+                else
+                {
+                    DeletedWaypoints = new List<CartographyWaypoint>();
+                }
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to deserialize deleted waypoints: {0}", ex);
+                DeletedWaypoints = new List<CartographyWaypoint>();
+            }
+            try
+            {
+                if (tree.HasAttribute("ExploredAreasIds"))
+                {
+                    var exploredAreasIdsStr = tree.GetString("ExploredAreasIds");
+                    ExploredAreasIds = exploredAreasIdsStr != null
+                        ? JsonUtil.FromString<List<ulong>>(exploredAreasIdsStr)
+                        : new List<ulong>();
+                }
+                else
+                {
+                    ExploredAreasIds = new List<ulong>();
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize explored areas ids: {0}", ex);
+                ExploredAreasIds = new List<ulong>();
+            }
         }
     }
 }
