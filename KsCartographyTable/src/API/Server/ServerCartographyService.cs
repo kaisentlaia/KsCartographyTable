@@ -78,30 +78,33 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 				string waypointsMessage = string.Empty;
 				if (updatedWaypoints.Added > 0)
 				{
-					waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_ADDED, updatedWaypoints.Added);
+					waypointsMessage = Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_ADDED, updatedWaypoints.Added);
 				}
 				if (updatedWaypoints.Edited > 0)
 				{
-					waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_EDITED, updatedWaypoints.Edited);
+					waypointsMessage = Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_EDITED, updatedWaypoints.Edited);
 				}
 				if (updatedWaypoints.Deleted > 0)
 				{
-					waypointsMessage = Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_DELETED, updatedWaypoints.Deleted);
+					waypointsMessage = Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, updatedWaypoints.Deleted);
 				}
 				CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, waypointsMessage, EnumChatType.Notification);
 			}
 			else
 			{
-				CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
+				CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
 			}
 
-			if (updatedExploredMap > 0)
+			if (block is BlockAdvancedCartographyTable)
 			{
-				CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_MAP_UPDATED, $"{updatedExploredMap:F1}"), EnumChatType.Notification);
-			}
-			else
-			{
-				CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.USER_MAP_UP_TO_DATE), EnumChatType.Notification);
+				if (updatedExploredMap > 0)
+				{
+					CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{updatedExploredMap:F1}"), EnumChatType.Notification);
+				}
+				else
+				{
+					CoreServerAPI.SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE), EnumChatType.Notification);
+				}
 			}
 
 			if (updatedExploredMap > 0 || updatedWaypoints.Updated)

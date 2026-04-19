@@ -2,12 +2,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
 {
 	public static class CartographyTableLangCodes
 	{
-		public readonly static string USER_WAYPOINTS_ADDED = GetLangCode("message-new-user-waypoints");
-		public readonly static string USER_WAYPOINTS_DELETED = GetLangCode("message-deleted-user-waypoints");
-		public readonly static string USER_WAYPOINTS_EDITED = GetLangCode("message-edited-user-waypoints");
-		public readonly static string USER_MAP_UPDATED = GetLangCode("message-updated-user-explored-chunks");
-		public readonly static string USER_WAYPOINTS_UP_TO_DATE = GetLangCode("message-user-waypoints-up-to-date");
-		public readonly static string USER_MAP_UP_TO_DATE = GetLangCode("message-user-map-up-to-date");
+		public readonly static string PLAYER_WAYPOINTS_ADDED = GetLangCode("message-new-user-waypoints");
+		public readonly static string PLAYER_WAYPOINTS_DELETED = GetLangCode("message-deleted-user-waypoints");
+		public readonly static string PLAYER_WAYPOINTS_EDITED = GetLangCode("message-edited-user-waypoints");
+		public readonly static string PLAYER_MAP_UPDATED = GetLangCode("message-updated-user-explored-chunks");
+		public readonly static string PLAYER_WAYPOINTS_UP_TO_DATE = GetLangCode("message-user-waypoints-up-to-date");
+		public readonly static string PLAYER_MAP_UP_TO_DATE = GetLangCode("message-user-map-up-to-date");
 		public readonly static string TABLE_MAP_UP_TO_DATE = GetLangCode("message-table-map-up-to-date");
 		public readonly static string TABLE_MAP_UPDATED = GetLangCode("message-updated-map-explored-chunks");
 		public readonly static string TABLE_MAP_WIPED = GetLangCode("message-table-map-wiped");

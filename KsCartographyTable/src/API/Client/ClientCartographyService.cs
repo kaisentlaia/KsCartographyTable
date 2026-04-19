@@ -108,7 +108,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         {
             if (!playerMapManager.SendMapToTable(map, block, blockPos))
             {
-                CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE));
+                if (block is BlockAdvancedCartographyTable)
+                {
+                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE));   
+                }
             }
         }
 

@@ -110,10 +110,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
-            if (Block.GetType() != typeof(BlockAdvancedCartographyTable) && map != null && map.Waypoints.Count > 0)
+            if (!(Block is BlockAdvancedCartographyTable) && map != null && map.Waypoints.Count > 0)
             {
                 dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, map.Waypoints.Count));
-            } else if (Block.GetType() == typeof(BlockAdvancedCartographyTable) && map != null && (map.Waypoints.Count > 0 || map.ExploredAreasIds.Count > 0)) {
+            } else if (Block is BlockAdvancedCartographyTable && map != null && (map.Waypoints.Count > 0 || map.ExploredAreasIds.Count > 0)) {
                 double km2 = map.ExploredAreasIds.Count * 0.001024;
                 dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, map.Waypoints.Count, $"{km2:F1}"));
             } else

@@ -154,6 +154,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		internal WaypointsUpdated Update(CartographyMap map, IServerPlayer player)
 		{
+			// BUG with lots of waypoints odd behaviors happen: at the first interaction the message says edited and deleted when the player added some waypoints and deleted other waypoints. At the second interaction the message says added. Further interactions keep displaying different values.
 			var playerWaypoints = GetPlayerWaypoints(player);
 			var playerDeletedWaypoints = GetPlayerDeletedWaypoints(player);
 

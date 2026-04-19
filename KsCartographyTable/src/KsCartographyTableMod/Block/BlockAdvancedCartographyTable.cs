@@ -26,6 +26,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 m.RotateYDeg(i * 90);
                 m.Translate(-0.5f, -0.5f, -0.5f);
 
+                // BUG the particles get spawned in the wrong position for non-north orientations
+                // BUG the particles are too high on north orientation
                 Vec4f rotated = m.TransformVector(new Vec4f(candleWickPosition.X, candleWickPosition.Y, candleWickPosition.Z, 1));
                 candleWickPositionsByRot[i] = new Vec3f(rotated.X, rotated.Y, rotated.Z);
             }
@@ -33,6 +35,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
         {
+            // BUG results in not enough space when there's space on the right if there are blocks behind the table
+            // BUG south orientation doesn't detect correctly an occupied right block
             // Get the position where the companion block would go
             BlockPos companionPos = GetCompanionPosition(blockSel.Position);
             

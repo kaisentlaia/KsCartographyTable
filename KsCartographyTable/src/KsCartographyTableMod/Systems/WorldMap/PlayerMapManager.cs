@@ -67,7 +67,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public bool SendMapToTable(CartographyMap map, Block block, BlockPos blockPos)
         {
-            if (block.GetType() != typeof(BlockAdvancedCartographyTable))
+            if (!(block is BlockAdvancedCartographyTable))
             {
                 return false;
             }
@@ -91,6 +91,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             
             const int maxChunksPerPacket = 100;
 
+            // BUG this kicks out the player if they are playing on a LAN/remote server instead of a local server, if they have a big map
             if (pieces.Count > maxChunksPerPacket)
             {
                 var piecesList = pieces.ToList(); // Convert to list for indexed access

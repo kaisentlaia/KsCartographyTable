@@ -68,7 +68,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		public double SendMapToPlayer(IServerPlayer player, Block block, BlockPos blockPos)
         {
-            if (block.GetType() != typeof(BlockAdvancedCartographyTable))
+            if (!(block is BlockAdvancedCartographyTable))
             {
                 return 0;
             }
@@ -115,7 +115,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         }
 		public bool Wipe(Block block, BlockPos blockPos)
 		{
-			if (block.GetType() == typeof(BlockAdvancedCartographyTable))
+			if (block is BlockAdvancedCartographyTable)
 			{
 				SharedMapDB mapDB = GetBlockMapDB(block.Id.ToString());
 
@@ -132,7 +132,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public void CleanupMapData(Block block, BlockPos pos)
         {
-			if (block.GetType() == typeof(BlockAdvancedCartographyTable))
+			if (block is BlockAdvancedCartographyTable)
 			{
 				SharedMapDB mapDB = GetBlockMapDB(block.Id.ToString());
 
