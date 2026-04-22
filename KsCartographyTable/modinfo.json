@@ -6,12 +6,12 @@
         "Kaisentlaia"
     ],
     "description": "A cartography table that allows waypoint sharing between players.",
-    "networkVersion": "1.0.3",
-    "version": "1.0.3",
+    "networkVersion": "1.0.4",
+    "version": "1.0.4",
     "side" : "Universal",
     "requiredOnClient": true,
     "requiredOnServer": true,
     "dependencies": {
-        "game": "1.22.0-rc.7"
+        "game": "1.22.0"
     }
 }
