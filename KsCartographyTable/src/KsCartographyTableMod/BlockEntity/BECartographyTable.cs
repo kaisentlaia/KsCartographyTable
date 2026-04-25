@@ -14,6 +14,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
+        protected ILoadedSound ambientSound;
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
@@ -111,11 +112,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
                 MarkDirty();
+                startSound();
                 return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Block);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
                 MarkDirty();
+                startSound();
                 return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel.Block);
             }
             return false;
@@ -123,6 +126,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+            // TODO session should receive secondsUsed and send a packet every x seconds
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
                 return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, blockSel.Block);
@@ -138,13 +142,41 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
+                stopSound();
                 KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
+                stopSound();
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
             }
             throw new NotImplementedException();
+        }
+        public void startSound()
+        {
+            if (ambientSound == null && Api?.Side == EnumAppSide.Client)
+            {
+                ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                {
+                    Location = new AssetLocation("game:sounds/effect/writing.ogg"),
+                    ShouldLoop = true,
+                    Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                    DisposeOnFinish = false,
+                    Volume = 0.75f
+                });
+
+                ambientSound.Start();
+            }
+        }
+
+        public void stopSound()
+        {
+            if (ambientSound != null)
+            {
+                ambientSound.Stop();
+                ambientSound.Dispose();
+                ambientSound = null;
+            }
         }
     }
 }
