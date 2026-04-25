@@ -1,6 +1,4 @@
-using System;
 using System.Collections.Generic;
-using System.IO;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Kaisentlaia.KsCartographyTableMod.GameContent;
@@ -58,7 +56,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         ICoreClientAPI CoreClientAPI;
         WorldMapManager WorldMapManager;
         private Dictionary<string, MapTransferSession> activeSessions = [];
-		private readonly PlayerWaypointManager playerWaypointManager;
+		private readonly ClientWaypointManager playerWaypointManager;
 		private readonly PlayerMapManager playerMapManager;
         ChunkMapLayer chunkMapLayer;
         public ChunkMapLayer ChunkMapLayer
@@ -83,7 +81,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI = api;
 
             playerMapManager = new PlayerMapManager(CoreClientAPI);
-            playerWaypointManager = new PlayerWaypointManager(CoreClientAPI);
+            playerWaypointManager = new ClientWaypointManager(CoreClientAPI);
 
             RegisterChannels();
         }
@@ -109,21 +107,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             playerMapManager.UpdateMap(packet);
         }
 
-        public void UpdateTableMap(CartographyMap map, Block block, BlockPos blockPos)
-        {
-            if (!playerMapManager.SendMapToTable(map, block, blockPos))
-            {
-                if (block is BlockAdvancedCartographyTable)
-                {
-                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE));   
-                }
-            }
-        }
-
         public void Ponder(CartographyMap map, IClientPlayer byPlayer)
         {
             PalantirTravelPacket palantirTravel = new PalantirTravelPacket(
-                map.GetPalantirWaypoints(),
+                playerWaypointManager.GetPalantirWaypoints(),
                 new CoordsPacket(byPlayer.Entity.Pos.X, byPlayer.Entity.Pos.Y, byPlayer.Entity.Pos.Z)
             );
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);
@@ -136,34 +123,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 return false;
             }
-            List<CartographyWaypoint> newWaypoints = playerWaypointManager.GetNewWaypoints(map);
-            List<CartographyWaypoint> editedWaypoints = playerWaypointManager.GetEditedWaypoints(map);
-            List<CartographyWaypoint> deletedWaypoints = playerWaypointManager.GetDeletedWaypoints(map);
-            CartographyMapData playerCartographyMap;
-            if (block is BlockAdvancedCartographyTable)
-            {
-                Dictionary<FastVec2i, MapPieceDB> mapPieces = playerMapManager.GetNewMapPieces(map, block);
-                playerCartographyMap = new CartographyMapData(
-                    mapPieces,
-                    newWaypoints,
-                    editedWaypoints,
-                    deletedWaypoints
-                );
-            }
-            else
-            {
-                playerCartographyMap = new CartographyMapData(
-                    newWaypoints,
-                    editedWaypoints,
-                    deletedWaypoints
-                );
-            }
-            if (playerCartographyMap.IsEmpty())
-            {
-                // TODO send table up to date message
-                return false;
-            }
-            MapTransferSession session = new MapTransferSession(byPlayer, block, action, world, playerCartographyMap);
+            MapTransferSession session = new MapTransferSession(byPlayer, block, action, world, playerMapManager.GetNewMapPieces(map, block));
             activeSessions.Add(sessionId, session);
             return session.SendFirstBatch();
         }

@@ -17,12 +17,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public BlockSelection BlockSel { get; }
         public CartographyAction Action { get; }
         public IWorldAccessor World { get; }
-        public CartographyMapData CartographyMapData { get; }
+        public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
         
         public int TotalChunksSent { get; private set; }
         public bool IsComplete { get; set; }
         
         private Queue<Dictionary<FastVec2i, MapPieceDB>> remainingBatches;
+        
         private const int BATCH_SIZE = 25;
         private string channel;
 
@@ -31,14 +32,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Block blockCartographyTable,
             CartographyAction action,
             IWorldAccessor world,
-            CartographyMapData cartographyMapData)
+            Dictionary<FastVec2i, MapPieceDB> mapPieces)
         {
             Player = player;
             BlockCartographyTable = blockCartographyTable;
             Action = action;
             World = world;
-            CartographyMapData = cartographyMapData;
             TotalChunksSent = 0;
+            MapPieces = mapPieces;
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
         }
 
@@ -58,35 +59,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public bool SendFirstBatch()
         {
-            if (CartographyMapData.IsEmpty())
-            {
-                return false;
-            }
-
-            if (CartographyMapData.HasWaypointData())
-            {
-                bool isFinal = !CartographyMapData.HasChunkData();
-                MapUploadPacket packet = new MapUploadPacket(
-                    [],
-                    BlockSel.Block,
-                    BlockSel.Position,
-                    CartographyMapData.NewWaypoints,
-                    CartographyMapData.EditedWaypoints,
-                    CartographyMapData.DeletedWaypoints,
-                    isFinal,
-                    isFinal ? CartographyMapData.NewWaypoints.Count() : 0,
-                    isFinal ? CartographyMapData.EditedWaypoints.Count() : 0,
-                    isFinal ? CartographyMapData.DeletedWaypoints.Count() : 0
-                );
-                SendPacket(packet);
-            }
-
-
-            var pieces = CartographyMapData.MapPieces;
-            // Split into batches
             remainingBatches = new Queue<Dictionary<FastVec2i, MapPieceDB>>();
 
-            var piecesList = pieces.ToList();
+            var piecesList = MapPieces.ToList();
 
             for (int i = 0; i < piecesList.Count; i += BATCH_SIZE)
             {
@@ -97,47 +72,51 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 remainingBatches.Enqueue(batch);
             }
 
-            return CartographyMapData.HasWaypointData() ? true : SendNextBatch();
+            return SendNextBatch();
         }
 
-        public bool SendNextBatch(bool forceLast = false)
+        public bool SendNextBatch()
         {
-            if (remainingBatches == null || remainingBatches.Count == 0)
+            if (remainingBatches.Count == 0)
             {
-                return false;
+                return SendFinalBatch();
             }
-
             var batch = remainingBatches.Dequeue();
-            bool isFinal = remainingBatches.Count == 0 || forceLast;
             TotalChunksSent += batch.Count;
 
-            // Send via network
             MapUploadPacket packet = new MapUploadPacket(
                 batch,
                 BlockSel.Block,
-                BlockSel.Position,
-                [],
-                [],
-                [],
-                isFinal,
-                isFinal ? CartographyMapData.NewWaypoints.Count() : 0,
-                isFinal ? CartographyMapData.EditedWaypoints.Count() : 0,
-                isFinal ? CartographyMapData.DeletedWaypoints.Count() : 0,
-                isFinal ? TotalChunksSent : 0
+                BlockSel.Position
             );
             SendPacket(packet);
 
             return remainingBatches.Count > 0;
         }
 
+        public bool SendFinalBatch()
+        {
+            var batch = remainingBatches.Dequeue();
+            TotalChunksSent += batch.Count;
+
+            MapUploadPacket packet = new MapUploadPacket(
+                batch,
+                BlockSel.Block,
+                BlockSel.Position,
+                true
+            );
+            SendPacket(packet);
+
+            return false;
+        }
+
         public void Dispose()
         {
             if (remainingBatches?.Count > 0)
             {
-                SendNextBatch(true);
+                SendFinalBatch();
             }
             remainingBatches?.Clear();
-            // TODO destroy PlayerCartographyMap?
         }
     }
 

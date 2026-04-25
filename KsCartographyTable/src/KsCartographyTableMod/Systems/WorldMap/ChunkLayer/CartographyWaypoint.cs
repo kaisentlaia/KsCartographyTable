@@ -1,68 +1,39 @@
 using Vintagestory.GameContent;
-using Vintagestory.API.Common;
 using System;
+using Vintagestory.API.MathTools;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class CartographyWaypoint : Waypoint
     {
-        public string CreatedByPlayerUid;
-        public string ModifiedByPlayerUid;
-        public string SharedTitle;
-        public DateTime? Created;
-        public DateTime? Modified;
-
-        public CartographyWaypoint(Waypoint waypoint, IPlayer player)
+        public string ParentGuid;
+        public DateTime LastUpdated;
+        public bool Deleted;
+        public CartographyWaypoint(Waypoint waypoint)
         {
-            Created = DateTime.Now;
-            if (player != null)
-            {
-                CreatedByPlayerUid = player.PlayerUID;
-            }
-            if (waypoint != null)
-            {
-                Color = waypoint.Color;
-                Guid = waypoint.Guid;
-                Icon = waypoint.Icon;
-                Title = waypoint.Title;
-                SharedTitle = $"{waypoint.Title} | Created by {player.PlayerName}";
-                Text = waypoint.Text;
-                ShowInWorld = waypoint.ShowInWorld;
-                Pinned = waypoint.Pinned;
-                Temporary = waypoint.Temporary;
-                OwningPlayerGroupId = waypoint.OwningPlayerGroupId;
-                OwningPlayerUid = waypoint.OwningPlayerUid;
-                Position = waypoint.Position;
-            }
+            Color = waypoint.Color;
+            Guid = waypoint.Guid;
+            Icon = waypoint.Icon;
+            Title = waypoint.Title;
+            Pinned = waypoint.Pinned;
+            OwningPlayerUid = waypoint.OwningPlayerUid;
+            Position = waypoint.Position;
+            LastUpdated = DateTime.Now; // TODO now or utcNow?
+            Deleted = false;
         }
-
-        public bool CorrespondsTo(Waypoint waypoint)
+        public CartographyWaypoint(string guid, string parentGuid, string owningPlayerUid, string title, string icon, string position, int color, int pinned, int deleted, int lastUpdated)
         {
-            return Guid == waypoint.Guid;
-        }
-
-        public bool CreatedBy(IPlayer player)
-        {
-            return CreatedByPlayerUid == player.PlayerUID;
-        }
-
-        public bool OwnedBy(IPlayer player)
-        {
-            return OwningPlayerUid == player.PlayerUID;
-        }
-
-        public bool ModifiedBy(IPlayer player)
-        {
-            return ModifiedByPlayerUid == player.PlayerUID;
-        }
-
-        public bool ContentEqualTo(Waypoint waypoint)
-        {
-            return Icon == waypoint.Icon && Color == waypoint.Color && Title == waypoint.Title && Pinned == waypoint.Pinned;
-        }
-        
-        public bool SamePositionAs(Waypoint waypoint) {
-            return Position == waypoint.Position;
+            var positionParts = position.Split(',');
+            Color = color;
+            Guid = guid;
+            ParentGuid = parentGuid;
+            Icon = icon;
+            Title = title;
+            Pinned = pinned == 1;
+            OwningPlayerUid = owningPlayerUid;
+            Position = new Vec3d(double.Parse(positionParts[0]), double.Parse(positionParts[1]), double.Parse(positionParts[2]));
+            LastUpdated = DateTimeOffset.FromUnixTimeMilliseconds(lastUpdated).LocalDateTime;
+            Deleted = deleted == 1;
         }
     }
 }

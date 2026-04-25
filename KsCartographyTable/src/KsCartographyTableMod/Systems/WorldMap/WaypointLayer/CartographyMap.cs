@@ -5,65 +5,29 @@ using Kaisentlaia.KsCartographyTableMod.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class CartographyMap {
-        private List<CartographyWaypoint> waypoints;
-        
-        /// <summary>
-        /// Gets the mutable list of waypoints. 
-        /// Intended to be modified by TableWaypointManager during sync operations.
-        /// Other code should use CreateOrUpdate(), Update(), Delete() domain methods.
-        /// </summary>
-        public List<CartographyWaypoint> Waypoints
-        {
-            get
-            {
-                if (waypoints == null)
-                {
-                    waypoints = new List<CartographyWaypoint>();
-                }
-                return waypoints;
-            }
-            set
-            {
-                if (value != null)
-                {
-                    waypoints = value;
-                }
-                else
-                {
-                    waypoints = new List<CartographyWaypoint>();
-                }
-            }
-        }
-        private List<CartographyWaypoint> deletedWaypoints;
-        public List<CartographyWaypoint> DeletedWaypoints
-        {
-            get
-            {
-                if (deletedWaypoints == null)
-                {
-                    deletedWaypoints = new List<CartographyWaypoint>();
-                }
-                return deletedWaypoints;
-            }
-            set {                
-                if (value != null) {
-                    deletedWaypoints = value;
-                } else {
-                    deletedWaypoints = new List<CartographyWaypoint>();
-                }
-            }
-        }
-
         private List<ulong> exploredAreasIds = new List<ulong>();
         public List<ulong> ExploredAreasIds
         {
             get { return exploredAreasIds; }
             set { exploredAreasIds = value; }
+        }
+        private int waypointCount = 0;
+        public int WaypointCount
+        {
+            get { return waypointCount; }
+            set { waypointCount = value; }
+        }
+        private Dictionary<string, int> lastPlayerDownloads = [];
+        public Dictionary<string, int> LastPlayerDownloads
+        {
+            get { return lastPlayerDownloads; }
+            set { lastPlayerDownloads = value; }
         }
         ICoreAPI api;
 
@@ -72,119 +36,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             this.api = api;
         }
 
-        public CartographyMap(List<Waypoint> initialWaypoints = null, List<Waypoint> initialDeletedWaypoints = null, IPlayer player = null)
-        {
-            Waypoints = initialWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
-                ?? new List<CartographyWaypoint>();
-
-            DeletedWaypoints = initialDeletedWaypoints?.Select(w => new CartographyWaypoint(w, player)).ToList()
-                ?? new List<CartographyWaypoint>();
-        }
-
-        public void CreateOrUpdate(Waypoint waypoint, IPlayer player) {
-            if(Contains(waypoint)) {
-                Update(waypoint, player);
-            } else {
-                waypoints.Add(new CartographyWaypoint(waypoint, player));
-            }
-            if (HasDeleted(waypoint)) {
-                Undelete(waypoint);
-            }
-        }
-
-        public void Update(Waypoint waypoint, IPlayer player) {
-            var existing = Find(waypoint);
-            if (existing != null) {
-                existing.Color = waypoint.Color;
-                existing.Icon = waypoint.Icon;
-                existing.Pinned = waypoint.Pinned;
-                existing.Title = waypoint.Title;
-                existing.OwningPlayerUid = player.PlayerUID;
-                existing.Modified = DateTime.Now;
-                existing.ModifiedByPlayerUid = player.PlayerUID;
-            } else {
-                waypoints.Add(new CartographyWaypoint(waypoint, player));
-            }
-            if (DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
-                Undelete(waypoint);
-            }
-        }
-
-        public void Delete(Waypoint waypoint) {
-            var toDelete = Waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
-            if (toDelete != null) {
-                if (!DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid)) {
-                    DeletedWaypoints.Add(toDelete);
-                }
-                waypoints.Remove(toDelete);
-            }
-        }
-
-        private void Undelete(Waypoint waypoint) {
-            var toUndelete = DeletedWaypoints.FirstOrDefault(dwp => dwp.Guid == waypoint.Guid);
-            if (toUndelete != null) {
-                DeletedWaypoints.Remove(toUndelete);
-            }
-        }
-
-        public CartographyWaypoint Find(Waypoint waypoint) {
-            return Waypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
-        }
-        public CartographyWaypoint FindDeleted(Waypoint waypoint) {
-            return DeletedWaypoints.FirstOrDefault(wp => wp.Guid == waypoint.Guid);
-        }
-
-        public bool Contains(Waypoint waypoint) {
-            var foundWaypoint = Find(waypoint);
-            return foundWaypoint != null;
-        }
-
-        public bool ContentEquals(Waypoint waypoint) {
-            var foundWaypoint = Find(waypoint);
-            if (foundWaypoint != null) {                
-                return foundWaypoint.ContentEqualTo(waypoint);
-            }
-            return foundWaypoint != null;
-        }
-
-        public bool HasEdits(Waypoint waypoint) {
-            var MapWaypoint = Find(waypoint);
-            if (MapWaypoint != null) {
-                var different = !MapWaypoint.ContentEqualTo(waypoint);
-                var userEdited = MapWaypoint.ModifiedByPlayerUid != null;
-                return different || userEdited;
-            }
-            return false;
-        }
-
-        public bool HasDeleted(Waypoint waypoint) {
-            return DeletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid);
-        }
-
-        public List<CoordsPacket> GetPalantirWaypoints()
-        {
-            return Waypoints.Where(waypoint => waypoint.Icon == "palantir-manual").Select(waypoint => new CoordsPacket(waypoint.Position.X, waypoint.Position.Y, waypoint.Position.Z)).ToList();
-        }
-
         public void Serialize(ITreeAttribute tree)
         {
             try
             {
-                tree.SetString("Waypoints", JsonUtil.ToString(Waypoints));
+                tree.SetString("WaypointCount", JsonUtil.ToString(WaypointCount));
             }
             catch (Exception ex)
             {
-                api.Logger.Error("Failed to serialize waypoints: {0}", ex);
-                tree.SetString("Waypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+                api.Logger.Error("Failed to serialize waypoint count: {0}", ex);
+                tree.SetString("WaypointCount", JsonUtil.ToString(0));
             }
             try
             {
-                tree.SetString("DeletedWaypoints", JsonUtil.ToString(DeletedWaypoints));
+                tree.SetString("LastPlayerDownloads", JsonUtil.ToString(LastPlayerDownloads));
             }
             catch (Exception ex)
             {
-                api.Logger.Error("Failed to serialize deleted waypoints: {0}", ex);
-                tree.SetString("DeletedWaypoints", JsonUtil.ToString(new List<CartographyWaypoint>()));
+                api.Logger.Error("Failed to serialize last player updates: {0}", ex);
+                tree.SetString("LastPlayerDownloads", JsonUtil.ToString(new Dictionary<string, int>()));
             }
             try
             {
@@ -201,41 +71,41 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             try
             {
-                if (tree.HasAttribute("Waypoints"))
+                if (tree.HasAttribute("WaypointCount"))
                 {
-                    var savedWaypoints = tree.GetString("Waypoints");
-                    Waypoints = savedWaypoints != null
-                        ? JsonUtil.FromString<List<CartographyWaypoint>>(savedWaypoints)
-                        : new List<CartographyWaypoint>();
+                    var waypointCount = tree.GetString("WaypointCount");
+                    WaypointCount = waypointCount != null
+                        ? JsonUtil.FromString<int>(waypointCount)
+                        : 0;
                 }
                 else
                 {
-                    Waypoints = new List<CartographyWaypoint>();
+                    WaypointCount = 0;
                 }
             }
             catch (Exception ex)
             {
-                api.Logger.Error("Failed to deserialize waypoints: {0}", ex);
-                Waypoints = new List<CartographyWaypoint>();
+                api.Logger.Error("Failed to deserialize waypoint count: {0}", ex);
+                WaypointCount = 0;
             }
             try
             {
-                if (tree.HasAttribute("DeletedWaypoints"))
+                if (tree.HasAttribute("LastPlayerDownloads"))
                 {
-                    var deletedWaypoints = tree.GetString("DeletedWaypoints");
-                    DeletedWaypoints = deletedWaypoints != null
-                        ? JsonUtil.FromString<List<CartographyWaypoint>>(deletedWaypoints)
-                        : new List<CartographyWaypoint>();
+                    var lastPlayerDownloads = tree.GetString("LastPlayerDownloads");
+                    LastPlayerDownloads = lastPlayerDownloads != null
+                        ? JsonUtil.FromString<Dictionary<string, int>>(lastPlayerDownloads)
+                        : [];
                 }
                 else
                 {
-                    DeletedWaypoints = new List<CartographyWaypoint>();
+                    LastPlayerDownloads = [];
                 }
             }
             catch (Exception ex)
             {
-                api.Logger.Error("Failed to deserialize deleted waypoints: {0}", ex);
-                DeletedWaypoints = new List<CartographyWaypoint>();
+                api.Logger.Error("Failed to deserialize last player updates: {0}", ex);
+                    LastPlayerDownloads = [];
             }
             try
             {
@@ -244,18 +114,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     var exploredAreasIdsStr = tree.GetString("ExploredAreasIds");
                     ExploredAreasIds = exploredAreasIdsStr != null
                         ? JsonUtil.FromString<List<ulong>>(exploredAreasIdsStr)
-                        : new List<ulong>();
+                        : [];
                 }
                 else
                 {
-                    ExploredAreasIds = new List<ulong>();
+                    ExploredAreasIds = [];
                 }
             }
             catch (Exception ex)
             {                
                 api.Logger.Error("Failed to deserialize explored areas ids: {0}", ex);
-                ExploredAreasIds = new List<ulong>();
+                ExploredAreasIds = [];
             }
+        }
+
+        internal DateTime getPlayerLastDownload(IServerPlayer fromPlayer)
+        {
+            return DateTimeOffset
+                .FromUnixTimeMilliseconds(LastPlayerDownloads[fromPlayer.PlayerUID])
+                .LocalDateTime;
         }
     }
 }

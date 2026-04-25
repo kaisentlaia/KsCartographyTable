@@ -41,15 +41,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        internal bool OnPurgeWaypointGroups(IPlayer byPlayer)
-        {
-            if (CoreServerAPI != null && KsCartographyTableModSystem.purgeWpGroups)
-            {
-                KsCartographyTableModSystem.ServerCartographyService.PurgeWaypointGroups(byPlayer);
-            }
-            return true;
-        }
-
         internal bool OnPonderMap(IPlayer byPlayer)
         {
             EnsureMap();
@@ -78,46 +69,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        internal bool OnUpdateTableMap(IPlayer byPlayer, BlockSelection blockSel)
-        {
-            EnsureMap();
-            if (CoreServerAPI != null)
-            {
-                KsCartographyTableModSystem.ServerCartographyService.UpdateTableMap(Map, byPlayer as IServerPlayer);
-                MarkDirty();
-            }
-            if (CoreClientAPI != null)
-            {
-                CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
-                KsCartographyTableModSystem.ClientCartographyService.UpdateTableMap(Map, Block, blockSel.Position);
-            }
-
-            return true;
-        }
-
-        internal bool OnUpdatePlayerMap(IPlayer byPlayer, BlockSelection blockSel)
-        {
-            EnsureMap();
-            if (CoreServerAPI != null)
-            {
-                KsCartographyTableModSystem.ServerCartographyService.UpdatePlayerMap(Map, byPlayer as IServerPlayer, Block, blockSel.Position);
-            }
-            if (CoreClientAPI != null)
-            {
-                CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
-            }
-
-            return true;
-        }
-
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
-            if (Block is not BlockAdvancedCartographyTable && Map != null && Map.Waypoints.Count > 0)
+            if (Block is not BlockAdvancedCartographyTable && Map != null && Map.WaypointCount > 0)
             {
-                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, Map.Waypoints.Count));
-            } else if (Block is BlockAdvancedCartographyTable && Map != null && (Map.Waypoints.Count > 0 || Map.ExploredAreasIds.Count > 0)) {
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, Map.WaypointCount));
+            } else if (Block is BlockAdvancedCartographyTable && Map != null && (Map.WaypointCount > 0 || Map.ExploredAreasIds.Count > 0)) {
                 double km2 = Map.ExploredAreasIds.Count * 0.001024;
-                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, Map.Waypoints.Count, $"{km2:F1}"));
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, Map.WaypointCount, $"{km2:F1}"));
             } else
             {
                 dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_EMPTY));
@@ -147,20 +106,22 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MarkDirty();
         }
 
-        internal bool onCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
+                MarkDirty();
                 return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Block);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
+                MarkDirty();
                 return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel.Block);
             }
             return false;
         }
 
-        internal bool onCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
@@ -168,12 +129,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                return KsCartographyTableModSystem.ServerCartographyService.continueCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+                return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
             }
             throw new NotImplementedException();
         }
 
-        internal void onCartographySessionStop(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal void OnCartographySessionStop(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
@@ -181,7 +142,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                KsCartographyTableModSystem.ServerCartographyService.endCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
             }
             throw new NotImplementedException();
         }

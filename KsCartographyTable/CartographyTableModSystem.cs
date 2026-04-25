@@ -35,8 +35,7 @@ public class KsCartographyTableModSystem : ModSystem
     protected const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     public static ServerCartographyService ServerCartographyService;
     public static ClientCartographyService ClientCartographyService;
-    public static bool purgeWpGroups = false;
-    private TableWaypointManager tableWaypointManager;
+    private ServerWaypointManager tableWaypointManager;
 
     public static ModCompatibilityManager ModCompatibilityManager;
 
@@ -55,26 +54,6 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void StartServerSide(ICoreServerAPI api)
     {
-        // TODO remove most commands, leave only the one to delete all player's waypoints
-        CoreServerAPI = api;
-        ServerCartographyService = new ServerCartographyService(CoreServerAPI);
-        tableWaypointManager = new TableWaypointManager(CoreServerAPI);
-        api.ChatCommands.Create("purgewpgroups")
-        .WithDescription("Removes groups from all the waypoints created by other mods on the next cartography table interaction")
-        .RequiresPrivilege(Privilege.chat)
-        .RequiresPlayer()
-        .HandleWith((args) => {
-            purgeWpGroups = true;
-            return TextCommandResult.Success("Groups set to be purged from all waypoints. Interact with a cartography table to apply.");
-        });
-        api.ChatCommands.Create("clearcartographydata")
-        .WithDescription("Clears the cartography table mod data from the savegame")
-        .RequiresPrivilege(Privilege.root)
-        .RequiresPlayer()
-        .HandleWith((args) => {
-            tableWaypointManager.ClearAllDeletedWaypoints();
-            return TextCommandResult.Success("Data cleared.");
-        });
         // TODO add handbook entry
         api.ChatCommands.Create("wipewaypoints")
         .WithDescription("Wipes all the waypoints")
@@ -109,7 +88,7 @@ public class KsCartographyTableModSystem : ModSystem
         if (!IsMapDisallowed() && !args.Parsers[0].IsMissing) {
             int index = (int)args.Parsers[0].GetValue();
             IServerPlayer player = args.Caller.Player as IServerPlayer;
-            ServerCartographyService.MarkDeleted(player, index);
+            ServerCartographyService.MarkWaypointDeleted(player, index);
         }
     }
 

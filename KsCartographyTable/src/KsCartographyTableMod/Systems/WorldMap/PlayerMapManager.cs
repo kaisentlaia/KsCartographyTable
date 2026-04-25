@@ -44,15 +44,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return playerMapDb;
 			}
 		}
-		SharedMapDB playerMapDbReader;
-		public SharedMapDB PlayerMapDbReader
+		ServerMapDB playerMapDbReader;
+		public ServerMapDB PlayerMapDbReader
 		{
 			get
 			{
 				if (playerMapDbReader == null)
 				{
                     string mapPath = Path.Combine(GamePaths.DataPath, "Maps", CoreClientAPI.World.SavegameIdentifier + ".db");
-                    playerMapDbReader = new SharedMapDB(CoreClientAPI);
+                    playerMapDbReader = new ServerMapDB(CoreClientAPI);
                     string error = null;
                     playerMapDbReader.OpenOrCreate(mapPath, ref error, false, true, false);
 				}
@@ -84,52 +84,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? [.. playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex()))] : playerMapPiecesIds;
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
             }
-            if (pieces.Count == 0)
-            {
-                return null;
-            }
             return pieces;
-        }
-
-        public bool SendMapToTable(CartographyMap map, Block forTable, BlockPos blockPos)
-        {
-            if (forTable is not BlockAdvancedCartographyTable)
-            {
-                return false;
-            }
-
-            Dictionary<FastVec2i, MapPieceDB> pieces = GetNewMapPieces(map, forTable);
-
-            if (pieces == null)
-            {
-                return false;
-            }
-
-            const int maxChunksPerPacket = 100;
-
-            // BUG this kicks out the player if they are playing on a LAN/remote server instead of a local server, if they have a big map
-            if (pieces.Count > maxChunksPerPacket)
-            {
-                var piecesList = pieces.ToList(); // Convert to list for indexed access
-
-                for (int i = 0; i < piecesList.Count; i += maxChunksPerPacket)
-                {
-                    var chunk = piecesList.Skip(i).Take(maxChunksPerPacket).ToDictionary(
-                        kvp => kvp.Key,
-                        kvp => kvp.Value
-                    );
-
-                    bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
-
-                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER).SendPacket(new MapUploadPacket(chunk, forTable, blockPos, isFinalBatch, totalChunksSent: isFinalBatch ? pieces.Count : 0));
-                }
-                return true;
-            }
-            else
-            {
-                CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER).SendPacket(new MapUploadPacket(pieces, forTable, blockPos, true, totalChunksSent: pieces.Count));
-            }
-            return false;
         }
 
         internal void UpdateMap(MapUploadPacket packet)
