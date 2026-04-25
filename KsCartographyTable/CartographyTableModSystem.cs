@@ -52,6 +52,9 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void StartServerSide(ICoreServerAPI api)
     {
+        CoreServerAPI = api;
+        ServerCartographyService = new ServerCartographyService(api);
+
         // TODO add handbook entry
         // TODO send a packet to the server
         api.ChatCommands.Create("wipewaypoints")
