@@ -19,7 +19,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			CoreServerAPI = api;
 		}
 
-		public void UpdateMap(IServerPlayer fromPlayer, MapUploadPacket packet, ServerMapDB mapDB)
+		public void UpdateMap(IServerPlayer fromPlayer, MapSyncPacket packet, ServerMapDB mapDB)
         {
             if (mapDB != null)
             {

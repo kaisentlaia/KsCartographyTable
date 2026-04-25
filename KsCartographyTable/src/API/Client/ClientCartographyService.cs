@@ -5,8 +5,6 @@ using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
@@ -89,11 +87,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         public void RegisterChannels()
         {
             CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER)
-                .RegisterMessageType<MapUploadPacket>();
+                .RegisterMessageType<MapSyncPacket>();
 
             CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT)
-                .RegisterMessageType<MapUploadPacket>()
-                .SetMessageHandler<MapUploadPacket>(OnMapDownloadRequest);
+                .RegisterMessageType<MapSyncPacket>()
+                .SetMessageHandler<MapSyncPacket>(OnMapDownloadRequest);
 
             if (KsCartographyTableModSystem.ModCompatibilityManager.IsPalantirEnabled)
             {
@@ -102,7 +100,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             }
         }
 
-        public void OnMapDownloadRequest(MapUploadPacket packet)
+        public void OnMapDownloadRequest(MapSyncPacket packet)
         {
             playerMapManager.UpdateMap(packet);
         }
@@ -116,14 +114,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);
         }
 
-        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, Block block)
+        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable blockEntity)
         {
-            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+            string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
                 return false;
             }
-            MapTransferSession session = new MapTransferSession(byPlayer, block, action, world, playerMapManager.GetNewMapPieces(map, block));
+            MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
             activeSessions.Add(sessionId, session);
             return session.SendFirstBatch();
         }

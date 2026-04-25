@@ -11,7 +11,7 @@ using System;
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
 	[ProtoContract]
-	public class MapUploadPacket
+	public class MapSyncPacket
 	{
 		[ProtoMember(1)]
 		public Dictionary<FastVec2i, MapPieceDB> Pieces { get; set; } = new Dictionary<FastVec2i, MapPieceDB>();
@@ -24,9 +24,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		[ProtoMember(4)]
 		public BlockPos BlockPos { get; set; } = null;
-		public MapUploadPacket() { }
+		public MapSyncPacket() { }
 
-		public MapUploadPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = true)
+		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = true)
 		{
 			Pieces = pieces;
 			BlockId = block.Id.ToString();

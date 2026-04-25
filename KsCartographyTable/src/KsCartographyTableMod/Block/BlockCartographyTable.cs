@@ -44,7 +44,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (currentAction != CartographyAction.PonderMap)
             {
-                return beTable.onCartographySessionStart(currentAction, world, byPlayer, blockSel);
+                return beTable.OnCartographySessionStart(currentAction, world, byPlayer, blockSel);
             }
             return true;
         }
@@ -61,7 +61,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 SpawnCartographyParticles(world, blockSel.Position, secondsUsed);
                 BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-                return beTable.onCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
+                return beTable.OnCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
             }
             return true;
         }
@@ -78,7 +78,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 beTable.OnPonderMap(byPlayer);
                 return;
             }
-            beTable.onCartographySessionStop(currentAction, secondsUsed, world, byPlayer, blockSel);
+            beTable.OnCartographySessionStop(currentAction, secondsUsed, world, byPlayer, blockSel);
         }
 
         private CartographyAction GetPerformedAction(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -143,9 +143,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             // Only cleanup if creative mode or no player (fire/explosion)
             bool shouldCleanup = byPlayer?.WorldData?.CurrentGameMode == EnumGameMode.Creative || byPlayer == null;
 
-            if (shouldCleanup && world.Side == EnumAppSide.Server)
+            if (shouldCleanup)
             {
-                KsCartographyTableModSystem.ServerCartographyService.CleanupMapData(this, pos);
+                KsCartographyTableModSystem.ServerCartographyService?.CleanupMapData(this, pos);
             }
 
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);

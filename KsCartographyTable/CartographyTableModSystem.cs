@@ -35,8 +35,6 @@ public class KsCartographyTableModSystem : ModSystem
     protected const BindingFlags Flags = BindingFlags.Instance | BindingFlags.Static | BindingFlags.Public | BindingFlags.NonPublic;
     public static ServerCartographyService ServerCartographyService;
     public static ClientCartographyService ClientCartographyService;
-    private ServerWaypointManager tableWaypointManager;
-
     public static ModCompatibilityManager ModCompatibilityManager;
 
     public override void Start(ICoreAPI api)
@@ -55,13 +53,14 @@ public class KsCartographyTableModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         // TODO add handbook entry
+        // TODO send a packet to the server
         api.ChatCommands.Create("wipewaypoints")
         .WithDescription("Wipes all the waypoints")
         .RequiresPrivilege(Privilege.root)
         .RequiresPlayer()
         .HandleWith((args) => {
             ServerCartographyService.WipeWaypoints();
-            tableWaypointManager.ResendWaypointsToPlayer(args.Caller.Player as IServerPlayer);
+            ServerCartographyService.ResendWaypointsToPlayer(args.Caller.Player as IServerPlayer);
             return TextCommandResult.Success("Waypoints wiped");
         });
         if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
@@ -97,7 +96,7 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void Dispose()
     {
-        ServerCartographyService.Dispose();
+        ServerCartographyService?.Dispose();
         CoreClientAPI = null;
         CoreAPI = null;
         CoreServerAPI = null;

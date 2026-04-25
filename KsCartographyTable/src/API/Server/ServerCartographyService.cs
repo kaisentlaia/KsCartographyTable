@@ -75,14 +75,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		public void RegisterChannels()
 		{
 			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER)
-				.RegisterMessageType<MapUploadPacket>()
-				.SetMessageHandler<MapUploadPacket>(OnMapUploadRequest);
+				.RegisterMessageType<MapSyncPacket>()
+				.SetMessageHandler<MapSyncPacket>(OnMapUploadRequest);
 
 			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT)
-				.RegisterMessageType<MapUploadPacket>();
+				.RegisterMessageType<MapSyncPacket>();
 		}
 
-        private void OnMapUploadRequest(IServerPlayer fromPlayer, MapUploadPacket packet)
+        private void OnMapUploadRequest(IServerPlayer fromPlayer, MapSyncPacket packet)
 		{
             uploadedChunks[fromPlayer.PlayerUID] += packet.Pieces.Count;
 
@@ -212,9 +212,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             });
         }
 
-        internal bool StartCartographyDownloadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer forPlayer, Block block)
+        internal bool StartCartographyDownloadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel)
         {
-            string sessionId = block.Id.ToString() + forPlayer.PlayerUID;
+            string sessionId = blockSel.Block.Id.ToString() + forPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
                 return false;
@@ -222,12 +222,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             tableWaypointManager.UpdatePlayerWaypoints(forPlayer, map);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
-            if (block is BlockAdvancedCartographyTable)
+            if (blockSel.Block is BlockAdvancedCartographyTable)
             {
-                ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+                ServerMapDB mapDB = GetBlockMapDB(blockSel.Block.Id.ToString());
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            MapTransferSession session = new MapTransferSession(forPlayer, block, action, world, newMapPiecesForPlayer);
+            MapTransferSession session = new MapTransferSession(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI);
             activeSessions.Add(sessionId, session);
             return session.SendFirstBatch();
         }
@@ -240,6 +240,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
         internal void EndCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
         {
             throw new NotImplementedException();
+        }
+
+        internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)
+        {
+            tableWaypointManager.ResendWaypointsToPlayer(toPlayer);
         }
     }
 }

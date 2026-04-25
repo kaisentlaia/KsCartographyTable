@@ -113,13 +113,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 MarkDirty();
                 startSound();
-                return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Block);
+                return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel, this);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
                 MarkDirty();
                 startSound();
-                return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel.Block);
+                return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel);
             }
             return false;
         }

@@ -60,7 +60,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return playerMapDbReader;
 			}
 		}
-        private string deletedWaypointsFilePath;
 		public PlayerMapManager(ICoreClientAPI api) {
 			CoreClientAPI = api;
             WorldMapManager = CoreClientAPI.ModLoader.GetModSystem<WorldMapManager>();
@@ -70,7 +69,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (forTable is not BlockAdvancedCartographyTable)
             {
-                return null;
+                return [];
             }
             List<FastVec2i> playerMapPiecesIds = PlayerMapDbReader.GetAllMapPiecesIds();
             HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
@@ -87,7 +86,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return pieces;
         }
 
-        internal void UpdateMap(MapUploadPacket packet)
+        internal void UpdateMap(MapSyncPacket packet)
         {
             PlayerMapDbReader.SetMapPieces(packet.Pieces);
 

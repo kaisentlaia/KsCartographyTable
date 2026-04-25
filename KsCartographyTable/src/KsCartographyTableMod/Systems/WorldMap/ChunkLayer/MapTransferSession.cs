@@ -12,11 +12,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     public class MapTransferSession
     {
         public IPlayer Player { get; }
-        public Block BlockCartographyTable { get; }
-        public BlockEntityCartographyTable BlockEntity { get; }
         public BlockSelection BlockSel { get; }
         public CartographyAction Action { get; }
         public IWorldAccessor World { get; }
+        public ICoreAPI Api { get; }
         public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
         
         public int TotalChunksSent { get; private set; }
@@ -29,31 +28,44 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public MapTransferSession(
             IPlayer player,
-            Block blockCartographyTable,
+            BlockSelection blockSel,
             CartographyAction action,
             IWorldAccessor world,
-            Dictionary<FastVec2i, MapPieceDB> mapPieces)
+            Dictionary<FastVec2i, MapPieceDB> mapPieces,
+            ICoreAPI api)
         {
             Player = player;
-            BlockCartographyTable = blockCartographyTable;
+            BlockSel = blockSel;
             Action = action;
             World = world;
+            Api = api;
             TotalChunksSent = 0;
             MapPieces = mapPieces;
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
         }
 
-        private void SendPacket(MapUploadPacket packet)
+        private void SendPacket(MapSyncPacket packet)
         {
-            if (World.Api.Side == EnumAppSide.Client)
+            if (Api is ICoreClientAPI clientApi)
             {
-                ICoreClientAPI api = World.Api as ICoreClientAPI;
-                api?.Network.GetChannel(channel).SendPacket(packet);
+                var channel = clientApi.Network.GetChannel(this.channel);
+                if (channel == null) {                    
+                    clientApi.SendChatMessage($"Channel {CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER} not found on CLIENT");
+                    Api.Logger.Error($"Channel {this.channel} not found on CLIENT");
+                    return;
+                }
+                channel.SendPacket(packet);
             }
-            else if (World.Api.Side == EnumAppSide.Server)
+            else if (Api is ICoreServerAPI serverApi)
             {
-                ICoreServerAPI api = World.Api as ICoreServerAPI;
-                api?.Network.GetChannel(channel).SendPacket(packet);
+                var channel = serverApi.Network.GetChannel(this.channel);
+                if (channel == null) {
+                    Api.Logger.Error($"Channel {this.channel} not found on SERVER");
+                    return;
+                }
+                // BUG: This sends to ALL players or no one? You need:
+                // channel.SendPacket((IServerPlayer)Player, packet);
+                channel.SendPacket(packet, [Player as IServerPlayer]);
             }
         }
 
@@ -84,7 +96,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             var batch = remainingBatches.Dequeue();
             TotalChunksSent += batch.Count;
 
-            MapUploadPacket packet = new MapUploadPacket(
+            MapSyncPacket packet = new MapSyncPacket(
                 batch,
                 BlockSel.Block,
                 BlockSel.Position
@@ -96,15 +108,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public bool SendFinalBatch()
         {
-            var batch = remainingBatches.Dequeue();
-            TotalChunksSent += batch.Count;
+            MapSyncPacket packet;
+            if (remainingBatches.Count > 0)
+            {
+                var batch = remainingBatches.Dequeue();
+                TotalChunksSent += batch.Count;
 
-            MapUploadPacket packet = new MapUploadPacket(
-                batch,
-                BlockSel.Block,
-                BlockSel.Position,
-                true
-            );
+                packet = new MapSyncPacket(
+                    batch,
+                    BlockSel.Block,
+                    BlockSel.Position,
+                    true
+                );
+            }
+            else
+            {
+
+                packet = new MapSyncPacket(
+                    [],
+                    BlockSel.Block,
+                    BlockSel.Position,
+                    true
+                );
+            }
             SendPacket(packet);
 
             return false;
