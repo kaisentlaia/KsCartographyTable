@@ -4,20 +4,23 @@ using System;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
-    public class CartographyWaypoint : Waypoint {
+    public class CartographyWaypoint : Waypoint
+    {
         public string CreatedByPlayerUid;
         public string ModifiedByPlayerUid;
         public string SharedTitle;
         public DateTime? Created;
         public DateTime? Modified;
 
-        public CartographyWaypoint (Waypoint waypoint, IPlayer player)
+        public CartographyWaypoint(Waypoint waypoint, IPlayer player)
         {
             Created = DateTime.Now;
-            if (player != null) {
+            if (player != null)
+            {
                 CreatedByPlayerUid = player.PlayerUID;
             }
-            if (waypoint != null) {
+            if (waypoint != null)
+            {
                 Color = waypoint.Color;
                 Guid = waypoint.Guid;
                 Icon = waypoint.Icon;
@@ -33,25 +36,33 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        public bool CorrespondsTo(Waypoint waypoint) {
+        public bool CorrespondsTo(Waypoint waypoint)
+        {
             return Guid == waypoint.Guid;
         }
 
-        public bool CreatedBy(IPlayer player) {
+        public bool CreatedBy(IPlayer player)
+        {
             return CreatedByPlayerUid == player.PlayerUID;
         }
 
-        public bool OwnedBy(IPlayer player) {
+        public bool OwnedBy(IPlayer player)
+        {
             return OwningPlayerUid == player.PlayerUID;
         }
 
-        public bool ModifiedBy(IPlayer player) {
+        public bool ModifiedBy(IPlayer player)
+        {
             return ModifiedByPlayerUid == player.PlayerUID;
         }
 
-
-        public bool ContentEqualTo(Waypoint waypoint) {
+        public bool ContentEqualTo(Waypoint waypoint)
+        {
             return Icon == waypoint.Icon && Color == waypoint.Color && Title == waypoint.Title && Pinned == waypoint.Pinned;
+        }
+        
+        public bool SamePositionAs(Waypoint waypoint) {
+            return Position == waypoint.Position;
         }
     }
 }

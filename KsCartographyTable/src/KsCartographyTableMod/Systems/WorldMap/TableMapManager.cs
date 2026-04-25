@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -56,9 +57,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 					{
 						blockEntity.UpdateMapExploredAreasIds(GetBlockMapDB(packet.BlockId).GetAllMapPiecesIds());
 					}
-					if (packet.IsFinalBatch && packet.Total > 0)
+					if (packet.IsFinalBatch && packet.TotalChunksSent > 0)
 					{                    
-						double km2 = packet.Total * 0.001024;
+						double km2 = packet.TotalChunksSent * 0.001024;
 						return km2;
 					}
 				}
@@ -96,12 +97,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                             kvp => MapColorOverlay.ApplyColorOverlay(kvp.Value)
                         );
 
-                        CoreServerAPI.Network.GetChannel(CartographyTableConstants.DOWNLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
+                        CoreServerAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch: i + maxChunksPerPacket >= piecesList.Count), player);
                     }
                 }
                 else
                 {
-                    CoreServerAPI.Network.GetChannel(CartographyTableConstants.DOWNLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
+                    CoreServerAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT).SendPacket(new MapUploadPacket(pieces, block, blockPos, true), player);
                 }
                 mapDB.SetMapPiecesForPlayer(pieces, player);
                 double km2 = pieces.Count * 0.001024;
@@ -163,5 +164,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 connection.Dispose();
             });
         }
-	}
+
+        internal Dictionary<FastVec2i, MapPieceDB> GetNewMapPieces(IPlayer forPlayer, Block block)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

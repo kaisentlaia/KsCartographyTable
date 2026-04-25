@@ -1,7 +1,11 @@
 
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
@@ -45,9 +49,16 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return waypointMapLayer;
 			}
 		}
+		string modDataPath = Path.Combine(
+			GamePaths.DataPath,
+			"ModData",
+			CartographyTableConstants.MOD_ID
+		);
+
 		public TableWaypointManager(ICoreServerAPI api)
 		{
 			CoreServerAPI = api;
+            GamePaths.EnsurePathExists(modDataPath);
 		}
 
 		private List<Waypoint> GetPlayerWaypoints(IServerPlayer player)
@@ -219,26 +230,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(new List<Waypoint>()));
 		}
 
-		public void MarkWaypointDeleted(IServerPlayer player, int index)
-		{
-			var playerWaypoints = WaypointMapLayer.Waypoints
-				.Where(p => p.OwningPlayerUid == player.PlayerUID)
-				.ToList();
-
-			if (index < 0 || index >= playerWaypoints.Count)
-			{
-				return;
-			}
-
-			Waypoint waypoint = playerWaypoints[index];
-			var deletedWaypoints = GetPlayerDeletedWaypoints();
-			if (!deletedWaypoints.Any(dwp => dwp.Guid == waypoint.Guid))
-			{
-				deletedWaypoints.Add(waypoint);
-				CoreServerAPI.WorldManager.SaveGame.StoreData("deletedWaypoints", SerializerUtil.Serialize(deletedWaypoints));
-			}
-		}
-
 		public int Wipe(CartographyMap map)
 		{
 			int wiped = 0;
@@ -264,5 +255,63 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			WaypointMapLayer.Waypoints.Clear();
 			WaypointMapLayer.ownWaypoints.Clear();
 		}
-	}
+
+        internal List<CartographyWaypoint> GetNewWaypoints(IPlayer forPlaye, CartographyMap map)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal List<CartographyWaypoint> GetEditedWaypoints(IPlayer forPlayer, CartographyMap map)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal List<CartographyWaypoint> GetDeletedWaypoints(IPlayer forPlayer, CartographyMap map)
+        {
+            throw new NotImplementedException();
+        }
+
+		internal void AddDeletedWaypointId(Waypoint deletedWaypoint, IServerPlayer byPlayer)
+		{
+            List<string> deletedWaypoints = GetDeletedWaypointsIds(byPlayer);
+            deletedWaypoints.Add(deletedWaypoint.Guid);
+            SaveDeletedWaypointsIds(deletedWaypoints, byPlayer);
+		}
+
+        private List<string> GetDeletedWaypointsIds(IServerPlayer byPlayer)
+        {
+            string deletedWaypointsFilePath = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            if (!File.Exists(deletedWaypointsFilePath)) return [];
+
+            try
+            {
+                string json = File.ReadAllText(deletedWaypointsFilePath);
+                var ids = JsonUtil.FromString<List<string>>(json);
+                if (ids != null)
+                {
+                    return ids;
+                }
+                return [];
+            }
+            catch (Exception ex)
+            {
+                CoreServerAPI.Logger.Error("Failed to load player deleted waypoints: {0}", ex);
+                return [];
+            }
+        }
+		
+        private void SaveDeletedWaypointsIds(List<string> deletedWaypointIds, IServerPlayer byPlayer)
+        {
+            string deletedWaypointsFilePath = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            try
+            {
+                string json = JsonUtil.ToString(deletedWaypointIds.ToList());
+                File.WriteAllText(deletedWaypointsFilePath, json);
+            }
+            catch (Exception ex)
+            {
+                CoreServerAPI.Logger.Error("Failed to save player deleted waypoints: {0}", ex);
+            }
+        }
+    }
 }

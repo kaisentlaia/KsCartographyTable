@@ -1,3 +1,6 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Kaisentlaia.KsCartographyTableMod.GameContent;
 using Vintagestory.API.Common;
@@ -5,6 +8,7 @@ using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
 using Vintagestory.API.Util;
+using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Server
 {
@@ -13,6 +17,25 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		readonly ICoreServerAPI CoreServerAPI;
 		private readonly TableWaypointManager tableWaypointManager;
 		private readonly TableMapManager tableMapManager;
+		WorldMapManager WorldMapManager;
+		WaypointMapLayer waypointMapLayer;
+        private Dictionary<string, MapTransferSession> activeSessions = [];
+		public WaypointMapLayer WaypointMapLayer
+		{
+			get
+			{
+				if (waypointMapLayer == null)
+				{
+					WorldMapManager = CoreServerAPI.ModLoader.GetModSystem<WorldMapManager>();
+					if (WorldMapManager != null)
+					{
+						waypointMapLayer = WorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
+					}
+				}
+
+				return waypointMapLayer;
+			}
+		}
 
 		public ServerCartographyService(ICoreServerAPI ServerAPI)
 		{
@@ -26,15 +49,15 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
 		public void RegisterChannels()
 		{
-			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.UPLOAD_CHANNEL)
+			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER)
 				.RegisterMessageType<MapUploadPacket>()
 				.SetMessageHandler<MapUploadPacket>(OnMapUploadRequest);
 
-			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.DOWNLOAD_CHANNEL)
+			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT)
 				.RegisterMessageType<MapUploadPacket>();
 		}
 
-		private void OnMapUploadRequest(IServerPlayer fromPlayer, MapUploadPacket packet)
+        private void OnMapUploadRequest(IServerPlayer fromPlayer, MapUploadPacket packet)
 		{
 			double km2updated = tableMapManager.UpdateMap(fromPlayer, packet);
 			if (km2updated > 0)
@@ -145,12 +168,22 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			}
 		}
 
-		public void MarkDeleted(IServerPlayer player, int index)
+		public void MarkDeleted(IServerPlayer fromPlayer, int index)
 		{
-			tableWaypointManager.MarkWaypointDeleted(player, index);
+			var playerWaypoints = WaypointMapLayer.Waypoints
+				.Where(p => p.OwningPlayerUid == fromPlayer.PlayerUID)
+				.ToList();
+
+			if (index < 0 || index >= playerWaypoints.Count)
+			{
+				return;
+			}
+
+			Waypoint deletedWaypoint = playerWaypoints[index];
+			tableWaypointManager.AddDeletedWaypointId(deletedWaypoint, fromPlayer);
 		}
 
-		public void WipeWaypoints()
+        public void WipeWaypoints()
 		{
 			tableWaypointManager.ClearAllWaypoints();
 		}
@@ -164,5 +197,54 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		{
 			tableMapManager.Dispose();
 		}
-	}
+
+        internal bool StartCartographyDownloadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer forPlayer, Block block)
+        {
+            string sessionId = block.Id.ToString() + forPlayer.PlayerUID;
+            if (activeSessions.Get(sessionId) != null)
+            {
+                return false;
+            }
+            List<CartographyWaypoint> newWaypoints = tableWaypointManager.GetNewWaypoints(forPlayer, map);
+            List<CartographyWaypoint> editedWaypoints = tableWaypointManager.GetEditedWaypoints(forPlayer, map);
+            List<CartographyWaypoint> deletedWaypoints = tableWaypointManager.GetDeletedWaypoints(forPlayer, map);
+            CartographyMapData playerCartographyMap;
+            if (block is BlockAdvancedCartographyTable)
+            {
+                Dictionary<FastVec2i, MapPieceDB> mapPieces = tableMapManager.GetNewMapPieces(forPlayer, block);
+                playerCartographyMap = new CartographyMapData(
+                    mapPieces,
+                    newWaypoints,
+                    editedWaypoints,
+                    deletedWaypoints
+                );
+            }
+            else
+            {
+                playerCartographyMap = new CartographyMapData(
+                    newWaypoints,
+                    editedWaypoints,
+                    deletedWaypoints
+                );
+            }
+            if (playerCartographyMap.IsEmpty())
+            {
+                // TODO send table up to date message
+                return false;
+            }
+            MapTransferSession session = new MapTransferSession(forPlayer, block, action, world, playerCartographyMap);
+            activeSessions.Add(sessionId, session);
+            return session.SendFirstBatch();
+        }
+
+        internal bool continueCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
+        {
+            throw new NotImplementedException();
+        }
+
+        internal void endCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
+        {
+            throw new NotImplementedException();
+        }
+    }
 }

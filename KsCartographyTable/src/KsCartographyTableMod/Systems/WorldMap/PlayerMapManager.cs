@@ -60,35 +60,51 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return playerMapDbReader;
 			}
 		}
+        private string deletedWaypointsFilePath;
 		public PlayerMapManager(ICoreClientAPI api) {
 			CoreClientAPI = api;
             WorldMapManager = CoreClientAPI.ModLoader.GetModSystem<WorldMapManager>();
 		}
 
-        public bool SendMapToTable(CartographyMap map, Block block, BlockPos blockPos)
+        public Dictionary<FastVec2i, MapPieceDB> GetNewMapPieces(CartographyMap map, Block forTable)
         {
-            if (!(block is BlockAdvancedCartographyTable))
+            if (forTable is not BlockAdvancedCartographyTable)
             {
-                return false;
+                return null;
             }
-
             List<FastVec2i> playerMapPiecesIds = PlayerMapDbReader.GetAllMapPiecesIds();
             HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
-            Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
+            Dictionary<FastVec2i, MapPieceDB> pieces = [];
             if (tableMapPiecesIds.Count == 0)
             {
                 pieces = PlayerMapDbReader.GetAllMapPieces();
             }
             else
             {
-                List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex())).ToList() : playerMapPiecesIds;
+                List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? [.. playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex()))] : playerMapPiecesIds;
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
             }
             if (pieces.Count == 0)
             {
+                return null;
+            }
+            return pieces;
+        }
+
+        public bool SendMapToTable(CartographyMap map, Block forTable, BlockPos blockPos)
+        {
+            if (forTable is not BlockAdvancedCartographyTable)
+            {
                 return false;
             }
-            
+
+            Dictionary<FastVec2i, MapPieceDB> pieces = GetNewMapPieces(map, forTable);
+
+            if (pieces == null)
+            {
+                return false;
+            }
+
             const int maxChunksPerPacket = 100;
 
             // BUG this kicks out the player if they are playing on a LAN/remote server instead of a local server, if they have a big map
@@ -105,13 +121,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                     bool isFinalBatch = i + maxChunksPerPacket >= piecesList.Count;
 
-                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(chunk, block, blockPos, isFinalBatch, total: isFinalBatch ? pieces.Count : 0));
+                    CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER).SendPacket(new MapUploadPacket(chunk, forTable, blockPos, isFinalBatch, totalChunksSent: isFinalBatch ? pieces.Count : 0));
                 }
                 return true;
             }
             else
             {
-                CoreClientAPI.Network.GetChannel(CartographyTableConstants.UPLOAD_CHANNEL).SendPacket(new MapUploadPacket(pieces, block, blockPos, true, total: pieces.Count));
+                CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER).SendPacket(new MapUploadPacket(pieces, forTable, blockPos, true, totalChunksSent: pieces.Count));
             }
             return false;
         }

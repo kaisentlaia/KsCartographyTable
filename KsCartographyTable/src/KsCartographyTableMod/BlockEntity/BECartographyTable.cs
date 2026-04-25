@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -15,11 +16,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     {
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
-        private CartographyMap map;
+        public EnumAppSide Side;
+        public CartographyMap Map;
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
 
+            Side = Api.Side;
             if (Api.Side == EnumAppSide.Server)
             {
                 CoreServerAPI = Api as ICoreServerAPI;
@@ -32,9 +35,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public void EnsureMap()
         {
-            if (map == null)
+            if (Map == null)
             {
-                map = new CartographyMap(Api);
+                Map = new CartographyMap(Api);
             }
         }
 
@@ -52,7 +55,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (CoreClientAPI != null)
             {
-                KsCartographyTableModSystem.ClientCartographyService.Ponder(map, byPlayer as IClientPlayer);
+                KsCartographyTableModSystem.ClientCartographyService.Ponder(Map, byPlayer as IClientPlayer);
             }
 
             return true;
@@ -63,7 +66,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (CoreServerAPI != null)
             {
-                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(map, Block, byPlayer, blockPos);
+                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Map, Block, byPlayer, blockPos);
                 MarkDirty();
             }
 
@@ -80,13 +83,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (CoreServerAPI != null)
             {
-                KsCartographyTableModSystem.ServerCartographyService.UpdateTableMap(map, byPlayer as IServerPlayer);
+                KsCartographyTableModSystem.ServerCartographyService.UpdateTableMap(Map, byPlayer as IServerPlayer);
                 MarkDirty();
             }
             if (CoreClientAPI != null)
             {
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
-                KsCartographyTableModSystem.ClientCartographyService.UpdateTableMap(map, Block, blockSel.Position);
+                KsCartographyTableModSystem.ClientCartographyService.UpdateTableMap(Map, Block, blockSel.Position);
             }
 
             return true;
@@ -97,12 +100,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (CoreServerAPI != null)
             {
-                KsCartographyTableModSystem.ServerCartographyService.UpdatePlayerMap(map, byPlayer as IServerPlayer, Block, blockSel.Position);
+                KsCartographyTableModSystem.ServerCartographyService.UpdatePlayerMap(Map, byPlayer as IServerPlayer, Block, blockSel.Position);
             }
             if (CoreClientAPI != null)
             {
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
-                KsCartographyTableModSystem.ClientCartographyService.UpdateTableMap(map, Block, blockSel.Position);
             }
 
             return true;
@@ -110,12 +112,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
-            if (!(Block is BlockAdvancedCartographyTable) && map != null && map.Waypoints.Count > 0)
+            if (Block is not BlockAdvancedCartographyTable && Map != null && Map.Waypoints.Count > 0)
             {
-                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, map.Waypoints.Count));
-            } else if (Block is BlockAdvancedCartographyTable && map != null && (map.Waypoints.Count > 0 || map.ExploredAreasIds.Count > 0)) {
-                double km2 = map.ExploredAreasIds.Count * 0.001024;
-                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, map.Waypoints.Count, $"{km2:F1}"));
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, Map.Waypoints.Count));
+            } else if (Block is BlockAdvancedCartographyTable && Map != null && (Map.Waypoints.Count > 0 || Map.ExploredAreasIds.Count > 0)) {
+                double km2 = Map.ExploredAreasIds.Count * 0.001024;
+                dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_MAP_WAYPOINTS, Map.Waypoints.Count, $"{km2:F1}"));
             } else
             {
                 dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_EMPTY));
@@ -125,9 +127,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
-            if (map != null)
+            if (Map != null)
             {
-                map.Serialize(tree);
+                Map.Serialize(tree);
             }
         }
 
@@ -135,14 +137,53 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             base.FromTreeAttributes(tree, worldForResolving);
             EnsureMap();
-            map.Deserialize(tree);
+            Map.Deserialize(tree);
         }
         
         public void UpdateMapExploredAreasIds(List<FastVec2i> piecesIds)
         {
             EnsureMap();
-            map.ExploredAreasIds = piecesIds.Select(pieceId => pieceId.ToChunkIndex()).ToList();
+            Map.ExploredAreasIds = piecesIds.Select(pieceId => pieceId.ToChunkIndex()).ToList();
             MarkDirty();
+        }
+
+        internal bool onCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            {
+                return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Block);
+            }
+            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            {
+                return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel.Block);
+            }
+            return false;
+        }
+
+        internal bool onCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            {
+                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, blockSel.Block);
+            }
+            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            {
+                return KsCartographyTableModSystem.ServerCartographyService.continueCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+            }
+            throw new NotImplementedException();
+        }
+
+        internal void onCartographySessionStop(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            {
+                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
+            }
+            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            {
+                KsCartographyTableModSystem.ServerCartographyService.endCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+            }
+            throw new NotImplementedException();
         }
     }
 }

@@ -10,7 +10,6 @@ using System;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
-
       [ProtoContract]
       public class MapUploadPacket
       {
@@ -27,17 +26,40 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             public BlockPos BlockPos { get; set; } = null;
 
             [ProtoMember(5)]
-            public int Total { get; set; } = 0;
+            public int TotalChunksSent { get; set; } = 0;
 
+            [ProtoMember(6)]
+            public List<CartographyWaypoint> NewWaypoints { get; set; } = [];
+
+            [ProtoMember(7)]
+            public List<CartographyWaypoint> UpdatedWaypoints { get; set; } = [];
+
+            [ProtoMember(8)]
+            public List<CartographyWaypoint> DeletedWaypoints { get; set; } = [];
+
+            [ProtoMember(9)]
+            public int TotalNewWaypointsSent { get; set; } = 0;
+
+            [ProtoMember(10)]
+            public int TotalUpdatedWaypointsSent { get; set; } = 0;
+
+            [ProtoMember(11)]
+            public int TotalDeletedWaypointsSent { get; set; } = 0;
             public MapUploadPacket() { }
 
-            public MapUploadPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = true, int total = 0)
+            public MapUploadPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, List<CartographyWaypoint> newWaypoints, List<CartographyWaypoint> updatedWaypoints, List<CartographyWaypoint> deletedWaypoints, bool isFinalBatch = true, int totalNewWaypointsSent = 0, int totalUpdatedWaypointsSent = 0, int totalDeletedWaypointsSent = 0, int totalChunksSent = 0)
             {
                   Pieces = pieces;
                   BlockId = block.Id.ToString();
                   BlockPos = blockPos;
                   IsFinalBatch = isFinalBatch;
-                  Total = total;
+                  TotalChunksSent = totalChunksSent;
+                  NewWaypoints = newWaypoints;
+                  UpdatedWaypoints = updatedWaypoints;
+                  DeletedWaypoints = deletedWaypoints;
+                  TotalNewWaypointsSent = totalNewWaypointsSent;
+                  TotalUpdatedWaypointsSent = totalUpdatedWaypointsSent;
+                  TotalDeletedWaypointsSent = totalDeletedWaypointsSent;
             }
       }
 

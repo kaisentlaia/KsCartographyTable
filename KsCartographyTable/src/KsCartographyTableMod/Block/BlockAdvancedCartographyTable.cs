@@ -1,3 +1,4 @@
+using System.Collections.Generic;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -5,7 +6,7 @@ using Vintagestory.API.MathTools;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
-    internal class BlockAdvancedCartographyTable : BlockCartographyTable
+    public class BlockAdvancedCartographyTable : BlockCartographyTable
     {
         internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
 
@@ -39,21 +40,21 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             // BUG south orientation doesn't detect correctly an occupied right block
             // Get the position where the companion block would go
             BlockPos companionPos = GetCompanionPosition(blockSel.Position);
-            
+
             // Check if companion position is clear
             if (!world.BlockAccessor.GetBlock(companionPos).IsReplacableBy(this))
             {
                 failureCode = "notenoughspace"; // Standard VS failure code
                 return false;
             }
-            
+
             // Check base position too (VS normally does this, but we're overriding)
             if (!world.BlockAccessor.GetBlock(blockSel.Position).IsReplacableBy(this))
             {
                 failureCode = "notenoughspace";
                 return false;
             }
-            
+
             // Both positions clear, proceed with placement
             return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
         }
@@ -85,9 +86,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
         }
-
         private BlockPos GetCompanionPosition(BlockPos pos)
-        {            
+        {
             string side = Variant["side"];
             return side switch
             {

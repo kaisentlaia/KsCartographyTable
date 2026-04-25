@@ -55,6 +55,7 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void StartServerSide(ICoreServerAPI api)
     {
+        // TODO remove most commands, leave only the one to delete all player's waypoints
         CoreServerAPI = api;
         ServerCartographyService = new ServerCartographyService(CoreServerAPI);
         tableWaypointManager = new TableWaypointManager(CoreServerAPI);
@@ -74,6 +75,7 @@ public class KsCartographyTableModSystem : ModSystem
             tableWaypointManager.ClearAllDeletedWaypoints();
             return TextCommandResult.Success("Data cleared.");
         });
+        // TODO add handbook entry
         api.ChatCommands.Create("wipewaypoints")
         .WithDescription("Wipes all the waypoints")
         .RequiresPrivilege(Privilege.root)
@@ -104,7 +106,6 @@ public class KsCartographyTableModSystem : ModSystem
     [HarmonyPrefix]
     [HarmonyPatch(typeof(WaypointMapLayer), "OnCmdWayPointRemove")]
     public static void PreOnCmdWayPointRemove(TextCommandCallingArgs args) {
-        CoreServerAPI.Logger.Notification("user deleting waypoint");
         if (!IsMapDisallowed() && !args.Parsers[0].IsMissing) {
             int index = (int)args.Parsers[0].GetValue();
             IServerPlayer player = args.Caller.Player as IServerPlayer;
