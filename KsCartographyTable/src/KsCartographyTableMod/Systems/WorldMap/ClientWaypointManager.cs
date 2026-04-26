@@ -2,7 +2,10 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Client;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
+using Vintagestory.API.Server;
+using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
@@ -10,6 +13,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 	public class ClientWaypointManager
 	{
 		public ICoreClientAPI CoreClientAPI;
+		WorldMapManager wmm;
 		WaypointMapLayer waypointMapLayer;
 		public WaypointMapLayer WaypointMapLayer
 		{
@@ -17,7 +21,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			{
 				if (waypointMapLayer == null)
 				{
-					WorldMapManager wmm = CoreClientAPI.ModLoader.GetModSystem<WorldMapManager>();
+					wmm = CoreClientAPI.ModLoader.GetModSystem<WorldMapManager>();
 					if (wmm != null)
 					{
 						waypointMapLayer = wmm.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
@@ -31,6 +35,24 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		public ClientWaypointManager(ICoreClientAPI api)
 		{
 			CoreClientAPI = api;
+		}
+
+		public void ResendWaypointsToServer()
+		{
+			List<Waypoint> waypoints = new List<Waypoint>();
+			if (WaypointMapLayer != null)
+			{
+				waypoints = WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerUid == CoreClientAPI.World.Player.PlayerUID);
+				waypoints.ForEach(waypoint =>
+				{
+					if (waypoint.Guid == null)
+					{
+						CoreClientAPI.Logger.Notification($"MAP Creating new Guid for waypoint {waypoint.Title}");
+						waypoint.Guid = Guid.NewGuid().ToString();
+					}
+				});
+				wmm.SendMapDataToServer(WaypointMapLayer, SerializerUtil.Serialize(waypoints));
+			}
 		}
 
 		private List<Waypoint> GetPlayerWaypoints()

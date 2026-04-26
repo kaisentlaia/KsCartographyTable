@@ -408,12 +408,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
 			using (SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction())
 			{
-				updateWaypointsCmd.Transaction = sqliteTransaction;
+				setDeletedWaypointsCmd.Transaction = sqliteTransaction;
 				foreach (string guid in deletedWaypointIds)
 				{
-					updateWaypointsCmd.Parameters["@guid"].Value = guid;
-					updateWaypointsCmd.Parameters["@parentGuid"].Value = guid;
-					updateWaypointsCmd.ExecuteNonQuery();
+					setDeletedWaypointsCmd.Parameters["@guid"].Value = guid;
+					setDeletedWaypointsCmd.Parameters["@parentGuid"].Value = guid;
+					setDeletedWaypointsCmd.ExecuteNonQuery();
 				}
 
 				sqliteTransaction.Commit();
@@ -423,7 +423,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal int GetSharedWaypointsCount()
         {
 			using var cmd = sqliteConn.CreateCommand();
-			cmd.CommandText = "SELECT COUNT(*) FROM sharedwaypoints WHERE parentGuid IS NULL";
+			cmd.CommandText = "SELECT COUNT(*) FROM sharedwaypoints WHERE parentGuid IS NULL AND deleted=0";
 			return Convert.ToInt32(cmd.ExecuteScalar());
         }
     }
