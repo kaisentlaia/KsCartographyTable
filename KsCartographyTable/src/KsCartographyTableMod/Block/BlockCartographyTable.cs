@@ -57,12 +57,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return true;
             }
 
-            api.Logger.Notification($"MAP block spawning particles and returning true");
-            // BUG not seeing particles
-            // Spawn particles (client side only)
-            if (world.Side == EnumAppSide.Client && (int)(secondsUsed * 20) % 4 == 0)
+            if (world.Side == EnumAppSide.Client)
             {
-                SpawnCartographyParticles(world, blockSel.Position, secondsUsed);
                 BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
                 return beTable.OnCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
             }
@@ -176,31 +172,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     be.EnsureMap(); // Only create new map if no data to restore
                 }
             }
-        }
-        
-        private void SpawnCartographyParticles(IWorldAccessor world, BlockPos pos, float secondsUsed)
-        {
-            Vec3d center = pos.ToVec3d().Add(0.5, 1.15, 0.5);
-            
-            // Ink drops (falling)
-            world.SpawnParticles(1, 
-                ColorUtil.ToRgba(200, 20, 20, 60),
-                center.AddCopy(-0.1, 0, -0.1),
-                center.AddCopy(0.1, 0.05, 0.1),
-                new Vec3f(0, -0.3f, 0),
-                new Vec3f(0, -0.1f, 0),
-                0.4f, 0.5f, 0.05f,
-                EnumParticleModel.Quad);
-
-            // Parchment dust (rising)
-            world.SpawnParticles(1,
-                ColorUtil.ToRgba(120, 200, 170, 100),
-                center.AddCopy(-0.08, 0, -0.08),
-                center.AddCopy(0.08, 0.1, 0.08),
-                new Vec3f(-0.05f, 0.1f, -0.05f),
-                new Vec3f(0.05f, 0.25f, 0.05f),
-                1.0f, 0.2f, 0.08f,
-                EnumParticleModel.Quad);
         }
     }
 }

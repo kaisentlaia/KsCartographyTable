@@ -23,6 +23,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private Queue<Dictionary<FastVec2i, MapPieceDB>> remainingBatches;
         
         private const int BATCH_SIZE = 25;
+        private const double SEND_EVERY_SECONDS = 0.2;
         private string channel;
         private double lastSendTime;
 
@@ -88,7 +89,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public bool TrySendNextBatch(double currentSeconds)
         {
             // Only send if 1/4 second has passed since last send
-            if (currentSeconds - lastSendTime < 0.25)
+            if (currentSeconds - lastSendTime < SEND_EVERY_SECONDS)
             {
                 return true; // Still alive, just not sending yet
             }

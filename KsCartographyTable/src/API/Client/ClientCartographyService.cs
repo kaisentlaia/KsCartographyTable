@@ -142,7 +142,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (session.IsComplete)
             {
-                blockEntity.stopSound();
+                blockEntity.StopSoundAndParticles();
                 return true; // Keep interaction alive, player still holding button
             }
 

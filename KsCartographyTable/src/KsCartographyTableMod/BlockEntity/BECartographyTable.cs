@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
+using Kaisentlaia.KsCartographyTableMod.API.Utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -14,11 +15,53 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
+        static SimpleParticleProperties InkParticles;
+        static SimpleParticleProperties PaperDustParticles;
         protected ILoadedSound ambientSound;
+        protected bool SpawnParticles = false;
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
         public CartographyMap Map;
+
+        static BlockEntityCartographyTable()
+        {
+            InkParticles = new SimpleParticleProperties(1, 3, ColorUtil.ToRgba(200, 20, 20, 60), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), 1, 1, 0.1f, 0.3f, EnumParticleModel.Quad);
+            InkParticles.AddPos.Set(1 + 2 / 32f, 0, 1 + 2 / 32f);
+            InkParticles.AddQuantity = 20;
+            InkParticles.MinVelocity.Set(-0.25f, 0, -0.25f);
+            InkParticles.AddVelocity.Set(0.5f, 1, 0.5f);
+            InkParticles.WithTerrainCollision = true;
+            InkParticles.ParticleModel = EnumParticleModel.Cube;
+            InkParticles.LifeLength = 1.5f;
+            InkParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -0.4f);
+
+            PaperDustParticles = new SimpleParticleProperties(
+                1,
+                3,
+                ColorUtil.ToRgba(200, 200, 170, 100),
+                new Vec3d(),
+                new Vec3d(),
+                new Vec3f(-0.25f, -0.25f, -0.25f),
+                new Vec3f(0.25f, 0.25f, 0.25f),
+                1,
+                1,
+                0.1f,
+                0.2f,
+                EnumParticleModel.Quad
+            );
+            PaperDustParticles.AddPos.Set(1 + 2 / 32f, 0, 1 + 2 / 32f);
+            PaperDustParticles.AddQuantity = 2;
+            PaperDustParticles.MinVelocity.Set(-0.05f, 0, -0.05f);
+            PaperDustParticles.AddVelocity.Set(0.1f, 0.2f, 0.1f);
+            PaperDustParticles.WithTerrainCollision = false;
+            PaperDustParticles.ParticleModel = EnumParticleModel.Quad;
+            PaperDustParticles.LifeLength = 0.5f;
+            PaperDustParticles.SelfPropelled = true;
+            PaperDustParticles.GravityEffect = 0;
+            PaperDustParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, 0.4f);
+            PaperDustParticles.OpacityEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -16f);
+        }
         public override void Initialize(ICoreAPI api)
         {
             base.Initialize(api);
@@ -113,7 +156,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 bool uploadStarted = KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel);
                 if (uploadStarted) {
-                    startSound();
+                    StartSoundAndParticles();
                 }
                 return uploadStarted;
             }
@@ -121,7 +164,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 bool uploadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel);
                 if (uploadStarted) {
-                    startSound();
+                    StartSoundAndParticles();
                 }
                 return uploadStarted;
             }
@@ -130,9 +173,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            // TODO session should receive secondsUsed and send a packet every x seconds?
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
+                if (SpawnParticles)
+                {
+                    ItemStack inkColorStack = ItemDetectorService.GetItemStacks(world, "charcoal")[0];
+                    InkParticles.Color = InkParticles.Color = inkColorStack.Collectible.GetRandomColor(Api as ICoreClientAPI, inkColorStack);
+                    InkParticles.Color &= 0xffffff;
+                    InkParticles.Color |= (200 << 24);
+                    InkParticles.MinQuantity = 1;
+                    InkParticles.AddQuantity = 5;
+                    InkParticles.MinPos.Set(Pos.X - 0.5 / 32f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    InkParticles.MinVelocity.Set(-0.1f, 0, -0.1f);
+                    InkParticles.AddVelocity.Set(0.2f, 0.2f, 0.2f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 0.5 / 32f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.AddQuantity = 1;
+                    PaperDustParticles.MinQuantity = 2;
+                    Api.World.SpawnParticles(InkParticles);
+                    Api.World.SpawnParticles(PaperDustParticles);
+                }
                 return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
@@ -152,9 +211,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
             }
-            stopSound();
+            StopSoundAndParticles();
         }
-        public void startSound()
+        public void StartSoundAndParticles()
         {
             if (ambientSound == null && Api?.Side == EnumAppSide.Client)
             {
@@ -168,16 +227,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 });
 
                 ambientSound.Start();
+                SpawnParticles = true;
             }
         }
 
-        public void stopSound()
+        public void StopSoundAndParticles()
         {
             if (ambientSound != null)
             {
                 ambientSound.Stop();
                 ambientSound.Dispose();
                 ambientSound = null;
+                SpawnParticles = false;
             }
         }
     }
