@@ -117,7 +117,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
-            if (activeSessions.Get(sessionId) != null)
+            if (activeSessions.ContainsKey(sessionId))
             {
                 return false;
             }
@@ -129,12 +129,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         internal bool ContinueCartographyUploadSession(IPlayer byPlayer, Block block)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
-            MapTransferSession session = activeSessions.Get(sessionId);
 
-            if (session == null)
+            if (!activeSessions.ContainsKey(sessionId))
             {
                 return false;
             }
+
+            MapTransferSession session = activeSessions.Get(sessionId);
 
             return session.SendNextBatch();
         }
@@ -142,11 +143,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         internal void EndCartographyUploadSession(IPlayer byPlayer, Block block)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
-            MapTransferSession session = activeSessions.Get(sessionId);
 
-            if (session != null)
+            if (activeSessions.ContainsKey(sessionId))
             {
+                MapTransferSession session = activeSessions.Get(sessionId);
                 session.Dispose();
+                activeSessions.Remove(sessionId);
             }
         }
     }

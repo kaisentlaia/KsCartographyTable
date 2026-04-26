@@ -7,6 +7,7 @@ using ProtoBuf;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using System;
+using System.Linq;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
@@ -45,6 +46,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		SqliteCommand updateWaypointsCmd;
 		SqliteCommand getPlayerWaypointsCmd;
 		SqliteCommand getMatchingWaypointCmd;
+		SqliteCommand setDeletedWaypointsCmd;
 		ICoreAPI coreApi;
 		public ServerMapDB(ICoreAPI coreApi) : base(coreApi.World.Logger)
 		{
@@ -70,7 +72,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			{
 				setPlayerExploredMapPieceCmd = sqliteConn.CreateCommand();
 				setPlayerExploredMapPieceCmd.CommandText = "INSERT OR IGNORE INTO playerchunkmapping (position, playerId) VALUES (@pos, @uid)";
-				setPlayerExploredMapPieceCmd.Parameters.Add("@uid", SqliteType.Text, 1);
+				setPlayerExploredMapPieceCmd.Parameters.Add("@uid", SqliteType.Text);
 				setPlayerExploredMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
 				setPlayerExploredMapPieceCmd.Prepare();
 
@@ -80,17 +82,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     FROM mappiece m 
                     LEFT JOIN playerchunkmapping p ON m.position = p.position AND p.playerId = @uid
                     WHERE p.playerId IS NULL";
-				getNewMapPiecesForPlayerCmd.Parameters.Add("@uid", SqliteType.Text, 1);
+				getNewMapPiecesForPlayerCmd.Parameters.Add("@uid", SqliteType.Text);
 				getNewMapPiecesForPlayerCmd.Prepare();
 
 				createWaypointsCmd = sqliteConn.CreateCommand();
-				createWaypointsCmd.CommandText = "INSERT INTO sharedwaypoints (guid, parentGuid, owningPlayerUid, position, title, icon, color, pinned, lastUpdated) VALUES (@guid, @parentGuid, @owningPlayerUid, @position, @title, @icon, @color, @pinned, @lastUpdated)";
-				createWaypointsCmd.Parameters.Add("@guid", SqliteType.Text, 1);
-				createWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text, 1);
-				createWaypointsCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text, 1);
-				createWaypointsCmd.Parameters.Add("@position", SqliteType.Integer, 1);
-				createWaypointsCmd.Parameters.Add("@title", SqliteType.Text, 1);
-				createWaypointsCmd.Parameters.Add("@icon", SqliteType.Text, 1);
+				createWaypointsCmd.CommandText = "INSERT OR IGNORE INTO sharedwaypoints (guid, parentGuid, owningPlayerUid, position, title, icon, color, pinned, lastUpdated, deleted) VALUES (@guid, @parentGuid, @owningPlayerUid, @position, @title, @icon, @color, @pinned, @lastUpdated, 0)";
+				createWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
+				createWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
+				createWaypointsCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
+				createWaypointsCmd.Parameters.Add("@position", SqliteType.Text);
+				createWaypointsCmd.Parameters.Add("@title", SqliteType.Text);
+				createWaypointsCmd.Parameters.Add("@icon", SqliteType.Text);
 				createWaypointsCmd.Parameters.Add("@color", SqliteType.Integer, 1);
 				createWaypointsCmd.Parameters.Add("@pinned", SqliteType.Integer, 1);
 				createWaypointsCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
@@ -98,11 +100,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 				updateWaypointsCmd = sqliteConn.CreateCommand();
 				updateWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET position=@position, title=@title, icon=@icon, color=@color, pinned=@pinned, lastUpdated=@lastUpdated WHERE guid=@guid OR parentGuid=@parentGuid";
-				updateWaypointsCmd.Parameters.Add("@guid", SqliteType.Text, 1);
-				updateWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text, 1);
-				updateWaypointsCmd.Parameters.Add("@position", SqliteType.Integer, 1);
-				updateWaypointsCmd.Parameters.Add("@title", SqliteType.Text, 1);
-				updateWaypointsCmd.Parameters.Add("@icon", SqliteType.Text, 1);
+				updateWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
+				updateWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
+				updateWaypointsCmd.Parameters.Add("@position", SqliteType.Text);
+				updateWaypointsCmd.Parameters.Add("@title", SqliteType.Text);
+				updateWaypointsCmd.Parameters.Add("@icon", SqliteType.Text);
 				updateWaypointsCmd.Parameters.Add("@color", SqliteType.Integer, 1);
 				updateWaypointsCmd.Parameters.Add("@pinned", SqliteType.Integer, 1);
 				updateWaypointsCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
@@ -110,18 +112,24 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 				getPlayerWaypointsCmd = sqliteConn.CreateCommand();
 				getPlayerWaypointsCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid";
-				getPlayerWaypointsCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text, 1);
+				getPlayerWaypointsCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getPlayerWaypointsCmd.Prepare();
 
 				getMatchingWaypointCmd = sqliteConn.CreateCommand();
-				getMatchingWaypointCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND parentGuid=NULL AND title=@title AND position=@position AND icon=@icon AND color=@color AND pinned=@pinned";
-				getMatchingWaypointCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text, 1);
-				getMatchingWaypointCmd.Parameters.Add("@position", SqliteType.Integer, 1);
-				getMatchingWaypointCmd.Parameters.Add("@title", SqliteType.Text, 1);
-				getMatchingWaypointCmd.Parameters.Add("@icon", SqliteType.Text, 1);
+				getMatchingWaypointCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND parentGuid IS NULL AND title=@title AND position=@position AND icon=@icon AND color=@color AND pinned=@pinned";
+				getMatchingWaypointCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
+				getMatchingWaypointCmd.Parameters.Add("@position", SqliteType.Text);
+				getMatchingWaypointCmd.Parameters.Add("@title", SqliteType.Text);
+				getMatchingWaypointCmd.Parameters.Add("@icon", SqliteType.Text);
 				getMatchingWaypointCmd.Parameters.Add("@color", SqliteType.Integer, 1);
 				getMatchingWaypointCmd.Parameters.Add("@pinned", SqliteType.Integer, 1);
 				getMatchingWaypointCmd.Prepare();
+
+				setDeletedWaypointsCmd = sqliteConn.CreateCommand();
+				setDeletedWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET deleted=1 WHERE guid=@guid OR parentGuid=@parentGuid";
+				setDeletedWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
+				setDeletedWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
+				setDeletedWaypointsCmd.Prepare();
 			}
 		}
 
@@ -141,8 +149,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				sqliteCommand4.ExecuteNonQuery();
 
 				using SqliteCommand sqliteCommand5 = sqliteConn.CreateCommand();
-				sqliteCommand3.CommandText = "CREATE TABLE IF NOT EXISTS sharedwaypoints (guid text NOT NULL, parentGuid text, owningPlayerUid text NOT NULL, position string NOT NULL, title text NOT NULL, icon text NOT NULL, color integer NOT NULL, pinned integer NOT NULL, deleted integer NOT NULL, PRIMARY KEY (guid));";
-				sqliteCommand3.ExecuteNonQuery();
+				sqliteCommand5.CommandText = "CREATE TABLE IF NOT EXISTS sharedwaypoints (guid text NOT NULL, parentGuid text, owningPlayerUid text NOT NULL, position text NOT NULL, title text NOT NULL, icon text NOT NULL, color integer NOT NULL, pinned integer NOT NULL, deleted integer NOT NULL, lastUpdated integer NOT NULL, PRIMARY KEY (guid));";
+				sqliteCommand5.ExecuteNonQuery();
 			}
 		}
 
@@ -261,13 +269,33 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		public void CreateWaypoints(List<CartographyWaypoint> waypoints)
 		{
+			// DEBUG: Check what's actually in the table right now
+			using (var checkCmd = sqliteConn.CreateCommand())
+			{
+				checkCmd.CommandText = "SELECT guid FROM sharedwaypoints";
+				using var reader = checkCmd.ExecuteReader();
+				while (reader.Read())
+				{
+					coreApi.Logger.Error($"DB ALREADY CONTAINS: {reader["guid"]}");
+				}
+			}
+
+			// DEBUG: Check for duplicates in the incoming list
+			var dupes = waypoints.GroupBy(w => w.Guid).Where(g => g.Count() > 1).ToList();
+			foreach (var g in dupes)
+			{
+				coreApi.Logger.Error($"INCOMING DUPLICATE GUID: {g.Key} appears {g.Count()} times");
+			}
+
 			using (SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction())
 			{
 				createWaypointsCmd.Transaction = sqliteTransaction;
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
+            		coreApi.Logger.Notification($"INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
+					// BUG why some GUIDs are duplicated here?
 					createWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
-					createWaypointsCmd.Parameters["@parentGuid"].Value = waypoint.ParentGuid;
+					createWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
 					createWaypointsCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
 					createWaypointsCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
 					createWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
@@ -287,7 +315,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			using (SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction())
 			{
 				updateWaypointsCmd.Transaction = sqliteTransaction;
-				updateWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET position=@position, title=@title, icon=@icon, color=@color, pinned=@pinned, lastUpdated=@lastUpdated WHERE guid=@guid OR parentGuid=@parentGuid";
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
 					updateWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
@@ -305,7 +332,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			}
 		}
 
-		public List<CartographyWaypoint> GetPlayerWaypoints(IPlayer player)
+		public List<CartographyWaypoint> GetPlayerSharedWaypoints(IPlayer player)
 		{
 			List<CartographyWaypoint> waypoints = [];
 
@@ -321,10 +348,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
 						reader["position"].ToString(),
-						reader["color"].ToIntPtr().ToInt32(),
-						reader["pinned"].ToIntPtr().ToInt32(),
-						reader["deleted"].ToIntPtr().ToInt32(),
-						reader["lastUpdated"].ToIntPtr().ToInt32()
+						Convert.ToInt64(reader["color"]),
+						Convert.ToInt64(reader["pinned"]),
+						Convert.ToInt64(reader["deleted"]),
+						Convert.ToInt64(reader["lastUpdated"])
 					));
 				}
 			}
@@ -335,7 +362,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		public CartographyWaypoint GetMatchingWaypoint(CartographyWaypoint waypoint)
 		{
 			CartographyWaypoint matchingWaypoint = null;
-				getMatchingWaypointCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND parentGuid=NULL AND title=@title AND position=@position AND icon=@icon AND color=@color AND pinned=@pinned";
 
 			getMatchingWaypointCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
 			getMatchingWaypointCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
@@ -380,7 +406,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal void DeleteWaypoints(List<string> deletedWaypointIds)
         {
-            throw new NotImplementedException();
+			using (SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction())
+			{
+				updateWaypointsCmd.Transaction = sqliteTransaction;
+				foreach (string guid in deletedWaypointIds)
+				{
+					updateWaypointsCmd.Parameters["@guid"].Value = guid;
+					updateWaypointsCmd.Parameters["@parentGuid"].Value = guid;
+					updateWaypointsCmd.ExecuteNonQuery();
+				}
+
+				sqliteTransaction.Commit();
+			}
+        }
+
+        internal int GetSharedWaypointsCount()
+        {
+			using var cmd = sqliteConn.CreateCommand();
+			cmd.CommandText = "SELECT COUNT(*) FROM sharedwaypoints WHERE parentGuid IS NULL";
+			return Convert.ToInt32(cmd.ExecuteScalar());
         }
     }
 }

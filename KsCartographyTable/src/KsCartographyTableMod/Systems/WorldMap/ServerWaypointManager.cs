@@ -51,15 +51,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return waypointMapLayer;
 			}
 		}
-		string modDataPath = Path.Combine(
-			GamePaths.DataPath,
-			"ModData",
-			CartographyTableConstants.MOD_ID
-		);
+		string modDataPath;
 
 		public ServerWaypointManager(ICoreServerAPI api)
 		{
 			CoreServerAPI = api;
+            modDataPath = Path.Combine(
+                GamePaths.DataPath,
+                "ModData",
+                CoreServerAPI.World.SavegameIdentifier,
+                CartographyTableConstants.MOD_ID
+            );
             GamePaths.EnsurePathExists(modDataPath);
 		}
 
@@ -144,7 +146,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (blockEntity != null)
             {
                 DateTime playerLastDownload = blockEntity.Map.getPlayerLastDownload(fromPlayer);
-                List<CartographyWaypoint> playerSharedDbWaypoints = mapDB.GetPlayerWaypoints(fromPlayer);
+                List<CartographyWaypoint> playerSharedDbWaypoints = mapDB.GetPlayerSharedWaypoints(fromPlayer);
                 List<Waypoint> playerCurrentWaypoints = GetPlayerWaypoints(fromPlayer);
 
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
@@ -158,7 +160,16 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                         waypoint.LastUpdated = matching.LastUpdated;
                     }
                 });
+                var duplicateGuids = playerCurrentWaypoints
+                    .GroupBy(w => w.Guid)
+                    .Where(g => g.Count() > 1)
+                    .Select(g => new { Guid = g.Key, Count = g.Count(), Titles = g.Select(w => w.Title).ToList() });
 
+                foreach (var dup in duplicateGuids)
+                {
+                    CoreServerAPI.Logger.Error("DUPLICATE WAYPOINT: GUID={0}, Count={1}, Titles={2}", 
+                        dup.Guid, dup.Count, string.Join(", ", dup.Titles));
+                }
                 mapDB.CreateWaypoints(newWaypoints);
 
                 List<CartographyWaypoint> existingWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) != null).Select(waypoint => new CartographyWaypoint(waypoint))];

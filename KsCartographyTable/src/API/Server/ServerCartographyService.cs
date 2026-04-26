@@ -27,7 +27,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		Dictionary<string, ServerMapDB> tableDBConnections = new Dictionary<string, ServerMapDB>();
         
         private ServerMapDB GetBlockMapDB(string blockId) {
-            if (tableDBConnections.Get(blockId) == null) {
+            if (!tableDBConnections.ContainsKey(blockId)) {
                 string mapFolderPath = Path.Combine(GamePaths.DataPath, "ModData", CoreServerAPI.World.SavegameIdentifier, CartographyTableConstants.MOD_ID);
                 GamePaths.EnsurePathExists(mapFolderPath);
                 string mapPath = Path.Combine(mapFolderPath, blockId + ".db");
@@ -42,7 +42,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                     return null;
                 }
             }
-
 			return tableDBConnections.Get(blockId);
         }
 		public WaypointMapLayer WaypointMapLayer
@@ -84,19 +83,29 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         private void OnMapUploadRequest(IServerPlayer fromPlayer, MapSyncPacket packet)
 		{
+            if (!uploadedChunks.ContainsKey(fromPlayer.PlayerUID))
+            {
+                uploadedChunks[fromPlayer.PlayerUID] = 0;
+            }
             uploadedChunks[fromPlayer.PlayerUID] += packet.Pieces.Count;
 
             Block table = CoreServerAPI.World.BlockAccessor.GetBlock(packet.BlockPos);
+            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
+            ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
             if (table is BlockAdvancedCartographyTable)
             {
-                tableMapManager.UpdateMap(fromPlayer, packet, GetBlockMapDB(packet.BlockId));
+                tableMapManager.UpdateMap(fromPlayer, packet, mapDB);
             }
 
             if (packet.IsFinalBatch)
-            {                    
+            {         
+                if (!uploadedChunks.ContainsKey(fromPlayer.PlayerUID))
+                {
+                    uploadedChunks[fromPlayer.PlayerUID] = 0;
+                }           
                 double km2 = uploadedChunks[fromPlayer.PlayerUID] * 0.001024;
                 uploadedChunks[fromPlayer.PlayerUID] = 0;
-                WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, GetBlockMapDB(packet.BlockId));
+                WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
                 if (km2 == 0 && table is BlockAdvancedCartographyTable)
                 {
 					CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE), EnumChatType.Notification);
@@ -128,6 +137,25 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                         CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted), EnumChatType.Notification);
                     }
                 }
+                if (beCartographyTable.Map.LastPlayerDownloads.ContainsKey(fromPlayer.PlayerUID))
+                {
+                    beCartographyTable.Map.LastPlayerDownloads[fromPlayer.PlayerUID] = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
+                } else
+                {
+                    beCartographyTable.Map.LastPlayerDownloads.Add(fromPlayer.PlayerUID, ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds());
+                }
+                beCartographyTable.Map.WaypointCount = mapDB.GetSharedWaypointsCount();
+                CoreServerAPI.Logger.Notification($"MAP last waypoint count set to: {JsonUtil.ToString(beCartographyTable.Map.WaypointCount)}");
+                if (table is BlockAdvancedCartographyTable)
+                {   
+                    beCartographyTable.Map.ExploredAreasIds = [.. mapDB.GetAllMapPiecesIds().Select(v => v.ToChunkIndex())];
+                    CoreServerAPI.Logger.Notification($"MAP explored areas ids set to: {JsonUtil.ToString(beCartographyTable.Map.ExploredAreasIds)}");
+                }
+                mapDB.GetPlayerSharedWaypoints(fromPlayer).ForEach(waypoint =>
+                {                    
+                    CoreServerAPI.Logger.Notification($"Found waypoint on shared map db: {waypoint.Guid} {waypoint.Title}");
+                });
+                beCartographyTable.MarkDirty();
             }            
 		}
 

@@ -21,10 +21,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             LastUpdated = DateTime.Now; // TODO now or utcNow?
             Deleted = false;
         }
-        public CartographyWaypoint(string guid, string parentGuid, string owningPlayerUid, string title, string icon, string position, int color, int pinned, int deleted, int lastUpdated)
+        public CartographyWaypoint(string guid, string parentGuid, string owningPlayerUid, string title, string icon, string position, long color, long pinned, long deleted, long lastUpdated)
         {
             var positionParts = position.Split(',');
-            Color = color;
+            Color = Convert.ToInt32(color);
             Guid = guid;
             ParentGuid = parentGuid;
             Icon = icon;

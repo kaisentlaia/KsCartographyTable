@@ -79,6 +79,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
             beTable.OnCartographySessionStop(currentAction, secondsUsed, world, byPlayer, blockSel);
+            currentAction = CartographyAction.None;
         }
 
         private CartographyAction GetPerformedAction(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

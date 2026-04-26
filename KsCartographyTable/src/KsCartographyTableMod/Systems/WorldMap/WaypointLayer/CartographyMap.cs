@@ -23,8 +23,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return waypointCount; }
             set { waypointCount = value; }
         }
-        private Dictionary<string, int> lastPlayerDownloads = [];
-        public Dictionary<string, int> LastPlayerDownloads
+        private Dictionary<string, long> lastPlayerDownloads = [];
+        public Dictionary<string, long> LastPlayerDownloads
         {
             get { return lastPlayerDownloads; }
             set { lastPlayerDownloads = value; }
@@ -94,7 +94,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 {
                     var lastPlayerDownloads = tree.GetString("LastPlayerDownloads");
                     LastPlayerDownloads = lastPlayerDownloads != null
-                        ? JsonUtil.FromString<Dictionary<string, int>>(lastPlayerDownloads)
+                        ? JsonUtil.FromString<Dictionary<string, long>>(lastPlayerDownloads)
                         : [];
                 }
                 else
@@ -130,6 +130,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal DateTime getPlayerLastDownload(IServerPlayer fromPlayer)
         {
+            if (!LastPlayerDownloads.ContainsKey(fromPlayer.PlayerUID))
+            {
+                return DateTime.Now.AddYears(-1);
+            }
             return DateTimeOffset
                 .FromUnixTimeMilliseconds(LastPlayerDownloads[fromPlayer.PlayerUID])
                 .LocalDateTime;

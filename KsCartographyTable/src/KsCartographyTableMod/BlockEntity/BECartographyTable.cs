@@ -150,7 +150,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 stopSound();
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
             }
-            throw new NotImplementedException();
         }
         public void startSound()
         {
