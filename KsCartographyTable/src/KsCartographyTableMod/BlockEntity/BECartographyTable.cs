@@ -167,32 +167,51 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 bool uploadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel);
                 if (uploadStarted) {
                     StartSoundAndParticles();
+                    SpawnMoreParticles(world);
                 }
                 return uploadStarted;
             }
             return false;
         }
 
+        private void SpawnMoreParticles(IWorldAccessor world)
+        {
+            if (SpawnParticles)
+            {
+                ItemStack inkColorStack = ItemDetectorService.GetItemStacks(world, "charcoal")[0];
+                InkParticles.Color = InkParticles.Color = inkColorStack.Collectible.GetRandomColor(Api as ICoreClientAPI, inkColorStack);
+                InkParticles.Color &= 0xffffff;
+                InkParticles.Color |= (200 << 24);
+                InkParticles.MinQuantity = 1;
+                InkParticles.AddQuantity = 5;
+                InkParticles.MinVelocity.Set(-0.1f, 0, -0.1f);
+                InkParticles.AddVelocity.Set(0.2f, 0.2f, 0.2f);
+
+                PaperDustParticles.AddQuantity = 1;
+                PaperDustParticles.MinQuantity = 2;
+
+                if (Block is not BlockAdvancedCartographyTable)
+                {
+                    InkParticles.MinPos.Set(Pos.X - 1 / 32f , Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 1 / 32f, Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
+                }
+                else
+                {
+                    InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                }
+                Api.World.SpawnParticles(InkParticles);
+                Api.World.SpawnParticles(PaperDustParticles);
+            }
+        }
+
         internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
-                if (SpawnParticles)
+                if ((int)(secondsUsed * 20) % 4 == 0)
                 {
-                    ItemStack inkColorStack = ItemDetectorService.GetItemStacks(world, "charcoal")[0];
-                    InkParticles.Color = InkParticles.Color = inkColorStack.Collectible.GetRandomColor(Api as ICoreClientAPI, inkColorStack);
-                    InkParticles.Color &= 0xffffff;
-                    InkParticles.Color |= (200 << 24);
-                    InkParticles.MinQuantity = 1;
-                    InkParticles.AddQuantity = 5;
-                    InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
-                    InkParticles.MinVelocity.Set(-0.1f, 0, -0.1f);
-                    InkParticles.AddVelocity.Set(0.2f, 0.2f, 0.2f);
-                    PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
-                    PaperDustParticles.AddQuantity = 1;
-                    PaperDustParticles.MinQuantity = 2;
-                    Api.World.SpawnParticles(InkParticles);
-                    Api.World.SpawnParticles(PaperDustParticles);
+                    SpawnMoreParticles(world);
                 }
                 return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
             }

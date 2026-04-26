@@ -106,6 +106,202 @@
       }
     ]
   },
+  "collisionBoxesByType": {
+    "*-north": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": -0.64,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Book - toward parent at west (-X)"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.64,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.98,
+        "comment": "Book - toward parent at north (-Z)"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 2.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.02,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 1.64,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Book - toward parent at east (+X)"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 2.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": 0.02,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 1.64,
+        "comment": "Book - toward parent at south (+Z)"
+      }
+    ]
+  },
+  "particleCollisionBoxesByType": {
+    "*-north": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": -0.64,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Book - toward parent at west (-X)"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.64,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.98,
+        "comment": "Book - toward parent at north (-Z)"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 2.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.02,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 1.64,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Book - toward parent at east (+X)"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 2.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0, "y1": 0, "z1": 0, "x2": 0, "y2": 0, "z2": 0,
+        "comment": "Ink and Quill (disabled)"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": 0.02,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 1.64,
+        "comment": "Book - toward parent at south (+Z)"
+      }
+    ]
+  },
   "sounds": {
     "place": "game:block/planks",
     "break": "game:block/planks"
