@@ -123,7 +123,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                 return false;
             }
             CoreClientAPI.Logger.Notification($"MAP starting new session");
-            playerWaypointManager.ResendWaypointsToServer(); // let's make sure that the server has the current waypoint list before starting the session
             MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();

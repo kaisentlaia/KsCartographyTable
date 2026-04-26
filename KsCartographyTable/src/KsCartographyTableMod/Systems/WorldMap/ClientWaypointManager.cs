@@ -37,24 +37,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			CoreClientAPI = api;
 		}
 
-		public void ResendWaypointsToServer()
-		{
-			List<Waypoint> waypoints = new List<Waypoint>();
-			if (WaypointMapLayer != null)
-			{
-				waypoints = WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerUid == CoreClientAPI.World.Player.PlayerUID);
-				waypoints.ForEach(waypoint =>
-				{
-					if (waypoint.Guid == null)
-					{
-						CoreClientAPI.Logger.Notification($"MAP Creating new Guid for waypoint {waypoint.Title}");
-						waypoint.Guid = Guid.NewGuid().ToString();
-					}
-				});
-				wmm.SendMapDataToServer(WaypointMapLayer, SerializerUtil.Serialize(waypoints));
-			}
-		}
-
 		private List<Waypoint> GetPlayerWaypoints()
 		{
 			List<Waypoint> waypoints = new List<Waypoint>();

@@ -74,6 +74,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			}
 			return waypoints;
 		}
+
+		private bool EnsureWaypointGuids(IServerPlayer player)
+		{
+			if (WaypointMapLayer == null) return false;
+			bool changed = false;
+			foreach (Waypoint w in WaypointMapLayer.Waypoints)
+			{
+				if (w.OwningPlayerUid != player.PlayerUID) continue;
+				if (string.IsNullOrEmpty(w.Guid))
+				{
+					w.Guid = Guid.NewGuid().ToString();
+					CoreServerAPI.Logger.Notification(
+						$"[kscartographytable] Assigned missing Guid to waypoint '{w.Title}' for {player.PlayerName}");
+					changed = true;
+				}
+			}
+			return changed;
+		}
+
 		public void ResendWaypointsToPlayer(IServerPlayer toPlayer)
 		{
 			Dictionary<int, PlayerGroupMembership> playerGroupMemberships = toPlayer.ServerData.PlayerGroupMemberships;
@@ -145,6 +164,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
             if (blockEntity != null)
             {
+                if (EnsureWaypointGuids(fromPlayer))
+                {
+                    ResendWaypointsToPlayer(fromPlayer);
+                }
                 DateTime playerLastDownload = blockEntity.Map.getPlayerLastDownload(fromPlayer);
                 List<CartographyWaypoint> playerSharedDbWaypoints = mapDB.GetPlayerSharedWaypoints(fromPlayer);
                 List<Waypoint> playerCurrentWaypoints = GetPlayerWaypoints(fromPlayer);
