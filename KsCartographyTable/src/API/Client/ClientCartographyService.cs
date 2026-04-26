@@ -105,7 +105,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             playerMapManager.UpdateMap(packet);
         }
 
-        public void Ponder(CartographyMap map, IClientPlayer byPlayer)
+        public void Ponder(IClientPlayer byPlayer)
         {
             PalantirTravelPacket palantirTravel = new PalantirTravelPacket(
                 playerWaypointManager.GetPalantirWaypoints(),
@@ -114,7 +114,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);
         }
 
-        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable blockEntity)
+        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
@@ -129,7 +129,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             return true; 
         }
 
-        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, float secondsUsed, Block block)
+        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
@@ -142,6 +142,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (session.IsComplete)
             {
+                blockEntity.stopSound();
                 return true; // Keep interaction alive, player still holding button
             }
 

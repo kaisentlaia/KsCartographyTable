@@ -58,6 +58,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
 
             api.Logger.Notification($"MAP block spawning particles and returning true");
+            // BUG not seeing particles
             // Spawn particles (client side only)
             if (world.Side == EnumAppSide.Client && (int)(secondsUsed * 20) % 4 == 0)
             {
@@ -121,21 +122,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 			return  CartographyAction.None;
         }
-
-
-        // public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
-        // {
-        //     BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-        //     return blockInteractionRouterService.TryRouteInteraction(
-        //         byPlayer,
-        //         blockSel,
-        //         beTable,
-        //         sel => beTable?.OnWipeTableMap(byPlayer, blockSel.Position),
-        //         sel => beTable?.OnPonderMap(byPlayer),
-        //         sel => beTable?.OnUpdatePlayerMap(byPlayer, sel),
-        //         sel => beTable?.OnUpdateTableMap(byPlayer, sel)
-        //     );
-        // }
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
