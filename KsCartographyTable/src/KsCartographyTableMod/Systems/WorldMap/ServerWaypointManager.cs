@@ -172,12 +172,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 }
                 mapDB.CreateWaypoints(newWaypoints);
 
-                List<CartographyWaypoint> existingWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) != null).Select(waypoint => new CartographyWaypoint(waypoint))];
+                List<CartographyWaypoint> changedWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
-                List<CartographyWaypoint> rejectedWaypoints = [.. existingWaypoints.Where(w => w.LastUpdated < playerLastDownload)];
+                List<CartographyWaypoint> rejectedWaypoints = [.. changedWaypoints.Where(w => w.LastUpdated < playerLastDownload)];
 
-                List<CartographyWaypoint> updatedWaypoints = [.. existingWaypoints.Where(w => w.LastUpdated >= playerLastDownload)];
-
+                List<CartographyWaypoint> updatedWaypoints = [.. changedWaypoints.Where(w => w.LastUpdated >= playerLastDownload)];
 
                 mapDB.UpdateWaypoints(updatedWaypoints);
 

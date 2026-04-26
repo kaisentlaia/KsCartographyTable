@@ -111,13 +111,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
-                MarkDirty();
                 startSound();
                 return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel, this);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                MarkDirty();
                 startSound();
                 return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel);
             }
@@ -126,10 +124,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            // TODO session should receive secondsUsed and send a packet every x seconds
+            // TODO session should receive secondsUsed and send a packet every x seconds?
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
-                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, blockSel.Block);
+                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block);
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {

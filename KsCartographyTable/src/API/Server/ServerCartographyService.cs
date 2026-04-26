@@ -97,6 +97,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 tableMapManager.UpdateMap(fromPlayer, packet, mapDB);
             }
 
+            if (table is BlockAdvancedCartographyTable)
+            {   
+                beCartographyTable.Map.ExploredAreasIds = [.. mapDB.GetAllMapPiecesIds().Select(v => v.ToChunkIndex())];
+                beCartographyTable.MarkDirty();
+            }
+
             if (packet.IsFinalBatch)
             {         
                 if (!uploadedChunks.ContainsKey(fromPlayer.PlayerUID))
@@ -120,7 +126,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 }
                 if (km2 > 0 && table is BlockAdvancedCartographyTable)
                 {
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, km2), EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
                 }
                 if (waypointResult.Synced)
                 {
@@ -145,16 +151,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                     beCartographyTable.Map.LastPlayerDownloads.Add(fromPlayer.PlayerUID, ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds());
                 }
                 beCartographyTable.Map.WaypointCount = mapDB.GetSharedWaypointsCount();
-                CoreServerAPI.Logger.Notification($"MAP last waypoint count set to: {JsonUtil.ToString(beCartographyTable.Map.WaypointCount)}");
-                if (table is BlockAdvancedCartographyTable)
-                {   
-                    beCartographyTable.Map.ExploredAreasIds = [.. mapDB.GetAllMapPiecesIds().Select(v => v.ToChunkIndex())];
-                    CoreServerAPI.Logger.Notification($"MAP explored areas ids set to: {JsonUtil.ToString(beCartographyTable.Map.ExploredAreasIds)}");
-                }
-                mapDB.GetPlayerSharedWaypoints(fromPlayer).ForEach(waypoint =>
-                {                    
-                    CoreServerAPI.Logger.Notification($"Found waypoint on shared map db: {waypoint.Guid} {waypoint.Title}");
-                });
                 beCartographyTable.MarkDirty();
             }            
 		}
@@ -257,7 +253,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
             MapTransferSession session = new MapTransferSession(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI);
             activeSessions.Add(sessionId, session);
-            return session.SendFirstBatch();
+            session.SendFirstBatch();
+            return true;
         }
 
         internal bool ContinueCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)

@@ -18,13 +18,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public ICoreAPI Api { get; }
         public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
         
-        public int TotalChunksSent { get; private set; }
         public bool IsComplete { get; set; }
         
         private Queue<Dictionary<FastVec2i, MapPieceDB>> remainingBatches;
         
         private const int BATCH_SIZE = 25;
         private string channel;
+        private double lastSendTime;
 
         public MapTransferSession(
             IPlayer player,
@@ -39,7 +39,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Action = action;
             World = world;
             Api = api;
-            TotalChunksSent = 0;
             MapPieces = mapPieces;
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
         }
@@ -86,6 +85,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             return SendNextBatch();
         }
+        public bool TrySendNextBatch(double currentSeconds)
+        {
+            // Only send if 1/4 second has passed since last send
+            if (currentSeconds - lastSendTime < 0.25)
+            {
+                return true; // Still alive, just not sending yet
+            }
+            
+            lastSendTime = currentSeconds;
+            return SendNextBatch();
+        }
 
         public bool SendNextBatch()
         {
@@ -94,7 +104,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return SendFinalBatch();
             }
             var batch = remainingBatches.Dequeue();
-            TotalChunksSent += batch.Count;
 
             MapSyncPacket packet = new MapSyncPacket(
                 batch,
@@ -103,36 +112,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             );
             SendPacket(packet);
 
-            return remainingBatches.Count > 0;
+            if (remainingBatches.Count == 0)
+            {
+                return SendFinalBatch();
+            }
+            return true;
         }
 
         public bool SendFinalBatch()
         {
+            if (IsComplete) return false;
+            
             MapSyncPacket packet;
             if (remainingBatches.Count > 0)
             {
                 var batch = remainingBatches.Dequeue();
-                TotalChunksSent += batch.Count;
-
-                packet = new MapSyncPacket(
-                    batch,
-                    BlockSel.Block,
-                    BlockSel.Position,
-                    true
-                );
+                packet = new MapSyncPacket(batch, BlockSel.Block, BlockSel.Position, true);
             }
             else
             {
-
-                packet = new MapSyncPacket(
-                    [],
-                    BlockSel.Block,
-                    BlockSel.Position,
-                    true
-                );
+                packet = new MapSyncPacket([], BlockSel.Block, BlockSel.Position, true);
             }
             SendPacket(packet);
-
+            IsComplete = true;
             return false;
         }
 

@@ -18,7 +18,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		public Dictionary<FastVec2i, MapPieceDB> Pieces { get; set; } = new Dictionary<FastVec2i, MapPieceDB>();
 
 		[ProtoMember(2)]
-		public bool IsFinalBatch { get; set; } = true;
+		public bool IsFinalBatch { get; set; } = false;
 
 		[ProtoMember(3)]
 		public string BlockId { get; set; } = "";
@@ -27,7 +27,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		public BlockPos BlockPos { get; set; } = null;
 		public MapSyncPacket() { }
 
-		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = true)
+		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = false)
 		{
 			Pieces = pieces;
 			BlockId = block.Id.ToString();
@@ -111,7 +111,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				updateWaypointsCmd.Prepare();
 
 				getPlayerWaypointsCmd = sqliteConn.CreateCommand();
-				getPlayerWaypointsCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid";
+				getPlayerWaypointsCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=0";
 				getPlayerWaypointsCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getPlayerWaypointsCmd.Prepare();
 
@@ -293,7 +293,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
             		coreApi.Logger.Notification($"INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
-					// BUG why some GUIDs are duplicated here?
 					createWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
 					createWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
 					createWaypointsCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
@@ -317,8 +316,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				updateWaypointsCmd.Transaction = sqliteTransaction;
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
+            		coreApi.Logger.Notification($"UPDATING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
 					updateWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
-					updateWaypointsCmd.Parameters["@parentGuid"].Value = waypoint.ParentGuid;
+					updateWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
 					updateWaypointsCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
 					updateWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
 					updateWaypointsCmd.Parameters["@icon"].Value = waypoint.Icon;

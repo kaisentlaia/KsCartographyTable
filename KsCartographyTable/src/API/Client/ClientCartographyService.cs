@@ -119,25 +119,34 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
             {
+                CoreClientAPI.Logger.Notification($"MAP session already exists");
                 return false;
             }
+            CoreClientAPI.Logger.Notification($"MAP starting new session");
             MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
             activeSessions.Add(sessionId, session);
-            return session.SendFirstBatch();
+            session.SendFirstBatch();
+            return true; 
         }
 
-        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, Block block)
+        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, float secondsUsed, Block block)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
             if (!activeSessions.ContainsKey(sessionId))
             {
-                return false;
+                return false; // No session, end interaction
             }
 
             MapTransferSession session = activeSessions.Get(sessionId);
 
-            return session.SendNextBatch();
+            if (session.IsComplete)
+            {
+                return true; // Keep interaction alive, player still holding button
+            }
+
+            session.TrySendNextBatch(secondsUsed);
+            return true; // Always return true while player holds button
         }
 
         internal void EndCartographyUploadSession(IPlayer byPlayer, Block block)
@@ -146,6 +155,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (activeSessions.ContainsKey(sessionId))
             {
+                CoreClientAPI.Logger.Notification($"MAP ending session");
                 MapTransferSession session = activeSessions.Get(sessionId);
                 session.Dispose();
                 activeSessions.Remove(sessionId);

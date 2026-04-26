@@ -38,6 +38,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             currentAction = GetPerformedAction(world, byPlayer, blockSel);
+            api.Logger.Notification($"MAP block starting action {currentAction}");
             if (currentAction == CartographyAction.None)
             {
                 return false;
@@ -56,6 +57,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return true;
             }
 
+            api.Logger.Notification($"MAP block spawning particles and returning true");
             // Spawn particles (client side only)
             if (world.Side == EnumAppSide.Client && (int)(secondsUsed * 20) % 4 == 0)
             {
@@ -68,6 +70,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+            api.Logger.Notification($"MAP block stopping action {currentAction}");
             if (currentAction == CartographyAction.None)
             {
                 return;
