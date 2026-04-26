@@ -32,6 +32,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             InkParticles.MinVelocity.Set(-0.25f, 0, -0.25f);
             InkParticles.AddVelocity.Set(0.5f, 1, 0.5f);
             InkParticles.WithTerrainCollision = true;
+            InkParticles.SelfPropelled = true;
+            InkParticles.GravityEffect = 0.5f;
             InkParticles.ParticleModel = EnumParticleModel.Cube;
             InkParticles.LifeLength = 1.5f;
             InkParticles.SizeEvolve = EvolvingNatFloat.create(EnumTransformFunction.QUADRATIC, -0.4f);
@@ -51,7 +53,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 EnumParticleModel.Quad
             );
             PaperDustParticles.AddPos.Set(1 + 2 / 32f, 0, 1 + 2 / 32f);
-            PaperDustParticles.AddQuantity = 2;
+            PaperDustParticles.AddQuantity = 1;
             PaperDustParticles.MinVelocity.Set(-0.05f, 0, -0.05f);
             PaperDustParticles.AddVelocity.Set(0.1f, 0.2f, 0.1f);
             PaperDustParticles.WithTerrainCollision = false;
@@ -183,10 +185,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     InkParticles.Color |= (200 << 24);
                     InkParticles.MinQuantity = 1;
                     InkParticles.AddQuantity = 5;
-                    InkParticles.MinPos.Set(Pos.X - 0.5 / 32f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                     InkParticles.MinVelocity.Set(-0.1f, 0, -0.1f);
                     InkParticles.AddVelocity.Set(0.2f, 0.2f, 0.2f);
-                    PaperDustParticles.MinPos.Set(Pos.X - 0.5 / 32f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                     PaperDustParticles.AddQuantity = 1;
                     PaperDustParticles.MinQuantity = 2;
                     Api.World.SpawnParticles(InkParticles);
