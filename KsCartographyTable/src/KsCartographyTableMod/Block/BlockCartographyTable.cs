@@ -15,8 +15,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
-
-            if (api.Side != EnumAppSide.Client) return;
         }
 
         public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
@@ -125,7 +123,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             if (shouldCleanup)
             {
-                KsCartographyTableModSystem.ServerCartographyService?.CleanupMapData(this, pos);
+                KsCartographyTableModSystem.ServerCartographyService?.CleanupMapData(this);
             }
 
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);

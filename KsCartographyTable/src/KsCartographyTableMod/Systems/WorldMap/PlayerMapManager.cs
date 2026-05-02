@@ -88,7 +88,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal void UpdateMap(MapSyncPacket packet)
         {
-            PlayerMapDbReader.SetMapPieces(packet.Pieces);
+            PlayerMapDb.SetMapPieces(packet.Pieces);
         }
     }
 }

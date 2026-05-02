@@ -99,8 +99,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (table is BlockAdvancedCartographyTable)
             {   
-                beCartographyTable.Map.ExploredAreasIds = [.. mapDB.GetAllMapPiecesIds().Select(v => v.ToChunkIndex())];
-                beCartographyTable.MarkDirty();
+                beCartographyTable.UpdateMapExploredAreasIds(mapDB.GetAllMapPiecesIds());
             }
 
             if (packet.IsFinalBatch)
@@ -176,29 +175,26 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			}
 		}
 
-        public void CleanupMapData(Block block, BlockPos pos)
+        public void CleanupMapData(Block block)
         {
-			if (block is BlockAdvancedCartographyTable)
-			{
-				ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+            ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
 
-                if (mapDB != null)
+            if (mapDB != null)
+            {
+                mapDB?.Dispose();
+                // Delete the .db file from disk
+                string mapPath = Path.Combine(GamePaths.DataPath, "ModData",
+                    CoreServerAPI.World.SavegameIdentifier,
+                    CartographyTableConstants.MOD_ID,
+                    block.Id + ".db");
+
+                if (File.Exists(mapPath))
                 {
-                    mapDB?.Dispose();
-                    // Delete the .db file from disk
-                    string mapPath = Path.Combine(GamePaths.DataPath, "ModData",
-                        CoreServerAPI.World.SavegameIdentifier,
-                        CartographyTableConstants.MOD_ID,
-                        block.Id + ".db");
+                    File.Delete(mapPath);
+                }
 
-                    if (File.Exists(mapPath))
-                    {
-                        File.Delete(mapPath);
-                    }
-
-                    tableDBConnections.Remove(block.Id.ToString());
-				}
-			}
+                tableDBConnections.Remove(block.Id.ToString());
+            }
         }
 
 		public void MarkWaypointDeleted(IServerPlayer fromPlayer, int index)
@@ -223,7 +219,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         public void Dispose()
         {
-            // TODO close all sessions
             tableDBConnections.Values.ToList().ForEach(connection =>
             {
                 connection.Close();
@@ -233,6 +228,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel)
         {
+            blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position);            
             string sessionId = blockSel.Block.Id.ToString() + forPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
@@ -246,7 +242,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
             WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, blockSel.Position, mapDB);
-            MapTransferSession session = new(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult);
+            MapTransferSession session = new(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
             return true;

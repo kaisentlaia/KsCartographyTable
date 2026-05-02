@@ -113,45 +113,47 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             }
             downloadedChunks[currentPlayer.PlayerUID] += packet.Pieces.Count;
 
-            if (packet.IsFinalBatch)
+            if (!packet.IsFinalBatch) return;
+
+            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos); 
+            
+            beCartographyTable.StopSoundAndParticles();
+       
+            double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
+            downloadedChunks[currentPlayer.PlayerUID] = 0;
+            if (km2 == 0)
             {
-                BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);        
-                double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
-                downloadedChunks[currentPlayer.PlayerUID] = 0;
-                if (km2 == 0)
-                {
-                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
-                }  
-                if (!packet.WaypointSyncResult.Synced)
-                {
-                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE));
-                }
-                if (km2 == 0 && !packet.WaypointSyncResult.Synced)
-                {
-                    return;
-                }
-                if (km2 > 0)
-                {
-                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
-                }
-                if (packet.WaypointSyncResult.Synced)
-                {
-                    if (packet.WaypointSyncResult.Added > 0)
-                    {
-                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_ADDED, packet.WaypointSyncResult.Added));
-                    }
-                    if (packet.WaypointSyncResult.Edited > 0)
-                    {
-                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_EDITED, packet.WaypointSyncResult.Edited));
-                    }
-                    if (packet.WaypointSyncResult.Deleted > 0)
-                    {
-                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, packet.WaypointSyncResult.Deleted));
-                    }
-                }
-                beCartographyTable.Map.SetPlayerLastDownload(currentPlayer);
-                beCartographyTable.MarkDirty();
+                CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
+            }  
+            if (!packet.WaypointSyncResult.Synced)
+            {
+                CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE));
             }
+            if (km2 == 0 && !packet.WaypointSyncResult.Synced)
+            {
+                return;
+            }
+            if (km2 > 0)
+            {
+                CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
+            }
+            if (packet.WaypointSyncResult.Synced)
+            {
+                if (packet.WaypointSyncResult.Added > 0)
+                {
+                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_ADDED, packet.WaypointSyncResult.Added));
+                }
+                if (packet.WaypointSyncResult.Edited > 0)
+                {
+                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_EDITED, packet.WaypointSyncResult.Edited));
+                }
+                if (packet.WaypointSyncResult.Deleted > 0)
+                {
+                    CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, packet.WaypointSyncResult.Deleted));
+                }
+            }
+            beCartographyTable.SetPlayerLastDownload(currentPlayer);
+            beCartographyTable.MarkDirty();
         }
 
         public void Ponder(IClientPlayer byPlayer)

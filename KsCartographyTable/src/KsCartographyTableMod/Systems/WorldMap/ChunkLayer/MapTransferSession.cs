@@ -18,6 +18,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public ICoreAPI Api { get; }
         public WaypointSyncResult WaypointSyncResult { get; }
         public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
+        public ServerMapDB MapDB { get; private set; }
         
         public bool IsComplete { get; set; }
         
@@ -35,7 +36,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             IWorldAccessor world,
             Dictionary<FastVec2i, MapPieceDB> mapPieces,
             ICoreAPI api,
-            WaypointSyncResult waypointSyncResult = null // added only for download sessions
+            WaypointSyncResult waypointSyncResult = null, // added only for download sessions
+            ServerMapDB mapDB = null // added only for download sessions
         )
         {
             Player = player;
@@ -46,6 +48,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MapPieces = mapPieces;
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
             WaypointSyncResult = waypointSyncResult;
+            MapDB = mapDB;
         }
 
         private void SendPacket(MapSyncPacket packet)
@@ -68,6 +71,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     return;
                 }
                 channel.SendPacket(packet, [Player as IServerPlayer]);
+                MapDB?.SetMapPiecesForPlayer(packet.Pieces, Player);
             }
         }
 

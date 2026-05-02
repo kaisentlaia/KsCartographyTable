@@ -69,11 +69,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             base.Initialize(api);
 
             Side = Api.Side;
-            if (Api.Side == EnumAppSide.Server)
+            if (Side == EnumAppSide.Server)
             {
                 CoreServerAPI = Api as ICoreServerAPI;
             }
-            if (Api.Side == EnumAppSide.Client)
+            if (Side == EnumAppSide.Client)
             {
                 CoreClientAPI = Api as ICoreClientAPI;
             }
@@ -150,9 +150,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MarkDirty();
         }
 
+        internal void UpdateMapWaypointCount(int waypointCount)
+        {
+            EnsureMap();
+            Map.WaypointCount = waypointCount;
+            MarkDirty();
+        }
+
+        internal DateTime GetPlayerLastDownload(IPlayer forPlayer)
+        {
+            EnsureMap();
+            return Map.GetPlayerLastDownload(forPlayer);
+        }
+
+        internal void SetPlayerLastDownload(IPlayer player)
+        {
+            EnsureMap();
+            Map.SetPlayerLastDownload(player);
+            MarkDirty();
+        }
+
         internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            if (action == CartographyAction.UploadMap && CoreClientAPI != null)
             {
                 bool uploadStarted = KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel);
                 if (uploadStarted) {
@@ -160,15 +180,83 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 }
                 return uploadStarted;
             }
-            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            if (action == CartographyAction.DownloadMap)
             {
-                bool downloadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel);
-                if (downloadStarted) {
-                    StartSoundAndParticles();
+                if (CoreServerAPI != null)
+                {
+                    bool downloadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel);
+                    return downloadStarted;
                 }
-                return downloadStarted;
+                else
+                {
+                    // sound needs to happen client side
+                    StartSoundAndParticles();
+                    return true;
+                }
             }
             return false;
+        }
+
+        internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            {
+                if ((int)(secondsUsed * 20) % 4 == 0)
+                {
+                    SpawnMoreParticles(world);
+                }
+                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
+            }
+            if (action == CartographyAction.DownloadMap)
+            {
+                if (CoreServerAPI != null)
+                {
+                    blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position); 
+                    return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, blockSel.Block, this);
+                }
+                else
+                {
+                    if ((int)(secondsUsed * 20) % 4 == 0)
+                    {
+                        SpawnMoreParticles(world);
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        internal void OnCartographySessionStop(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            {
+                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
+            }
+            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            {
+                blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position); 
+                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, blockSel.Block);
+            }
+            StopSoundAndParticles();
+        }
+        public void StartSoundAndParticles()
+        {
+            if (ambientSound == null && Api?.Side == EnumAppSide.Client)
+            {
+                // TODO bugfix no sound on download sessions (server side)
+                ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                {
+                    Location = new AssetLocation("kscartographytable:sounds/effect/mapwriting.ogg"),
+                    ShouldLoop = true,
+                    Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                    DisposeOnFinish = false,
+                    Volume = 0.75f
+                });
+
+                ambientSound.Start();
+                // TODO fix particles size and collision with book before reenabling them
+                // SpawnParticles = true;
+            }
         }
 
         private void SpawnMoreParticles(IWorldAccessor world)
@@ -202,54 +290,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
-        {
-            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
-            {
-                if ((int)(secondsUsed * 20) % 4 == 0)
-                {
-                    SpawnMoreParticles(world);
-                }
-                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
-            }
-            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
-            {
-                return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, blockSel.Block, this);
-            }
-            throw new NotImplementedException();
-        }
-
-        internal void OnCartographySessionStop(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
-        {
-            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
-            {
-                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
-            }
-            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
-            {
-                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, blockSel.Block);
-            }
-            StopSoundAndParticles();
-        }
-        public void StartSoundAndParticles()
-        {
-            if (ambientSound == null && Api?.Side == EnumAppSide.Client)
-            {
-                ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
-                {
-                    Location = new AssetLocation("kscartographytable:sounds/effect/mapwriting.ogg"),
-                    ShouldLoop = true,
-                    Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
-                    DisposeOnFinish = false,
-                    Volume = 0.75f
-                });
-
-                ambientSound.Start();
-                // TODO fix particles size and collision with book before reenabling them
-                // SpawnParticles = true;
-            }
-        }
-
         public void StopSoundAndParticles()
         {
             if (ambientSound != null)
@@ -259,10 +299,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound = null;
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = false;
-                if (Api.Side == EnumAppSide.Server)
+                if (Api.Side == EnumAppSide.Client)
                 {
                     // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
-                    ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                    ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                     {
                         Location = new AssetLocation("game:sounds/held/bookclose1"),
                         ShouldLoop = false,
@@ -271,16 +311,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                         Volume = 0.75f
                     });
 
-                    ambientSound.Start();
+                    finalAmbientSound.Start();
                 }
             }
-        }
-
-        internal void UpdateMapWaypointCount(int waypointCount)
-        {
-            EnsureMap();
-            Map.WaypointCount = waypointCount;
-            MarkDirty();
         }
     }
 }
