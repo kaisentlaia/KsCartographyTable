@@ -15,6 +15,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
+        EnumCartographyTableCloseSoundTypes finalSoundType = EnumCartographyTableCloseSoundTypes.None;
         static SimpleParticleProperties InkParticles;
         static SimpleParticleProperties PaperDustParticles;
         protected ILoadedSound ambientSound;
@@ -27,7 +28,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public enum EnumCartographyTableCloseSoundTypes
         {
             NothingWritten,
-            SomethingWritten
+            SomethingWritten,
+            Unknown,
+            None
         }
 
         static BlockEntityCartographyTable()
@@ -176,6 +179,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MarkDirty();
         }
 
+        internal void UpdateFinalSoundType(EnumCartographyTableCloseSoundTypes soundType)
+        {
+            if (Api.Side == EnumAppSide.Server)
+            {
+                finalSoundType = soundType;
+                MarkDirty();
+            }
+        }
+
         internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && CoreClientAPI != null)
@@ -238,11 +250,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
             }
-            if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
+            if (action == CartographyAction.DownloadMap)
             {
-                blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position); 
-                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, blockSel.Block);
+                if (Api.Side == EnumAppSide.Server)
+                {
+                    KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, world.BlockAccessor.GetBlock(blockSel.Position));
+                }               
             }
+            StopSoundAndParticles(EnumCartographyTableCloseSoundTypes.Unknown);
         }
         public void StartSoundAndParticles()
         {
@@ -261,6 +276,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound.Start();
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = true;
+
+                MarkDirty();
             }
         }
 
@@ -306,32 +323,39 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // SpawnParticles = false;
                 if (Api.Side == EnumAppSide.Client)
                 {
-                    AssetLocation location;
-                    if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
+                    AssetLocation location = null;
+                    if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
                     {
                         location = new AssetLocation("kscartographytable:sounds/effect/mapclose");
                     }
-                    else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
+                    else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
                     {                        
                         location = new AssetLocation("kscartographytable:sounds/effect/mapwriteandclose");
                     }
-                    else
+                    else if (soundType != EnumCartographyTableCloseSoundTypes.None || finalSoundType != EnumCartographyTableCloseSoundTypes.None)
                     {
                         // fallback
                         location = new AssetLocation("game:sounds/held/bookclose1");
                     }
-                    // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
-                    ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
-                    {
-                        Location = location,
-                        ShouldLoop = false,
-                        Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
-                        DisposeOnFinish = true,
-                        Volume = 0.75f
-                    });
 
-                    finalAmbientSound.Start();
+                    if (location != null)
+                    {
+                        // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
+                        ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                        {
+                            Location = location,
+                            ShouldLoop = false,
+                            Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                            DisposeOnFinish = true,
+                            Volume = 0.75f
+                        });
+
+                        finalAmbientSound.Start();
+
+                        finalSoundType = EnumCartographyTableCloseSoundTypes.None;
+                    }
                 }
+                MarkDirty();
             }
         }
     }
