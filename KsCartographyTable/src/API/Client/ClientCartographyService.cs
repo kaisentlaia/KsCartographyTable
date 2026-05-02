@@ -117,27 +117,29 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos); 
             
-            beCartographyTable.StopSoundAndParticles();
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             downloadedChunks[currentPlayer.PlayerUID] = 0;
-            if (km2 == 0)
+            bool mapUpdated = km2 > 0;
+            bool waypointsUpdated = packet.WaypointSyncResult.Synced;
+            if (!mapUpdated)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
             }  
-            if (!packet.WaypointSyncResult.Synced)
+            if (!waypointsUpdated)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE));
             }
-            if (km2 == 0 && !packet.WaypointSyncResult.Synced)
+            beCartographyTable.StopSoundAndParticles(!mapUpdated && !waypointsUpdated ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
+            if (!mapUpdated && !waypointsUpdated)
             {
                 return;
             }
-            if (km2 > 0)
+            if (mapUpdated)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
             }
-            if (packet.WaypointSyncResult.Synced)
+            if (waypointsUpdated)
             {
                 if (packet.WaypointSyncResult.Added > 0)
                 {
@@ -193,7 +195,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (session.IsComplete)
             {
-                blockEntity.StopSoundAndParticles();
+                blockEntity.StopSoundAndParticles(session.HasSentData() ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
                 return true; // Keep interaction alive, player still holding button
             }
 

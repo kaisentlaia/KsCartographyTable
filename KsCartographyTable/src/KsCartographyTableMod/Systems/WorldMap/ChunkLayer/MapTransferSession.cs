@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
@@ -19,6 +20,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public WaypointSyncResult WaypointSyncResult { get; }
         public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
         public ServerMapDB MapDB { get; private set; }
+        public int SentChunkCount { get; private set; }
         
         public bool IsComplete { get; set; }
         
@@ -49,6 +51,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
             WaypointSyncResult = waypointSyncResult;
             MapDB = mapDB;
+            SentChunkCount = 0;
         }
 
         private void SendPacket(MapSyncPacket packet)
@@ -73,6 +76,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 channel.SendPacket(packet, [Player as IServerPlayer]);
                 MapDB?.SetMapPiecesForPlayer(packet.Pieces, Player);
             }
+            SentChunkCount += packet.Pieces.Count;
         }
 
         public bool SendFirstBatch()
@@ -152,6 +156,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 SendFinalBatch();
             }
             remainingBatches?.Clear();
+        }
+
+        internal bool HasSentData()
+        {
+            if (WaypointSyncResult != null)
+            {
+                return SentChunkCount > 0 || WaypointSyncResult.Synced;
+            }
+            return SentChunkCount > 0;
         }
     }
 

@@ -248,7 +248,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             return true;
         }
 
-        internal bool ContinueCartographyDownloadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable blockEntity)
+        internal bool ContinueCartographyDownloadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable beCartographyTable)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
@@ -261,7 +261,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (session.IsComplete)
             {
-                blockEntity.StopSoundAndParticles();
+                beCartographyTable.StopSoundAndParticles(session.HasSentData() ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
                 return true; // Keep interaction alive, player still holding button
             }
 

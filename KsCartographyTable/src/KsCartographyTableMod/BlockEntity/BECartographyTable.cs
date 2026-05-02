@@ -24,6 +24,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public EnumAppSide Side;
         public CartographyMap Map;
 
+        public enum EnumCartographyTableCloseSoundTypes
+        {
+            NothingWritten,
+            SomethingWritten
+        }
+
         static BlockEntityCartographyTable()
         {
             InkParticles = new SimpleParticleProperties(1, 3, ColorUtil.ToRgba(200, 20, 20, 60), new Vec3d(), new Vec3d(), new Vec3f(-0.25f, -0.25f, -0.25f), new Vec3f(0.25f, 0.25f, 0.25f), 1, 1, 0.1f, 0.3f, EnumParticleModel.Quad);
@@ -237,7 +243,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position); 
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, blockSel.Block);
             }
-            StopSoundAndParticles();
         }
         public void StartSoundAndParticles()
         {
@@ -290,7 +295,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        public void StopSoundAndParticles()
+        public void StopSoundAndParticles(EnumCartographyTableCloseSoundTypes soundType)
         {
             if (ambientSound != null)
             {
@@ -301,10 +306,24 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // SpawnParticles = false;
                 if (Api.Side == EnumAppSide.Client)
                 {
+                    AssetLocation location;
+                    if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
+                    {
+                        location = new AssetLocation("kscartographytable:sounds/effect/mapclose");
+                    }
+                    else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
+                    {                        
+                        location = new AssetLocation("kscartographytable:sounds/effect/mapwriteandclose");
+                    }
+                    else
+                    {
+                        // fallback
+                        location = new AssetLocation("game:sounds/held/bookclose1");
+                    }
                     // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
                     ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                     {
-                        Location = new AssetLocation("game:sounds/held/bookclose1"),
+                        Location = location,
                         ShouldLoop = false,
                         Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                         DisposeOnFinish = true,
