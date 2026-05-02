@@ -16,6 +16,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public CartographyAction Action { get; }
         public IWorldAccessor World { get; }
         public ICoreAPI Api { get; }
+        public WaypointSyncResult WaypointSyncResult { get; }
         public Dictionary<FastVec2i, MapPieceDB> MapPieces { get; private set; }
         
         public bool IsComplete { get; set; }
@@ -33,7 +34,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             CartographyAction action,
             IWorldAccessor world,
             Dictionary<FastVec2i, MapPieceDB> mapPieces,
-            ICoreAPI api)
+            ICoreAPI api,
+            WaypointSyncResult waypointSyncResult = null // added only for download sessions
+        )
         {
             Player = player;
             BlockSel = blockSel;
@@ -42,6 +45,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Api = api;
             MapPieces = mapPieces;
             channel = action == CartographyAction.DownloadMap ? CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT : CartographyTableConstants.CHANNEL_UPLOAD_TO_SERVER;
+            WaypointSyncResult = waypointSyncResult;
         }
 
         private void SendPacket(MapSyncPacket packet)
@@ -63,8 +67,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     Api.Logger.Error($"Channel {this.channel} not found on SERVER");
                     return;
                 }
-                // BUG: This sends to ALL players or no one? You need:
-                // channel.SendPacket((IServerPlayer)Player, packet);
                 channel.SendPacket(packet, [Player as IServerPlayer]);
             }
         }
@@ -128,11 +130,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (remainingBatches.Count > 0)
             {
                 var batch = remainingBatches.Dequeue();
-                packet = new MapSyncPacket(batch, BlockSel.Block, BlockSel.Position, true);
+                packet = new MapSyncPacket(batch, BlockSel.Block, BlockSel.Position, true, WaypointSyncResult);
             }
             else
             {
-                packet = new MapSyncPacket([], BlockSel.Block, BlockSel.Position, true);
+                packet = new MapSyncPacket([], BlockSel.Block, BlockSel.Position, true, WaypointSyncResult);
             }
             SendPacket(packet);
             IsComplete = true;

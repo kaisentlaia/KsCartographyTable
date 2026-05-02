@@ -25,14 +25,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		[ProtoMember(4)]
 		public BlockPos BlockPos { get; set; } = null;
+
+		[ProtoMember(5)]
+		public WaypointSyncResult WaypointSyncResult { get; set; } = null;
 		public MapSyncPacket() { }
 
-		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = false)
+		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = false, WaypointSyncResult waypointSyncResult = null) 
 		{
 			Pieces = pieces;
 			BlockId = block.Id.ToString();
 			BlockPos = blockPos;
 			IsFinalBatch = isFinalBatch;
+            WaypointSyncResult = waypointSyncResult;
 		}
 	}
 
@@ -47,6 +51,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		SqliteCommand getPlayerWaypointsCmd;
 		SqliteCommand getMatchingWaypointCmd;
 		SqliteCommand setDeletedWaypointsCmd;
+		SqliteCommand getNewWaypointsForPlayerCmd;
+		SqliteCommand getUpdatedWaypointsForPlayerCmd;
+		SqliteCommand getDeletedWaypointsForPlayerCmd;
 		ICoreAPI coreApi;
 		public ServerMapDB(ICoreAPI coreApi) : base(coreApi.World.Logger)
 		{
@@ -130,6 +137,23 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				setDeletedWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
 				setDeletedWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
 				setDeletedWaypointsCmd.Prepare();
+
+				getNewWaypointsForPlayerCmd = sqliteConn.CreateCommand();
+				getNewWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints sw WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND NOT EXISTS ( SELECT 1 FROM sharedwaypoints child WHERE child.parentGuid = sw.guid )";
+				getNewWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
+				getNewWaypointsForPlayerCmd.Prepare();
+
+				getUpdatedWaypointsForPlayerCmd = sqliteConn.CreateCommand();
+				getUpdatedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=0 AND lastUpdated > lastUpdated";
+				getUpdatedWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
+				getUpdatedWaypointsForPlayerCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
+				getUpdatedWaypointsForPlayerCmd.Prepare();
+
+				getDeletedWaypointsForPlayerCmd = sqliteConn.CreateCommand();
+				getDeletedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=1 AND lastUpdated > lastUpdated";
+				getDeletedWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
+				getDeletedWaypointsForPlayerCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
+				getDeletedWaypointsForPlayerCmd.Prepare();
 			}
 		}
 
@@ -337,6 +361,89 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			List<CartographyWaypoint> waypoints = [];
 
 			getPlayerWaypointsCmd.Parameters["@owningPlayerUid"].Value = player.PlayerUID;
+			using (var reader = getPlayerWaypointsCmd.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					waypoints.Add(new CartographyWaypoint(
+						reader["guid"].ToString(),
+						reader["parentGuid"].ToString(),
+						reader["owningPlayerUid"].ToString(),
+						reader["title"].ToString(),
+						reader["icon"].ToString(),
+						reader["position"].ToString(),
+						Convert.ToInt64(reader["color"]),
+						Convert.ToInt64(reader["pinned"]),
+						Convert.ToInt64(reader["deleted"]),
+						Convert.ToInt64(reader["lastUpdated"])
+					));
+				}
+			}
+
+			return waypoints;
+		}
+
+		public List<CartographyWaypoint> GetNewWaypointsForPlayer(IPlayer player)
+		{
+			List<CartographyWaypoint> waypoints = [];
+
+			getNewWaypointsForPlayerCmd.Parameters["@owningPlayerUid"].Value = player.PlayerUID;
+			using (var reader = getPlayerWaypointsCmd.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					waypoints.Add(new CartographyWaypoint(
+						reader["guid"].ToString(),
+						reader["parentGuid"].ToString(),
+						reader["owningPlayerUid"].ToString(),
+						reader["title"].ToString(),
+						reader["icon"].ToString(),
+						reader["position"].ToString(),
+						Convert.ToInt64(reader["color"]),
+						Convert.ToInt64(reader["pinned"]),
+						Convert.ToInt64(reader["deleted"]),
+						Convert.ToInt64(reader["lastUpdated"])
+					));
+				}
+			}
+
+			return waypoints;
+		}
+
+		public List<CartographyWaypoint> GetUpdatedWaypointsForPlayer(IPlayer player, DateTime lastUpdated)
+		{
+			List<CartographyWaypoint> waypoints = [];
+
+			getUpdatedWaypointsForPlayerCmd.Parameters["@owningPlayerUid"].Value = player.PlayerUID;
+			getUpdatedWaypointsForPlayerCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)lastUpdated.ToUniversalTime()).ToUnixTimeMilliseconds();
+			using (var reader = getPlayerWaypointsCmd.ExecuteReader())
+			{
+				while (reader.Read())
+				{
+					waypoints.Add(new CartographyWaypoint(
+						reader["guid"].ToString(),
+						reader["parentGuid"].ToString(),
+						reader["owningPlayerUid"].ToString(),
+						reader["title"].ToString(),
+						reader["icon"].ToString(),
+						reader["position"].ToString(),
+						Convert.ToInt64(reader["color"]),
+						Convert.ToInt64(reader["pinned"]),
+						Convert.ToInt64(reader["deleted"]),
+						Convert.ToInt64(reader["lastUpdated"])
+					));
+				}
+			}
+
+			return waypoints;
+		}
+
+		public List<CartographyWaypoint> GetDeletedWaypointsForPlayer(IPlayer player, DateTime lastUpdated)
+		{
+			List<CartographyWaypoint> waypoints = [];
+
+			getDeletedWaypointsForPlayerCmd.Parameters["@owningPlayerUid"].Value = player.PlayerUID;
+			getDeletedWaypointsForPlayerCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)lastUpdated.ToUniversalTime()).ToUnixTimeMilliseconds();
 			using (var reader = getPlayerWaypointsCmd.ExecuteReader())
 			{
 				while (reader.Read())

@@ -7,6 +7,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
 		public readonly static string PLAYER_WAYPOINTS_EDITED = GetLangCode("message-edited-user-waypoints");
 		public readonly static string PLAYER_MAP_UPDATED = GetLangCode("message-updated-user-explored-chunks");
 		public readonly static string PLAYER_WAYPOINTS_UP_TO_DATE = GetLangCode("message-user-waypoints-up-to-date");
+		public readonly static string PLAYER_WAYPOINTS_REJECTED = GetLangCode("message-user-waypoints-rejected");
 		public readonly static string PLAYER_MAP_UP_TO_DATE = GetLangCode("message-user-map-up-to-date");
 		public readonly static string TABLE_MAP_UP_TO_DATE = GetLangCode("message-table-map-up-to-date");
 		public readonly static string TABLE_MAP_UPDATED = GetLangCode("message-updated-map-explored-chunks");

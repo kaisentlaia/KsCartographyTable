@@ -100,11 +100,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnWipeTableMap(IPlayer byPlayer, BlockPos blockPos)
         {
-            EnsureMap();
             if (CoreServerAPI != null)
             {
-                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Map, Block, byPlayer, blockPos);
-                MarkDirty();
+                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, blockPos);
             }
 
             if (CoreClientAPI != null)
@@ -148,7 +146,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public void UpdateMapExploredAreasIds(List<FastVec2i> piecesIds)
         {
             EnsureMap();
-            Map.ExploredAreasIds = piecesIds.Select(pieceId => pieceId.ToChunkIndex()).ToList();
+            Map.ExploredAreasIds = [.. piecesIds.Select(pieceId => pieceId.ToChunkIndex())];
             MarkDirty();
         }
 
@@ -164,12 +162,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                bool uploadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, Map, world, byPlayer, blockSel);
-                if (uploadStarted) {
+                bool downloadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel);
+                if (downloadStarted) {
                     StartSoundAndParticles();
-                    SpawnMoreParticles(world);
                 }
-                return uploadStarted;
+                return downloadStarted;
             }
             return false;
         }
@@ -217,7 +214,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+                return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, blockSel.Block, this);
             }
             throw new NotImplementedException();
         }
@@ -261,6 +258,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound = null;
                 SpawnParticles = false;
             }
+        }
+
+        internal void UpdateMapWaypointCount(int waypointCount)
+        {
+            EnsureMap();
+            Map.WaypointCount = waypointCount;
+            MarkDirty();
         }
     }
 }

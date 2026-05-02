@@ -104,12 +104,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
 
             if (packet.IsFinalBatch)
-            {         
-                if (!uploadedChunks.ContainsKey(fromPlayer.PlayerUID))
-                {
-                    uploadedChunks[fromPlayer.PlayerUID] = 0;
-                }           
-                double km2 = uploadedChunks[fromPlayer.PlayerUID] * 0.001024;
+            {
+                double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
                 uploadedChunks[fromPlayer.PlayerUID] = 0;
                 WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
                 if (km2 == 0 && table is BlockAdvancedCartographyTable)
@@ -142,34 +138,33 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                     {
                         CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted), EnumChatType.Notification);
                     }
+                    if (waypointResult.Rejected > 0)
+                    {
+                        CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
+                    }
                 }
-                if (beCartographyTable.Map.LastPlayerDownloads.ContainsKey(fromPlayer.PlayerUID))
-                {
-                    beCartographyTable.Map.LastPlayerDownloads[fromPlayer.PlayerUID] = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
-                } else
-                {
-                    beCartographyTable.Map.LastPlayerDownloads.Add(fromPlayer.PlayerUID, ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds());
-                }
-                beCartographyTable.Map.WaypointCount = mapDB.GetSharedWaypointsCount();
+                beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
                 beCartographyTable.MarkDirty();
             }            
 		}
 
-		public void WipeTableMap(CartographyMap map, Block block, IPlayer byPlayer, BlockPos blockPos)
+		public void WipeTableMap(Block block, IPlayer byPlayer, BlockPos blockPos)
 		{
-            bool mapWiped = false;
-			if (block is BlockAdvancedCartographyTable)
-			{
-				ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+            bool hadData = false;
+            ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
 
-				if (mapDB != null)
-				{
-					mapDB.Wipe();
-					BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
-                    blockEntity.UpdateMapExploredAreasIds(new List<FastVec2i>());     
-				}
-			}
-			if (mapWiped)
+            if (mapDB != null)
+            {
+                hadData = mapDB.GetMapPieceCount() > 0 || mapDB.GetSharedWaypointsCount() > 0;
+                if (hadData)
+                {
+                    mapDB.Wipe();
+                    BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
+                    blockEntity.UpdateMapWaypointCount(0);
+                    blockEntity.UpdateMapExploredAreasIds([]);
+                }
+            }
+			if (hadData)
 			{
 				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED), EnumChatType.Notification);
 
@@ -236,35 +231,58 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             });
         }
 
-        internal bool StartCartographyDownloadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel)
+        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel)
         {
             string sessionId = blockSel.Block.Id.ToString() + forPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
                 return false;
             }
-            tableWaypointManager.UpdatePlayerWaypoints(forPlayer, map);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
+            ServerMapDB mapDB = GetBlockMapDB(blockSel.Block.Id.ToString());
             if (blockSel.Block is BlockAdvancedCartographyTable)
             {
-                ServerMapDB mapDB = GetBlockMapDB(blockSel.Block.Id.ToString());
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            MapTransferSession session = new MapTransferSession(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI);
+            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, blockSel.Position, mapDB);
+            MapTransferSession session = new(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
             return true;
         }
 
-        internal bool ContinueCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
+        internal bool ContinueCartographyDownloadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable blockEntity)
         {
-            throw new NotImplementedException();
+            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+
+            if (!activeSessions.ContainsKey(sessionId))
+            {
+                return false; // No session, end interaction
+            }
+
+            MapTransferSession session = activeSessions.Get(sessionId);
+
+            if (session.IsComplete)
+            {
+                blockEntity.StopSoundAndParticles();
+                return true; // Keep interaction alive, player still holding button
+            }
+
+            session.TrySendNextBatch(secondsUsed);
+            return true; // Always return true while player holds button
         }
 
         internal void EndCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
         {
-            throw new NotImplementedException();
+            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+
+            if (activeSessions.ContainsKey(sessionId))
+            {
+                MapTransferSession session = activeSessions.Get(sessionId);
+                session.Dispose();
+                activeSessions.Remove(sessionId);
+            }
         }
 
         internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)

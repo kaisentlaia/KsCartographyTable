@@ -128,7 +128,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        internal DateTime getPlayerLastDownload(IServerPlayer fromPlayer)
+        internal DateTime GetPlayerLastDownload(IPlayer fromPlayer)
         {
             if (!LastPlayerDownloads.ContainsKey(fromPlayer.PlayerUID))
             {
@@ -137,6 +137,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return DateTimeOffset
                 .FromUnixTimeMilliseconds(LastPlayerDownloads[fromPlayer.PlayerUID])
                 .LocalDateTime;
+        }
+
+        internal void SetPlayerLastDownload(IPlayer forPlayer)
+        {
+            long now = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
+            if (!LastPlayerDownloads.ContainsKey(forPlayer.PlayerUID))
+            {
+                LastPlayerDownloads.Add(forPlayer.PlayerUID, now);
+                return;
+            }
+            LastPlayerDownloads[forPlayer.PlayerUID] = now;
         }
     }
 }

@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
@@ -5,6 +6,7 @@ using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
+using Vintagestory.API.Config;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
@@ -57,6 +59,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 		private readonly ClientWaypointManager playerWaypointManager;
 		private readonly PlayerMapManager playerMapManager;
         ChunkMapLayer chunkMapLayer;
+        private Dictionary<string, int> downloadedChunks = [];
         public ChunkMapLayer ChunkMapLayer
         {
             get
@@ -102,7 +105,53 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
         public void OnMapDownloadRequest(MapSyncPacket packet)
         {
+            IClientPlayer currentPlayer = CoreClientAPI.World.Player;
             playerMapManager.UpdateMap(packet);
+            if (!downloadedChunks.ContainsKey(currentPlayer.PlayerUID))
+            {
+                downloadedChunks[currentPlayer.PlayerUID] = 0;
+            }
+            downloadedChunks[currentPlayer.PlayerUID] += packet.Pieces.Count;
+
+            if (packet.IsFinalBatch)
+            {
+                BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);        
+                double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
+                downloadedChunks[currentPlayer.PlayerUID] = 0;
+                if (km2 == 0)
+                {
+                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
+                }  
+                if (!packet.WaypointSyncResult.Synced)
+                {
+                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE));
+                }
+                if (km2 == 0 && !packet.WaypointSyncResult.Synced)
+                {
+                    return;
+                }
+                if (km2 > 0)
+                {
+                    CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
+                }
+                if (packet.WaypointSyncResult.Synced)
+                {
+                    if (packet.WaypointSyncResult.Added > 0)
+                    {
+                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_ADDED, packet.WaypointSyncResult.Added));
+                    }
+                    if (packet.WaypointSyncResult.Edited > 0)
+                    {
+                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_EDITED, packet.WaypointSyncResult.Edited));
+                    }
+                    if (packet.WaypointSyncResult.Deleted > 0)
+                    {
+                        CoreClientAPI.SendChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, packet.WaypointSyncResult.Deleted));
+                    }
+                }
+                beCartographyTable.Map.SetPlayerLastDownload(currentPlayer);
+                beCartographyTable.MarkDirty();
+            }
         }
 
         public void Ponder(IClientPlayer byPlayer)
@@ -156,7 +205,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (activeSessions.ContainsKey(sessionId))
             {
-                CoreClientAPI.Logger.Notification($"MAP ending session");
                 MapTransferSession session = activeSessions.Get(sessionId);
                 session.Dispose();
                 activeSessions.Remove(sessionId);

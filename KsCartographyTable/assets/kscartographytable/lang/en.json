@@ -23,6 +23,7 @@
     "message-user-map-up-to-date": "Your explored map is already up to date.",
     "message-table-waypoints-up-to-date": "The waypoints on the table are already up to date.",
     "message-user-waypoints-up-to-date": "Your waypoints are already up to date.",
+    "message-user-waypoints-rejected": "Couldn't modify {0} waypoints on the cartography table. Update your map first.",
     "message-table-map-wiped": "The cartography table is now empty.",
     "message-table-map-already-empty": "The cartography table is already empty.",
     "gamemechanicinfo-sharingwaypoints-title": "Game Mechanic: Sharing waypoints and maps",

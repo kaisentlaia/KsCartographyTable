@@ -89,11 +89,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal void UpdateMap(MapSyncPacket packet)
         {
             PlayerMapDbReader.SetMapPieces(packet.Pieces);
-
-            if (packet.IsFinalBatch)
-            {
-                CoreClientAPI.Logger.Notification("Finished downloading map pieces from server.");
-            }
         }
     }
 }

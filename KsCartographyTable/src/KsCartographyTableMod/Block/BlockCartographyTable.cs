@@ -38,7 +38,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             currentAction = GetPerformedAction(world, byPlayer, blockSel);
-            api.Logger.Notification($"MAP block starting action {currentAction}");
             if (currentAction == CartographyAction.None)
             {
                 return false;
@@ -57,17 +56,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return true;
             }
 
-            if (world.Side == EnumAppSide.Client)
-            {
-                BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-                return beTable.OnCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
-            }
-            return true;
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            return beTable.OnCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
         }
 
         public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            api.Logger.Notification($"MAP block stopping action {currentAction}");
             if (currentAction == CartographyAction.None)
             {
                 return;
