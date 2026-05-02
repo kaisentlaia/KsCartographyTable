@@ -219,7 +219,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             throw new NotImplementedException();
         }
 
-        internal void OnCartographySessionStop(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal void OnCartographySessionStop(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
             {
@@ -259,6 +259,20 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound = null;
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = false;
+                if (Api.Side == EnumAppSide.Server)
+                {
+                    // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
+                    ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                    {
+                        Location = new AssetLocation("game:sounds/held/bookclose1"),
+                        ShouldLoop = false,
+                        Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                        DisposeOnFinish = true,
+                        Volume = 0.75f
+                    });
+
+                    ambientSound.Start();
+                }
             }
         }
 

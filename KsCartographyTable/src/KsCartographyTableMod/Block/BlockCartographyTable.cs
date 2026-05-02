@@ -72,7 +72,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 beTable.OnPonderMap(byPlayer);
                 return;
             }
-            beTable.OnCartographySessionStop(currentAction, secondsUsed, world, byPlayer, blockSel);
+            beTable.OnCartographySessionStop(currentAction, world, byPlayer, blockSel);
             currentAction = CartographyAction.None;
         }
 

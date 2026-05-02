@@ -283,7 +283,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }
-            world.PlaySoundAt(new AssetLocation("game:sounds/held/bookclose1"), byPlayer); // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
         }
 
         internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)
