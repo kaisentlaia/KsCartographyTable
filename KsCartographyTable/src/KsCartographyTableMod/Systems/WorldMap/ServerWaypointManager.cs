@@ -183,6 +183,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<CartographyWaypoint> playerSharedDbWaypoints = mapDB.GetPlayerSharedWaypoints(fromPlayer);
                 List<Waypoint> playerCurrentWaypoints = GetPlayerWaypoints(fromPlayer);
 
+                // BUG existing waypoints get duplicated here
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
                 newWaypoints.ForEach(waypoint =>
@@ -218,6 +219,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
             if (blockEntity != null)
             {
+                // BUG if player A added a waypoint to the table and player B edited it, when player A updates their map a new waypoint gets created, it should modify the existing one instead
                 List<CartographyWaypoint> newWaypointsForPlayer = mapDB.GetNewWaypointsForPlayer(forPlayer);
                 List<CartographyWaypoint> updatedWaypointsForPlayer = mapDB.GetUpdatedWaypointsForPlayer(forPlayer, blockEntity.GetPlayerLastDownload(forPlayer));
                 List<CartographyWaypoint> deletedWaypointsForPlayer = mapDB.GetDeletedWaypointsForPlayer(forPlayer, blockEntity.GetPlayerLastDownload(forPlayer));
@@ -259,6 +261,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     }
                 });
 
+                // BUG writes the correct data on db but the count is wrong, should count only new waypoints without parentGuid
                 mapDB.CreateWaypoints(newSharedWaypoints);
 
                 updatedWaypointsForPlayer.ForEach(waypoint =>

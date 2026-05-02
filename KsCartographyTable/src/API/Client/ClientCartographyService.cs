@@ -122,8 +122,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             downloadedChunks[currentPlayer.PlayerUID] = 0;
             bool mapUpdated = km2 > 0;
             bool waypointsUpdated = packet.WaypointSyncResult.Synced;
+            // BUG chat messages not appearing on client when server is not local
             if (!mapUpdated)
             {
+                 // BUG this message should be displayed only for advanced cartography tables 
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
             }  
             if (!waypointsUpdated)

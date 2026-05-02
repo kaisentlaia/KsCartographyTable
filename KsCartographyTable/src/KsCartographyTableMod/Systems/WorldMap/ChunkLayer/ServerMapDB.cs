@@ -523,6 +523,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             setDeletedWaypointsCmd.Transaction = sqliteTransaction;
             foreach (string guid in deletedWaypointIds)
             {
+				// BUG parent waypoint not being deleted, add parentGuid = parentGuid and pass waypoint list instead of id list to get the parent guid
                 setDeletedWaypointsCmd.Parameters["@guid"].Value = guid;				
 				setDeletedWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
                 setDeletedWaypointsCmd.ExecuteNonQuery();
