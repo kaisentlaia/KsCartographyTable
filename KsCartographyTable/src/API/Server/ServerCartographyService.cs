@@ -273,7 +273,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             return true; // Always return true while player holds button
         }
 
-        internal void EndCartographyDownloadSession(CartographyMap map, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, Block block)
+        internal void EndCartographyDownloadSession(IWorldAccessor world, IPlayer byPlayer, Block block)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
@@ -283,6 +283,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }
+            world.PlaySoundAt(new AssetLocation("game:sounds/held/bookclose1"), byPlayer); // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
         }
 
         internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)

@@ -227,7 +227,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap && Api.Side == EnumAppSide.Server)
             {
-                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(Map, secondsUsed, world, byPlayer, blockSel.Block);
+                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, blockSel.Block);
             }
             StopSoundAndParticles();
         }
@@ -237,7 +237,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
-                    Location = new AssetLocation("game:sounds/effect/writing.ogg"),
+                    Location = new AssetLocation("kscartographytable:sounds/effect/mapwriting.ogg"),
                     ShouldLoop = true,
                     Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                     DisposeOnFinish = false,
@@ -245,7 +245,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 });
 
                 ambientSound.Start();
-                SpawnParticles = true;
+                // TODO fix particles size and collision with book before reenabling them
+                // SpawnParticles = true;
             }
         }
 
@@ -256,7 +257,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound.Stop();
                 ambientSound.Dispose();
                 ambientSound = null;
-                SpawnParticles = false;
+                // TODO fix particles size and collision with book before reenabling them
+                // SpawnParticles = false;
             }
         }
 
