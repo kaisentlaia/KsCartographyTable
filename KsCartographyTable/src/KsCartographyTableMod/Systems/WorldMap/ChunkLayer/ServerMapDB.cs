@@ -158,7 +158,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				getDeletedWaypointsForPlayerCmd.Prepare();
 
 				getWaypointsToDeleteCmd = sqliteConn.CreateCommand();
-				getWaypointsToDeleteCmd.CommandText = "SELECT guid FROM sharedwaypoints WHERE (guid=@guid OR parentGuid=@guid) AND deleted=0";
+				getWaypointsToDeleteCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE (guid=@guid OR parentGuid=@guid) AND deleted=0";
 				getWaypointsToDeleteCmd.Parameters.Add("@guid", SqliteType.Text);
 				getWaypointsToDeleteCmd.Prepare();
 			}
@@ -546,23 +546,26 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 			foreach (string guid in deletedWaypointIds)
 			{
-				getWaypointsToDeleteCmd.Parameters["@guid"].Value = guid;
-                using var reader = getWaypointsToDeleteCmd.ExecuteReader();
-                while (reader.Read())
-                {
-                    waypoints.Add(new CartographyWaypoint(
-						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
-						reader["owningPlayerUid"].ToString(),
-						reader["title"].ToString(),
-						reader["icon"].ToString(),
-						reader["position"].ToString(),
-						Convert.ToInt64(reader["color"]),
-						Convert.ToInt64(reader["pinned"]),
-						Convert.ToInt64(reader["deleted"]),
-						Convert.ToInt64(reader["lastUpdated"])
-					));
-                }
+				if (!string.IsNullOrEmpty(guid))
+				{
+					getWaypointsToDeleteCmd.Parameters["@guid"].Value = guid;
+					using var reader = getWaypointsToDeleteCmd.ExecuteReader();
+					while (reader.Read())
+					{
+						waypoints.Add(new CartographyWaypoint(
+							reader["guid"].ToString(),
+							reader["parentGuid"].ToString(),
+							reader["owningPlayerUid"].ToString(),
+							reader["title"].ToString(),
+							reader["icon"].ToString(),
+							reader["position"].ToString(),
+							Convert.ToInt64(reader["color"]),
+							Convert.ToInt64(reader["pinned"]),
+							Convert.ToInt64(reader["deleted"]),
+							Convert.ToInt64(reader["lastUpdated"])
+						));
+					}
+				}
             }
 
 			return waypoints;
