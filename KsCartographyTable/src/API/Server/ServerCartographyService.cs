@@ -229,6 +229,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         public void Dispose()
         {
+            // BUG sometimes this causes an Exception: Collection was modified; enumeration operation may not execute. when saving and exiting the game
             tableDBConnections.Values.ToList().ForEach(connection =>
             {
                 connection.Close();

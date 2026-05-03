@@ -146,13 +146,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				getNewWaypointsForPlayerCmd.Prepare();
 
 				getUpdatedWaypointsForPlayerCmd = sqliteConn.CreateCommand();
-				getUpdatedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=0 AND lastUpdated > lastUpdated";
+				getUpdatedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=0 AND lastUpdated > @lastUpdated";
 				getUpdatedWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getUpdatedWaypointsForPlayerCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
 				getUpdatedWaypointsForPlayerCmd.Prepare();
 
 				getDeletedWaypointsForPlayerCmd = sqliteConn.CreateCommand();
-				getDeletedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=1 AND lastUpdated > lastUpdated";
+				getDeletedWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid=@owningPlayerUid AND deleted=1 AND lastUpdated > @lastUpdated";
 				getDeletedWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getDeletedWaypointsForPlayerCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
 				getDeletedWaypointsForPlayerCmd.Prepare();
