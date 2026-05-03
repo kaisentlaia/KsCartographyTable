@@ -187,7 +187,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
                 List<CartographyWaypoint> waypointsToCreate = [];
-                List<CartographyWaypoint> waypointsToUpdate = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null).Select(waypoint => new CartographyWaypoint(waypoint))];
+                List<CartographyWaypoint> waypointsToUpdate = [.. playerSharedDbWaypoints.Where(w => playerCurrentWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null)];
                 newWaypoints.ForEach(waypoint =>
                 {
                     CartographyWaypoint matching = mapDB.GetMatchingWaypoint(waypoint);
