@@ -107,10 +107,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				createWaypointsCmd.Prepare();
 
 				updateWaypointsCmd = sqliteConn.CreateCommand();
-				updateWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET position=@position, title=@title, icon=@icon, color=@color, pinned=@pinned, lastUpdated=@lastUpdated WHERE guid=@guid OR parentGuid=@parentGuid";
+				updateWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET title=@title, icon=@icon, color=@color, pinned=@pinned, lastUpdated=@lastUpdated WHERE guid=@guid OR parentGuid=@guid";
 				updateWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
-				updateWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
-				updateWaypointsCmd.Parameters.Add("@position", SqliteType.Text);
 				updateWaypointsCmd.Parameters.Add("@title", SqliteType.Text);
 				updateWaypointsCmd.Parameters.Add("@icon", SqliteType.Text);
 				updateWaypointsCmd.Parameters.Add("@color", SqliteType.Integer, 1);
@@ -348,14 +346,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
             		coreApi.Logger.Notification($"UPDATING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
-					updateWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
-					updateWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
-					updateWaypointsCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
+					updateWaypointsCmd.Parameters["@guid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? waypoint.Guid : waypoint.ParentGuid;
 					updateWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
 					updateWaypointsCmd.Parameters["@icon"].Value = waypoint.Icon;
 					updateWaypointsCmd.Parameters["@color"].Value = waypoint.Color;
 					updateWaypointsCmd.Parameters["@pinned"].Value = waypoint.Pinned;
-					updateWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)waypoint.LastUpdated.ToUniversalTime()).ToUnixTimeMilliseconds();
+					updateWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
 					updateWaypointsCmd.ExecuteNonQuery();
 				}
 

@@ -187,7 +187,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
                 List<CartographyWaypoint> waypointsToCreate = [];
-                List<CartographyWaypoint> waypointsToUpdate = [.. playerSharedDbWaypoints.Where(w => playerCurrentWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null)];
+                List<CartographyWaypoint> waypointsToUpdate = [.. playerSharedDbWaypoints
+                    .Select(sharedWaypoint =>
+                    {
+                        var currentWaypoint = playerCurrentWaypoints.Find(current =>
+                            current.Guid == sharedWaypoint.Guid &&
+                            (current.Color != sharedWaypoint.Color ||
+                            current.Title != sharedWaypoint.Title ||
+                            current.Icon != sharedWaypoint.Icon ||
+                            current.Pinned != sharedWaypoint.Pinned));
+
+                        if (currentWaypoint != null)
+                        {
+                            sharedWaypoint.Color = currentWaypoint.Color;
+                            sharedWaypoint.Title = currentWaypoint.Title;
+                            sharedWaypoint.Icon = currentWaypoint.Icon;
+                            sharedWaypoint.Pinned = currentWaypoint.Pinned;
+
+                            return sharedWaypoint;
+                        }
+
+                        return null;
+                    })
+                    .Where(w => w != null)];
                 newWaypoints.ForEach(waypoint =>
                 {
                     CartographyWaypoint matching = mapDB.GetMatchingWaypoint(waypoint);
