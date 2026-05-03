@@ -134,8 +134,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				getMatchingWaypointCmd.Prepare();
 
 				setDeletedWaypointsCmd = sqliteConn.CreateCommand();
-				setDeletedWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET deleted=1, lastUpdated=@lastUpdated WHERE guid=@guid";
+				setDeletedWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET deleted=1, lastUpdated=@lastUpdated WHERE guid=@guid or parentGuid=@parentGuid";
 				setDeletedWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
+				setDeletedWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
 				setDeletedWaypointsCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
 				setDeletedWaypointsCmd.Prepare();
 
@@ -517,14 +518,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			sqliteCommand2.ExecuteNonQuery();
 		}
 
-        internal void DeleteWaypoints(List<string> deletedWaypointIds)
+        internal void DeleteWaypoints(List<CartographyWaypoint> deletedWaypoints)
         {
             using SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction();
             setDeletedWaypointsCmd.Transaction = sqliteTransaction;
-            foreach (string guid in deletedWaypointIds)
+            foreach (CartographyWaypoint waypoint in deletedWaypoints)
             {
-				// BUG parent waypoint not being deleted, add parentGuid = parentGuid and pass waypoint list instead of id list to get the parent guid
-                setDeletedWaypointsCmd.Parameters["@guid"].Value = guid;				
+                setDeletedWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
+                setDeletedWaypointsCmd.Parameters["@parentGuid"].Value = waypoint.ParentGuid;
 				setDeletedWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
                 setDeletedWaypointsCmd.ExecuteNonQuery();
             }
@@ -539,9 +540,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
-        internal List<string> GetWaypointIdsToDelete(List<string> deletedWaypointIds)
+        internal List<CartographyWaypoint> GetWaypointsToDelete(List<string> deletedWaypointIds)
         {
-			List<string> waypointIds = [];
+			List<CartographyWaypoint> waypoints = [];
 
 			foreach (string guid in deletedWaypointIds)
 			{
@@ -549,11 +550,22 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 using var reader = getWaypointsToDeleteCmd.ExecuteReader();
                 while (reader.Read())
                 {
-                    waypointIds.Add(reader["guid"].ToString());
+                    waypoints.Add(new CartographyWaypoint(
+						reader["guid"].ToString(),
+						reader["parentGuid"].ToString(),
+						reader["owningPlayerUid"].ToString(),
+						reader["title"].ToString(),
+						reader["icon"].ToString(),
+						reader["position"].ToString(),
+						Convert.ToInt64(reader["color"]),
+						Convert.ToInt64(reader["pinned"]),
+						Convert.ToInt64(reader["deleted"]),
+						Convert.ToInt64(reader["lastUpdated"])
+					));
                 }
             }
 
-			return waypointIds;
+			return waypoints;
         }
     }
 }

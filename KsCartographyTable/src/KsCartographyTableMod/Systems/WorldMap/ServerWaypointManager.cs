@@ -186,6 +186,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // BUG existing waypoints get duplicated here
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
+                List<CartographyWaypoint> waypointsToCreate = [];
+                List<CartographyWaypoint> waypointsToUpdate = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null).Select(waypoint => new CartographyWaypoint(waypoint))];
                 newWaypoints.ForEach(waypoint =>
                 {
                     CartographyWaypoint matching = mapDB.GetMatchingWaypoint(waypoint);
@@ -193,24 +195,26 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     {
                         waypoint.ParentGuid = matching.Guid;
                         waypoint.LastUpdated = matching.LastUpdated;
+                        waypointsToUpdate.Add(waypoint);
+                    } 
+                    else
+                    {
+                        waypointsToCreate.Add(waypoint);
                     }
                 });
-                mapDB.CreateWaypoints(newWaypoints);
+                mapDB.CreateWaypoints(waypointsToCreate);
 
-                List<CartographyWaypoint> changedWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid && (sw.Color != w.Color || sw.Title != w.Title || sw.Position != w.Position || sw.Icon != w.Icon)) != null).Select(waypoint => new CartographyWaypoint(waypoint))];
+                List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
 
-                List<CartographyWaypoint> rejectedWaypoints = [.. changedWaypoints.Where(w => w.LastUpdated < playerLastDownload)];
-
-                List<CartographyWaypoint> updatedWaypoints = [.. changedWaypoints.Where(w => w.LastUpdated >= playerLastDownload)];
+                List<CartographyWaypoint> updatedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated >= playerLastDownload)];
 
                 mapDB.UpdateWaypoints(updatedWaypoints);
 
-                List<string> waypointIdsToDelete = mapDB.GetWaypointIdsToDelete(GetDeletedWaypointsIds(fromPlayer));
-                mapDB.DeleteWaypoints(waypointIdsToDelete);
+                List<CartographyWaypoint> deletedWaypoints = mapDB.GetWaypointsToDelete(GetDeletedWaypointsIds(fromPlayer));
+                mapDB.DeleteWaypoints(deletedWaypoints);
 
-                return new WaypointSyncResult(newWaypoints.Count, updatedWaypoints.Count, rejectedWaypoints.Count, waypointIdsToDelete.Count);
+                return new WaypointSyncResult(waypointsToCreate.Count, updatedWaypoints.Count, rejectedWaypoints.Count, deletedWaypoints.Count);
             }
-            // TODO log
             return new WaypointSyncResult(0, 0, 0, 0);
         }
 
@@ -224,44 +228,43 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<CartographyWaypoint> updatedWaypointsForPlayer = mapDB.GetUpdatedWaypointsForPlayer(forPlayer, blockEntity.GetPlayerLastDownload(forPlayer));
                 List<CartographyWaypoint> deletedWaypointsForPlayer = mapDB.GetDeletedWaypointsForPlayer(forPlayer, blockEntity.GetPlayerLastDownload(forPlayer));
 
+                List<CartographyWaypoint> matchingPlayerWaypoints = [];
                 List<CartographyWaypoint> newSharedWaypoints = [];
-                int addedCount = 0;
-                newWaypointsForPlayer.ForEach(waypoint =>
+                newWaypointsForPlayer.ForEach(parentWaypoint =>
                 {
-                    Waypoint matching = GetPlayerWaypoints(forPlayer as IServerPlayer).Find(playerWaypoint => playerWaypoint.Color == waypoint.Color && playerWaypoint.Position == waypoint.Position && playerWaypoint.Icon == waypoint.Icon && playerWaypoint.Title == waypoint.Title);
+                    Waypoint matching = GetPlayerWaypoints(forPlayer as IServerPlayer).Find(playerWaypoint => playerWaypoint.Color == parentWaypoint.Color && playerWaypoint.Position == parentWaypoint.Position && playerWaypoint.Icon == parentWaypoint.Icon && playerWaypoint.Title == parentWaypoint.Title);
                     if (matching != null)
                     {
-                        CartographyWaypoint sharedWaypoint = new CartographyWaypoint(matching)
+                        CartographyWaypoint sharedWaypoint = new(matching)
                         {
-                            LastUpdated = waypoint.LastUpdated,
-                            ParentGuid = waypoint.Guid
+                            LastUpdated = parentWaypoint.LastUpdated,
+                            ParentGuid = parentWaypoint.Guid
                         };
-                        newSharedWaypoints.Add(sharedWaypoint);
+                        matchingPlayerWaypoints.Add(sharedWaypoint);
                     }
                     else
                     {
-                        addedCount += 1;
                         Waypoint newWaypoint = new()
                         {
-                            Color = waypoint.Color,
-                            Position = waypoint.Position,
+                            Color = parentWaypoint.Color,
+                            Position = parentWaypoint.Position,
                             Guid = Guid.NewGuid().ToString(),
-                            Icon = waypoint.Icon,
+                            Icon = parentWaypoint.Icon,
                             OwningPlayerUid = forPlayer.PlayerUID,
-                            Title = waypoint.Title
+                            Title = parentWaypoint.Title
                         };
                         WaypointMapLayer.Waypoints.Add(newWaypoint);
 
-                        CartographyWaypoint sharedWaypoint = new CartographyWaypoint(newWaypoint)
+                        CartographyWaypoint sharedWaypoint = new(newWaypoint)
                         {
-                            LastUpdated = waypoint.LastUpdated,
-                            ParentGuid = waypoint.Guid
+                            LastUpdated = parentWaypoint.LastUpdated,
+                            ParentGuid = parentWaypoint.Guid
                         };
                         newSharedWaypoints.Add(sharedWaypoint);
                     }
                 });
 
-                // BUG writes the correct data on db but the count is wrong, should count only new waypoints without parentGuid
+                mapDB.CreateWaypoints(matchingPlayerWaypoints);
                 mapDB.CreateWaypoints(newSharedWaypoints);
 
                 updatedWaypointsForPlayer.ForEach(waypoint =>
@@ -280,7 +283,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                 ResendWaypointsToPlayer(forPlayer as IServerPlayer);
                 
-                return new WaypointSyncResult(addedCount, updatedWaypointsForPlayer.Count, 0, deletedWaypointsForPlayer.Count);
+                return new WaypointSyncResult(newSharedWaypoints.Count, updatedWaypointsForPlayer.Count, 0, deletedWaypointsForPlayer.Count);
                 
             }
             return new WaypointSyncResult(0, 0, 0, 0);
