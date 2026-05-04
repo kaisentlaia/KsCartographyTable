@@ -3,6 +3,7 @@
   "class": "kscartographytable.advanced-cartography-table",
   "entityClass": "kscartographytable.cartography-table-entity",
   "variantgroups": [
+    { "code": "state", "states": ["empty", "filled"] },
     { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
   ],
   "behaviors": [
@@ -309,24 +310,24 @@
   "fileReplaceMode": "ReplaceAll",
   "blockmaterial": "wood",
   "creativeinventory": {
-    "general": ["*-north"],
-    "kscartographytable": ["*-north"]
+    "general": ["*-filled-north"],
+    "kscartographytable": ["*-filled-north"]
   },
   "shapeByType": {
     "*-north": {
-      "base": "kscartographytable:block/advancedcartographytable",
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
       "rotateY": 0
     },
     "*-east": {
-      "base": "kscartographytable:block/advancedcartographytable",
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
       "rotateY": 270
     },
     "*-south": {
-      "base": "kscartographytable:block/advancedcartographytable",
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
       "rotateY": 180
     },
     "*-west": {
-      "base": "kscartographytable:block/advancedcartographytable",
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
       "rotateY": 90
     }
   },
@@ -400,5 +401,9 @@
       "particleModel": "Quad"
     }
   ],
-  "lightHsv": [7, 7, 10]
+  "lightHsv": [7, 7, 10],
+  "dropsByType": {
+    "*-empty-*": [{ "code": "advancedcartographytable-empty-north" }],
+    "*-filled-*": [{ "code": "advancedcartographytable-filled-north" }]
+  }
 }

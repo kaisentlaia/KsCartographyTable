@@ -174,6 +174,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         UploadMap,
         DownloadMap,
         WipeTable,
-        PonderMap
+        PonderMap,
+        TakeQuill,
+        PutQuill
     }
 }

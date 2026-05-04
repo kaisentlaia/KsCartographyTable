@@ -9,7 +9,7 @@
     "height": 3,
     "output": {
       "type": "block",
-      "code": "cartographytable-north",
+      "code": "cartographytable-filled-north",
       "quantity":  1
     }
   }

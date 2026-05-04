@@ -176,8 +176,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			{
 				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED), EnumChatType.Notification);
 
-                // TODO change with a scraping sound
-				byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/effect/writing"), byPlayer);
+				byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/tool/hidescrape1"), byPlayer);
 			}
 			else
 			{

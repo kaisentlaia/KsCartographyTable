@@ -23,6 +23,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return waypointCount; }
             set { waypointCount = value; }
         }
+
+        public bool Empty
+        {
+            get { return ExploredAreasIds.Count < 1 && waypointCount < 1; }
+        }
         private Dictionary<string, long> lastPlayerDownloads = [];
         public Dictionary<string, long> LastPlayerDownloads
         {

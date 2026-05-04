@@ -5,6 +5,7 @@ using Vintagestory.API.Client;
 using Kaisentlaia.KsCartographyTableMod.API.Utils;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Datastructures;
+using Vintagestory.API.Config;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
@@ -21,11 +22,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             return true;
         }
+        public bool Empty
+        {
+            get { return Variant["state"] == "empty"; }
+        }
 
         public static BlockEntityCartographyTable FindBlockEntity(IWorldAccessor world, BlockPos pos)
         {
-            var entity = world.BlockAccessor.GetBlockEntity(pos) as BlockEntityCartographyTable;
-            if (entity != null) {
+            if (world.BlockAccessor.GetBlockEntity(pos) is BlockEntityCartographyTable entity)
+            {
                 return entity;
             }
 
@@ -40,6 +45,58 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 return false;
             }
+            if (currentAction == CartographyAction.TakeQuill)
+            {
+                ItemStack stack = new ItemStack(world.GetItem(new AssetLocation(CartographyTableConstants.MOD_ID+":"+CartographyTableConstants.QUILL_ITEM_CODE)));
+                if (byPlayer.InventoryManager.TryGiveItemstack(stack, true))
+                {
+                    Block filledBlock = world.GetBlock(CodeWithVariant("state", "empty"));
+                    world.BlockAccessor.ExchangeBlock(filledBlock.BlockId, blockSel.Position);
+
+                    if (Sounds?.Place != null)
+                    {
+                        world.PlaySoundAt(Sounds.Place, blockSel.Position, 0.1, byPlayer);
+                    }
+
+                    return true;
+                }
+                return false;
+            }
+            if (currentAction == CartographyAction.PutQuill)
+            {
+                ItemStack heldStack = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack;
+                if (heldStack != null && heldStack.Collectible.Code.Path.Equals(CartographyTableConstants.QUILL_ITEM_CODE))
+                {
+                    byPlayer.InventoryManager.ActiveHotbarSlot.TakeOut(1);
+                    byPlayer.InventoryManager.ActiveHotbarSlot.MarkDirty();
+
+                    Block filledBlock = world.GetBlock(CodeWithVariant("state", "filled"));
+                    world.BlockAccessor.ExchangeBlock(filledBlock.BlockId, blockSel.Position);
+
+                    if (Sounds?.Place != null)
+                    {
+                        world.PlaySoundAt(Sounds.Place, blockSel.Position, 0.1, byPlayer);
+                    }
+                    return true;
+                }
+                return false;
+            }
+            if (currentAction == CartographyAction.WipeTable)
+            {
+                if (beTable.Map.Empty)
+                {
+                    if (api.Side == EnumAppSide.Client)
+                    {
+                        (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY));
+                    }
+                    return false;
+                }
+                if (api.Side == EnumAppSide.Client)
+                {
+                    (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
+                }
+                return true;
+            }
             if (currentAction != CartographyAction.PonderMap)
             {
                 return beTable.OnCartographySessionStart(currentAction, world, byPlayer, blockSel);
@@ -53,8 +110,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 return true;
             }
-
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+
+            if (currentAction == CartographyAction.WipeTable)
+            {
+                // TODO play looping scraping sound
+                if (secondsUsed >= 3)
+                {
+                    beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                }
+                return true;
+            }
+
             return beTable.OnCartographySessionStep(currentAction, secondsUsed, world, byPlayer, blockSel);
         }
 
@@ -65,6 +132,19 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+
+            if (currentAction == CartographyAction.WipeTable)
+            {
+                if (secondsUsed >= 3)
+                {
+                    beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                }
+
+                // TODO stop looping scraping sound
+                currentAction = CartographyAction.None;
+                return;
+            }
+
             if (currentAction == CartographyAction.PonderMap)
             {
                 beTable.OnPonderMap(byPlayer);
@@ -85,9 +165,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea)
             {
-                if (ItemDetectorService.HasItemInHand(byPlayer, "resin"))
+                if (byPlayer?.InventoryManager.ActiveTool == EnumTool.Knife)
                 {
                     return CartographyAction.WipeTable;
+                }
+
+                if (ItemDetectorService.HasItemInHand(byPlayer, CartographyTableConstants.QUILL_ITEM_CODE))
+                {
+                    return byPlayer.Entity.Controls.Sprint ? CartographyAction.DownloadMap : CartographyAction.UploadMap;
                 }
                 
                 if (ItemDetectorService.HasItemInHand(byPlayer, CartographyTableConstants.PALANTIR_BLOCK_CODE))
@@ -98,14 +183,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.InkAndQuill && ItemDetectorService.HasEmptyHand(byPlayer))
 			{
-				if (byPlayer.Entity.Controls.Sprint)
-				{
-				    return CartographyAction.DownloadMap;
-				}
-				else
-				{
-				    return CartographyAction.UploadMap;
-				}
+                return CartographyAction.TakeQuill;
+			}
+
+			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.InkAndQuill && ItemDetectorService.HasItemInHand(byPlayer, "quill"))
+			{
+                return CartographyAction.PutQuill;
 			}
 
 			return  CartographyAction.None;
@@ -113,7 +196,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
-            return InteractionHelpProvider.GetHelpText(world, selection.SelectionBoxIndex).Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
+            return InteractionHelpProvider.GetHelpText(world, selection.SelectionBoxIndex, Empty).Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
         }
         
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)

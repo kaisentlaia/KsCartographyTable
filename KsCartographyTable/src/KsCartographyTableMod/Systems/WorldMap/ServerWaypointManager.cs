@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography.X509Certificates;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using ProtoBuf;
 using Vintagestory.API.Common;
@@ -13,6 +12,8 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
+
+// TODO fix namespaces not matching folder structure
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     [ProtoContract]
@@ -107,7 +108,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		public void ResendWaypointsToPlayer(IServerPlayer toPlayer)
 		{
-			Dictionary<int, PlayerGroupMembership> playerGroupMemberships = toPlayer.ServerData.PlayerGroupMemberships;
 			List<Waypoint> list = [];
 			foreach (Waypoint waypoint in WaypointMapLayer.Waypoints)
 			{

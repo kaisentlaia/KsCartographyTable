@@ -1,0 +1,97 @@
+{
+	"editor": {
+		"allAngles": false,
+		"entityTextureMode": false
+	},
+	"textureWidth": 16,
+	"textureHeight": 16,
+	"textureSizes": {
+	},
+	"textures": {
+		"bituminous": "game:block/coal/bituminous",
+		"brass": "game:block/metal/ingot/silver",
+		"feather": "game:item/tool/feather"
+	},
+	"elements": [
+		{
+			"name": "origin",
+			"from": [ 8.0, 0.0, 8.0 ],
+			"to": [ 8.0, 0.0, 8.0 ],
+			"rotationOrigin": [ 8.0, 0.0, 8.0 ],
+			"faces": {
+				"north": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"east": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"south": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"west": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"up": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false },
+				"down": { "texture": "#null", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "enabled": false }
+			},
+			"children": [
+				{
+					"name": "pen",
+					"from": [ 0.0, -0.5, -0.9 ],
+					"to": [ 0.3, 3.0, -0.6 ],
+					"rotationOrigin": [ 0.1, 0.1, -0.5 ],
+					"rotationX": 90.0,
+					"rotationY": -45.0,
+					"faces": {
+						"north": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 3.5 ] },
+						"east": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 3.5 ] },
+						"south": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 3.5 ] },
+						"west": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 3.5 ] },
+						"up": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 0.5 ] },
+						"down": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+					},
+					"children": [
+						{
+							"name": "feather",
+							"from": [ 0.2, 1.0, -1.58 ],
+							"to": [ 0.2, 7.0, 1.92 ],
+							"renderPass": 3,
+							"rotationOrigin": [ 0.2, 1.0, 0.1 ],
+							"rotationX": -2.0,
+							"rotationY": -45.0,
+							"faces": {
+								"north": { "texture": "#feather", "uv": [ 0.0, 0.0, 0.5, 6.0 ], "enabled": false },
+								"east": { "texture": "#feather", "uv": [ 6.0, 10.0, 9.5, 16.0 ] },
+								"south": { "texture": "#feather", "uv": [ 0.0, 0.0, 0.5, 6.0 ], "enabled": false },
+								"west": { "texture": "#feather", "uv": [ 0.0, 0.0, 3.5, 6.0 ], "enabled": false },
+								"up": { "texture": "#feather", "uv": [ 0.0, 0.0, 0.5, 3.5 ], "enabled": false },
+								"down": { "texture": "#feather", "uv": [ 0.0, 0.0, 0.5, 3.5 ], "enabled": false }
+							}
+						},
+						{
+							"name": "tip",
+							"from": [ 0.05, -1.0, 0.05 ],
+							"to": [ 0.15, 0.0, 0.15 ],
+							"rotationOrigin": [ 0.15, -1.0, 0.15 ],
+							"faces": {
+								"north": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"east": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"south": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"west": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"up": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "windMode": [-1,-1,-1,-1], "enabled": false },
+								"down": { "texture": "#bituminous", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+							}
+						},
+						{
+							"name": "end",
+							"from": [ 0.05, 3.4, 0.0 ],
+							"to": [ 0.25, 4.4, 0.2 ],
+							"rotationOrigin": [ 0.15, 3.4, 0.15 ],
+							"rotationX": -4.0,
+							"rotationY": 26.0,
+							"faces": {
+								"north": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"east": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"south": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"west": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 1.0 ] },
+								"up": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 0.5 ], "windMode": [-1,-1,-1,-1] },
+								"down": { "texture": "#brass", "uv": [ 0.0, 0.0, 0.5, 0.5 ] }
+							}
+						}
+					]
+				}
+			]
+		}
+	]}

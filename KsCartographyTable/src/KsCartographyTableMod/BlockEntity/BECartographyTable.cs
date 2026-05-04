@@ -109,6 +109,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnWipeTableMap(IPlayer byPlayer, BlockPos blockPos)
         {
+            EnsureMap();
             if (CoreServerAPI != null)
             {
                 KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, blockPos);
@@ -118,6 +119,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
             }
+
+            MarkDirty();
 
             return true;
         }
@@ -270,7 +273,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     ShouldLoop = true,
                     Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                     DisposeOnFinish = false,
-                    Volume = 0.75f
+                    Volume = 1f
                 });
 
                 ambientSound.Start();
@@ -347,7 +350,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                             ShouldLoop = false,
                             Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                             DisposeOnFinish = true,
-                            Volume = 0.75f
+                            Volume = 1f
                         });
 
                         finalAmbientSound.Start();

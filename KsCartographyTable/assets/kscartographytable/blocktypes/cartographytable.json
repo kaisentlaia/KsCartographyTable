@@ -4,15 +4,16 @@
   "entityClass": "kscartographytable.cartography-table-entity",
   "blockmaterial": "wood",
   "creativeinventory": {
-    "general": ["*-north"],
-    "kscartographytable": ["*-north"]
+    "general": ["*-filled-north"],
+    "kscartographytable": ["*-filled-north"]
   },
   "shape": { "base": "block/cartographytable" },
   "replaceable": 900,
   "resistance": 1.5,
-	"maxStackSize": 1,
+  "maxStackSize": 1,
   "lightAbsorption": 1,
   "variantgroups": [
+    { "code": "state", "states": ["empty", "filled"] },
     { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
   ],
   "behaviors": [
@@ -23,19 +24,19 @@
   ],
   "shapeByType": {
     "*-north": {
-      "base": "kscartographytable:block/cartographytable",
+      "base": "kscartographytable:block/cartographytable/{state}",
       "rotateY": 0
     },
     "*-east": {
-      "base": "kscartographytable:block/cartographytable",
+      "base": "kscartographytable:block/cartographytable/{state}",
       "rotateY": 270
     },
     "*-south": {
-      "base": "kscartographytable:block/cartographytable",
+      "base": "kscartographytable:block/cartographytable/{state}",
       "rotateY": 180
     },
     "*-west": {
-      "base": "kscartographytable:block/cartographytable",
+      "base": "kscartographytable:block/cartographytable/{state}",
       "rotateY": 90
     }
   },
@@ -61,15 +62,30 @@
   "collisionSelectionBoxesByType": {
     "*-north": [
       {
-        "x1": 0.0, "y1": 0.0, "z1": 0.0, "x2": 1.0, "y2": 1.0, "z2": 1.0,
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
         "comment": "Box 0: Table base"
       },
       {
-        "x1": 0.72, "y1": 1, "z1": 0.13, "x2": 0.91, "y2": 1.51, "z2": 0.32,
+        "x1": 0.72,
+        "y1": 1,
+        "z1": 0.13,
+        "x2": 0.91,
+        "y2": 1.51,
+        "z2": 0.32,
         "comment": "Box 1: Ink and quill"
       },
       {
-        "x1": 0.2, "y1": 1.0, "z1": 0.18, "x2": 0.8, "y2": 1.08, "z2": 0.92,
+        "x1": 0.2,
+        "y1": 1.0,
+        "z1": 0.18,
+        "x2": 0.8,
+        "y2": 1.08,
+        "z2": 0.92,
         "comment": "Box 2: Map"
       }
     ],
@@ -88,5 +104,9 @@
       { "x1": 0.13, "y1": 1, "z1": 0.1, "x2": 0.31, "y2": 1.51, "z2": 0.28 },
       { "x1": 0.18, "y1": 1.0, "z1": 0.2, "x2": 0.92, "y2": 1.08, "z2": 0.8 }
     ]
+  },
+  "dropsByType": {
+    "*-empty-*": [{ "code": "cartographytable-empty-north" }],
+    "*-filled-*": [{ "code": "cartographytable-filled-north" }]
   }
 }

@@ -21,11 +21,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
 		public readonly static string INTERACTION_TABLE_WIPE = GetLangCode("blockhelp-cartography-table-wipe-map");
 		public readonly static string INTERACTION_TABLE_PONDER = GetLangCode("blockhelp-cartography-table-ponder");
 		public readonly static string INTERACTION_USER_UPDATE = GetLangCode("blockhelp-cartography-table-update-map");
+		public readonly static string INTERACTION_ADD_QUILL = GetLangCode("blockhelp-cartography-table-addquill");
+		public readonly static string INTERACTION_REMOVE_QUILL = GetLangCode("blockhelp-cartography-table-removequill");
 		public readonly static string GUI_TABLE_WAYPOINTS = GetLangCode("gui-waypoint-count");
 		public readonly static string GUI_TABLE_MAP_WAYPOINTS = GetLangCode("gui-waypoint-chunks-count");
 		public readonly static string GUI_TABLE_EMPTY = GetLangCode("gui-empty-map");
 
         public readonly static string SESSION_STARTED = GetLangCode("message-session-started");
+        public readonly static string WIPE_STARTED = GetLangCode("message-wipe-started");
 
 		private static string GetLangCode(string code)
 		{

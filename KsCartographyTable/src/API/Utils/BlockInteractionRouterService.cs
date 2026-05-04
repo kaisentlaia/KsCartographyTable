@@ -29,8 +29,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 			if (beTable == null)
 				return false;
 
-			// Box 2: Map area - wipe with resin
-			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && ItemDetectorService.HasItemInHand(byPlayer, "resin"))
+			// Box 2: Map area - wipe with a knife
+			if (blockSel.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && byPlayer?.InventoryManager.ActiveTool == EnumTool.Knife)
 			{
 				onWipeMap(blockSel);
 				return true;

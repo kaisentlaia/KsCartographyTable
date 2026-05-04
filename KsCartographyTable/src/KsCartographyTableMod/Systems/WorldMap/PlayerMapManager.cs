@@ -1,7 +1,6 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
-using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -76,11 +75,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Dictionary<FastVec2i, MapPieceDB> pieces = [];
             if (tableMapPiecesIds.Count == 0)
             {
+                // TEST this should happen only the first time a player uploads to an empty table
+                CoreClientAPI.Logger.Notification("CARTOGRAPHYTABLE: no pieces id on map, uploading all player's map pieces");
                 pieces = PlayerMapDbReader.GetAllMapPieces();
             }
             else
             {
                 List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? [.. playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex()))] : playerMapPiecesIds;
+                CoreClientAPI.Logger.Notification("CARTOGRAPHYTABLE: uploading filtered player's map pieces not present on map");
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
             }
             return pieces;

@@ -1,0 +1,44 @@
+{
+  "code": "quill",
+  "behaviors": [
+    {
+      "name": "GroundStorable",
+      "properties": {
+        "layout": "Messy12",
+        "collisionBox": {
+          "x1": 0,
+          "y1": 0,
+          "z1": 0,
+          "x2": 1,
+          "y2": 0.125,
+          "z2": 1
+        }
+      }
+    }
+  ],
+  "shape": { "base": "item/tool/quill" },
+  "attributes": {
+    "groundStorageTransform": { "rotation": { "x": 0, "y": 38, "z": 0 } }
+  },
+  "creativeinventory": { "general": ["*"], "items": ["*"] },
+  "maxstacksize": 128,
+  "materialDensity": 20,
+  "combustibleProps": { "burnTemperature": 600, "burnDuration": 2 },
+  "guiTransform": {
+    "translation": { "x": 0, "y": 0, "z": 0 },
+    "rotation": { "x": 87, "y": -45, "z": -3 },
+    "origin": { "x": 0.49, "y": -0.52, "z": 0.51 },
+    "scale": 2.65
+  },
+  "groundTransform": {
+    "translation": { "x": 0, "y": 0.51, "z": 0 },
+    "rotation": { "x": 0, "y": 0, "z": 0 },
+    "origin": { "x": 0.5, "y": 0.5, "z": 0.5 },
+    "scale": 5
+  },
+  "tpHandTransform": {
+    "translation": { "x": -0.6, "y": 0, "z": -0.5 },
+    "rotation": { "x": 0, "y": -2, "z": 18 },
+    "scale": 0.9
+  }
+}

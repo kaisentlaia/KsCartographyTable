@@ -8,8 +8,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
       public const string ADVANCED_PART_SUFFIX = "part-";
       public const string PALANTIR_MOD_ID = "palantir";
       public const string PALANTIR_BLOCK_CODE = "palantir";
+      public const string QUILL_ITEM_CODE = "quill";
       public const string CHANNEL_UPLOAD_TO_SERVER = "cartographytableupload";
       public const string CHANNEL_DOWNLOAD_TO_CLIENT = "cartographytabledownload";
       public const string CHANNEL_SEND_TO_PALANTIR = "kscartographytablepalantir";
-  }
+
+    }
 }

@@ -1,0 +1,10 @@
+{
+  "ingredientPattern": "Q,K",
+  "ingredients": {
+    "Q": { "type": "item", "code": "game:feather" },
+    "K": { "type": "item", "tags": ["tool-knife"], "isTool": true }
+  },
+  "width": 1,
+  "height": 2,
+  "output": { "type": "item", "code": "quill", "quantity": 1 }
+}
