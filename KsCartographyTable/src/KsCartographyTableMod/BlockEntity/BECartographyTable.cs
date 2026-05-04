@@ -269,7 +269,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // TODO bugfix no sound on download sessions (server side)
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
-                    Location = new AssetLocation("kscartographytable:sounds/effect/mapwriting.ogg"),
+                    Location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting.ogg"),
                     ShouldLoop = true,
                     Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                     DisposeOnFinish = false,
@@ -329,11 +329,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     AssetLocation location = null;
                     if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
                     {
-                        location = new AssetLocation("kscartographytable:sounds/effect/mapclose");
+                        location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
                     }
                     else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
                     {                        
-                        location = new AssetLocation("kscartographytable:sounds/effect/mapwriteandclose");
+                        location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
                     }
                     else if (soundType != EnumCartographyTableCloseSoundTypes.None || finalSoundType != EnumCartographyTableCloseSoundTypes.None)
                     {
