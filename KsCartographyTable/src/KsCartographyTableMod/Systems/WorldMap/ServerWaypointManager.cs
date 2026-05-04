@@ -300,13 +300,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 mapDB.CreateWaypoints(matchingPlayerWaypoints);
                 mapDB.CreateWaypoints(newSharedWaypoints);
 
+                int updatedCount = 0;
                 updatedWaypointsForPlayer.ForEach(waypoint =>
                 {
                     Waypoint updatedWaypoint = WaypointMapLayer.Waypoints.Find(playerWaypoint => playerWaypoint.Guid == waypoint.Guid);
-                    updatedWaypoint.Color = waypoint.Color;
-                    updatedWaypoint.Title = waypoint.Title;
-                    updatedWaypoint.Icon = waypoint.Icon;
-                    updatedWaypoint.Pinned = waypoint.Pinned;
+                    if (updatedWaypoint.Color != waypoint.Color || updatedWaypoint.Title != waypoint.Title || updatedWaypoint.Icon != waypoint.Icon || updatedWaypoint.Pinned != waypoint.Pinned)
+                    {
+                        updatedWaypoint.Color = waypoint.Color;
+                        updatedWaypoint.Title = waypoint.Title;
+                        updatedWaypoint.Icon = waypoint.Icon;
+                        updatedWaypoint.Pinned = waypoint.Pinned;
+                        updatedCount = 0;
+                    }
                 });
 
                 int deletedCount = 0;
@@ -322,7 +327,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                 ResendWaypointsToPlayer(forPlayer as IServerPlayer);
                 
-                return new WaypointSyncResult(newSharedWaypoints.Count, updatedWaypointsForPlayer.Count, 0, deletedCount);
+                return new WaypointSyncResult(newSharedWaypoints.Count, updatedCount, 0, deletedCount);
                 
             }
             return new WaypointSyncResult(0, 0, 0, 0);
