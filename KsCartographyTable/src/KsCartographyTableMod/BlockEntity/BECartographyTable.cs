@@ -24,6 +24,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
         public CartographyMap Map;
+        public bool HasAnythingToWrite;
 
         public enum EnumCartographyTableCloseSoundTypes
         {
@@ -266,6 +267,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (ambientSound == null && Api?.Side == EnumAppSide.Client)
             {
+                HasAnythingToWrite = true;
                 // TODO bugfix no sound on download sessions (server side)
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
@@ -319,6 +321,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (ambientSound != null)
             {
+                HasAnythingToWrite = false;
                 ambientSound.Stop();
                 ambientSound.Dispose();
                 ambientSound = null;

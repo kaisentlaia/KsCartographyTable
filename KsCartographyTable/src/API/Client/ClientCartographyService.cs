@@ -171,6 +171,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
         internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
+            if (blockSel.Block == null)
+            {
+                return false;
+            }
+            // BUG exception when interacting with left side of the advanced table
             string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
             {

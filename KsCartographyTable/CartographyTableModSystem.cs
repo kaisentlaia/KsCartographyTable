@@ -45,7 +45,7 @@ public class KsCartographyTableModSystem : ModSystem
         api.RegisterBlockClass(Mod.Info.ModID + ".cartography-table", typeof(BlockCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
-        api.RegisterItemClass(Mod.Info.ModID + ".quill", typeof(ItemQuill));
+        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));
     }
 
     /// <summary>

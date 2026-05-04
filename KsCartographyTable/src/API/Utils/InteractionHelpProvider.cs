@@ -11,14 +11,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 {
     public static class InteractionHelpProvider
     {
-        public static WorldInteraction[] GetHelpText(IWorldAccessor world, int selectionBoxIndex, bool empty)
+        public static WorldInteraction[] GetHelpText(IWorldAccessor world, int selectionBoxIndex, bool empty, bool mapEmpty)
         {
             return selectionBoxIndex switch
             {
                 0 => GetTableHelp(),
                 1 => GetInkAndQuillHelp(world, empty),
-                2 => GetMapHelp(world),
-                _ => Array.Empty<WorldInteraction>()
+                2 => GetMapHelp(world, mapEmpty),
+                _ => []
             };
         }
 
@@ -55,7 +55,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
             }
         }
 
-        private static WorldInteraction[] GetMapHelp(IWorldAccessor world)
+        private static WorldInteraction[] GetMapHelp(IWorldAccessor world, bool mapEmpty)
         {
             var interactions = new List<WorldInteraction>
             {
@@ -72,15 +72,20 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
                     HotKeyCode = "sprint",
                     MouseButton = EnumMouseButton.Right,
                     Itemstacks = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.QUILL_ITEM_CODE)
-                },
-                new()
-                {
-                    ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_WIPE,
-                    HotKeyCode = null,
-                    MouseButton = EnumMouseButton.Right,
-                    Itemstacks = ObjectCacheUtil.GetToolStacks(world.Api, EnumTool.Knife)
                 }
             };
+
+            if (!mapEmpty)
+            {
+                interactions.Add(new()
+                    {
+                        ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_WIPE,
+                        HotKeyCode = null,
+                        MouseButton = EnumMouseButton.Right,
+                        Itemstacks = ObjectCacheUtil.GetToolStacks(world.Api, EnumTool.Knife)
+                    }
+                );
+            }
 
             if (KsCartographyTableModSystem.ModCompatibilityManager.IsPalantirEnabled)
             {

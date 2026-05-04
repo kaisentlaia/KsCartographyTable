@@ -6,6 +6,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class ItemQuill : Item
     {
+        public override string GetHeldTpHitAnimation(ItemSlot slot, Entity byEntity)
+        {
+            return getMapWriteAnim(byEntity) ?? base.GetHeldTpHitAnimation(slot, byEntity);
+        }
         public override string GetHeldTpUseAnimation(ItemSlot activeHotbarSlot, Entity forEntity)
         {
             return getMapWriteAnim(forEntity) ?? base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity);
@@ -18,12 +22,19 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (pos != null && (plr.Controls.HandUse != EnumHandInteract.None || plr.Controls.RightMouseDown))
             {
                 Block block = api.World.BlockAccessor.GetBlock(pos);
-                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea)
+                BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(pos);
+                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).HasAnythingToWrite)
                 {
                     return "clayform";
                 }
             }
             return null;
+        }
+
+        public override void OnHeldInteractStart(ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel, bool firstEvent, ref EnumHandHandling handling)
+        {
+            if (blockSel == null) return;
+            OnHeldAttackStart(slot, byEntity, blockSel, entitySel, ref handling);
         }
     }
 }

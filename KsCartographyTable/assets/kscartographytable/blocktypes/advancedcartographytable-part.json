@@ -6,7 +6,6 @@
   "sideopaque": { "all": false },
   "drawtype": "Empty",
   "variantgroups": [
-    { "code": "state", "states": ["empty", "filled"] },
     { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
   ],
   "collisionSelectionBoxesByType": {
