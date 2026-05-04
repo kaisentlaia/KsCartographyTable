@@ -25,6 +25,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
 		public readonly static string GUI_TABLE_MAP_WAYPOINTS = GetLangCode("gui-waypoint-chunks-count");
 		public readonly static string GUI_TABLE_EMPTY = GetLangCode("gui-empty-map");
 
+        public readonly static string SESSION_STARTED = GetLangCode("message-session-started");
+
 		private static string GetLangCode(string code)
 		{
 			return CartographyTableConstants.MOD_ID + ":" + code;

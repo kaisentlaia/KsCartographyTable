@@ -177,6 +177,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                 CoreClientAPI.Logger.Notification($"MAP session already exists");
                 return false;
             }
+            CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.SESSION_STARTED));
             CoreClientAPI.Logger.Notification($"MAP starting new session");
             MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
             activeSessions.Add(sessionId, session);

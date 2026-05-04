@@ -245,6 +245,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             {
                 return false;
             }
+            CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.SESSION_STARTED), EnumChatType.Notification);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
             ServerMapDB mapDB = GetBlockMapDB(blockSel.Block.Id.ToString());

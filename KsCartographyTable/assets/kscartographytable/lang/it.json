@@ -10,6 +10,7 @@
     "gui-waypoint-count": "Ci sono {0} punti di riferimento sulla mappa.\n",
     "gui-waypoint-chunks-count": "Ci sono {0} punti di riferimento e {1} km² di aree esplorate sulla mappa.\n",
     "gui-empty-map": "La mappa è vuota.\n",
+    "message-session-started": "Inizi a trascrivere la mappa...",
     "message-new-waypoints-count": "Hai aggiunto {0} nuovi punti di riferimento al tavolo da cartografia.",
     "message-edited-waypoints-count": "Hai modificato {0} punti di riferimento sul tavolo da cartografia.",
     "message-deleted-waypoints-count": "Hai rimosso {0} punti di riferimento dal tavolo da cartografia.",
