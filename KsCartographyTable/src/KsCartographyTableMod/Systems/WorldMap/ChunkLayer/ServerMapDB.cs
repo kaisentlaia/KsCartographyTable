@@ -132,9 +132,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				getMatchingWaypointCmd.Prepare();
 
 				setDeletedWaypointsCmd = sqliteConn.CreateCommand();
-				setDeletedWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET deleted=1, lastUpdated=@lastUpdated WHERE guid=@guid or parentGuid=@parentGuid";
+				setDeletedWaypointsCmd.CommandText = "UPDATE sharedwaypoints SET deleted=1, lastUpdated=@lastUpdated WHERE guid=@guid OR parentGuid=@guid";
 				setDeletedWaypointsCmd.Parameters.Add("@guid", SqliteType.Text);
-				setDeletedWaypointsCmd.Parameters.Add("@parentGuid", SqliteType.Text);
 				setDeletedWaypointsCmd.Parameters.Add("@lastUpdated", SqliteType.Integer, 1);
 				setDeletedWaypointsCmd.Prepare();
 
@@ -521,7 +520,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             foreach (CartographyWaypoint waypoint in deletedWaypoints)
             {
                 setDeletedWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
-                setDeletedWaypointsCmd.Parameters["@parentGuid"].Value = waypoint.ParentGuid;
 				setDeletedWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
                 setDeletedWaypointsCmd.ExecuteNonQuery();
             }
