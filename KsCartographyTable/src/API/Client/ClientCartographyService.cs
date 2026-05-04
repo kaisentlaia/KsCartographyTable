@@ -116,6 +116,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             if (!packet.IsFinalBatch) return;
 
             BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos); 
+            Block blockTable = CoreClientAPI.World.BlockAccessor.GetBlock(packet.BlockPos); 
             
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
@@ -123,9 +124,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             bool mapUpdated = km2 > 0;
             bool waypointsUpdated = packet.WaypointSyncResult.Synced;
             // BUG chat messages not appearing on client when server is not local
-            if (!mapUpdated)
+            if (!mapUpdated && blockTable is not BlockCartographyTable)
             {
-                 // BUG this message should be displayed only for advanced cartography tables 
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
             }  
             if (!waypointsUpdated)
@@ -137,7 +137,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 return;
             }
-            if (mapUpdated)
+            if (mapUpdated && blockTable is not BlockCartographyTable)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
             }
