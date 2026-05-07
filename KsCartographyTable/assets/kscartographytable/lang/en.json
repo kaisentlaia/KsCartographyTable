@@ -17,6 +17,7 @@
   "gui-empty-map": "There is nothing on the map.\n",
   "message-session-started": "You start transcribing the map...",
   "message-wipe-started": "You start scraping the ink from the map...",
+  "mapfailure-updatefirst": "You need to update your map.",
   "message-new-waypoints-count": "You added {0} new waypoints to the cartography table.",
   "message-edited-waypoints-count": "You modified {0} waypoints on the cartography table.",
   "message-deleted-waypoints-count": "You removed {0} waypoints from the cartography table.",

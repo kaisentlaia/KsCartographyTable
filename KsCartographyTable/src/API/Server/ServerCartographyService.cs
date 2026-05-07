@@ -121,7 +121,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
             }
 
-            // BUG UpdateFinalSoundType gets called too late, once the sound has already stopped. We will probably need to send a packet instead and stop the interaction sound client side when such packet is received
             if (km2 == 0 && !waypointResult.Synced)
             {
                 CoreServerAPI.Logger.Notification("Setting written to false and writing to false");
@@ -155,7 +154,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             if (waypointResult.Rejected > 0)
             {
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
-                // TODO display error "You need to update your map"
+                CoreServerAPI.SendIngameError(fromPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_UPDATE_FIRST));
             }
             CoreServerAPI.Logger.Notification("Setting writing to false");
             beCartographyTable.SetWriting(false);

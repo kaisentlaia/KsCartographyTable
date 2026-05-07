@@ -14,6 +14,7 @@
     "gui-empty-map": "La mappa è vuota.\n",
     "message-session-started": "Inizi a trascrivere la mappa...",
     "message-wipe-started": "Inizi a grattare via l'inchiostro dalla mappa...",
+    "mapfailure-updatefirst": "Devi aggiornare la tua mappa.",
     "message-new-waypoints-count": "Hai aggiunto {0} nuovi punti di riferimento al tavolo da cartografia.",
     "message-edited-waypoints-count": "Hai modificato {0} punti di riferimento sul tavolo da cartografia.",
     "message-deleted-waypoints-count": "Hai rimosso {0} punti di riferimento dal tavolo da cartografia.",
