@@ -34,6 +34,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return lastPlayerDownloads; }
             set { lastPlayerDownloads = value; }
         }
+        private bool isWriting = false;
+        public bool IsWriting
+        {
+            get { return isWriting; }
+            set { isWriting = value; }
+        }
+        private bool hasWrittenData = false;
+        public bool HasWrittenData
+        {
+            get { return hasWrittenData; }
+            set { hasWrittenData = value; }
+        }
         ICoreAPI api;
 
         public CartographyMap(ICoreAPI api)
@@ -69,6 +81,24 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 api.Logger.Error("Failed to serialize explored areas ids: {0}", ex);
                 tree.SetString("ExploredAreasIds", JsonUtil.ToString(new List<FastVec2i>()));
+            }
+            try
+            {
+                tree.SetString("IsWriting", JsonUtil.ToString(IsWriting));
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to serialize is writing: {0}", ex);
+                tree.SetString("IsWriting", JsonUtil.ToString(false));
+            }
+            try
+            {
+                tree.SetString("HasWrittenData", JsonUtil.ToString(HasWrittenData));
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to serialize has written data: {0}", ex);
+                tree.SetString("HasWrittenData", JsonUtil.ToString(false));
             }
         }
 
@@ -129,6 +159,44 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             catch (Exception ex)
             {                
                 api.Logger.Error("Failed to deserialize explored areas ids: {0}", ex);
+                ExploredAreasIds = [];
+            }
+            try
+            {
+                if (tree.HasAttribute("IsWriting"))
+                {
+                    var isWritingStr = tree.GetString("IsWriting");
+                    IsWriting = isWritingStr != null
+                        ? JsonUtil.FromString<bool>(isWritingStr)
+                        : false;
+                }
+                else
+                {
+                    IsWriting = false;
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize is writing: {0}", ex);
+                ExploredAreasIds = [];
+            }
+            try
+            {
+                if (tree.HasAttribute("HasWrittenData"))
+                {
+                    var hasWrittenDataStr = tree.GetString("HasWrittenData");
+                    HasWrittenData = hasWrittenDataStr != null
+                        ? JsonUtil.FromString<bool>(hasWrittenDataStr)
+                        : false;
+                }
+                else
+                {
+                    IsWriting = false;
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize has written data: {0}", ex);
                 ExploredAreasIds = [];
             }
         }

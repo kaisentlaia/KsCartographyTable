@@ -89,11 +89,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     {
                         (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY));
                     }
-                    return true;
+                    return false;
                 }
                 if (api.Side == EnumAppSide.Client)
                 {
                     (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
+                    beTable.SetWiping(true);
                 }
                 return true;
             }
@@ -106,7 +107,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (new[] { CartographyAction.None, CartographyAction.PonderMap }.Contains(currentAction))
+            if (currentAction == CartographyAction.None)
+            {
+                return false;
+            }
+            if (currentAction == CartographyAction.PonderMap)
             {
                 return true;
             }
@@ -118,6 +123,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 if (secondsUsed >= 3 && !beTable.Map.Empty)
                 {
                     beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                    beTable.SetWiping(false);
+                }
+                else if (api.Side == EnumAppSide.Client)
+                {
+                    beTable.SpawnWipingParticles(world);
                 }
                 return true;
             }
@@ -138,6 +148,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 if (secondsUsed >= 3 && !beTable.Map.Empty)
                 {
                     beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                    beTable.SetWiping(false);
                 }
 
                 // TODO stop looping scraping sound
@@ -197,6 +208,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override WorldInteraction[] GetPlacedBlockInteractionHelp(IWorldAccessor world, BlockSelection selection, IPlayer forPlayer)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, selection.Position);
+            if (beTable == null)
+            {
+                return base.GetPlacedBlockInteractionHelp(world, selection, forPlayer);
+            }
             return InteractionHelpProvider.GetHelpText(world, selection.SelectionBoxIndex, Empty, beTable.Map.Empty).Append(base.GetPlacedBlockInteractionHelp(world, selection, forPlayer));
         }
         

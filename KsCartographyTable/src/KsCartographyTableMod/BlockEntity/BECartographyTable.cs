@@ -15,7 +15,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
-        EnumCartographyTableCloseSoundTypes finalSoundType = EnumCartographyTableCloseSoundTypes.None;
         static SimpleParticleProperties InkParticles;
         static SimpleParticleProperties PaperDustParticles;
         protected ILoadedSound ambientSound;
@@ -24,7 +23,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
         public CartographyMap Map;
-        public bool HasAnythingToWrite;
 
         public enum EnumCartographyTableCloseSoundTypes
         {
@@ -143,10 +141,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override void ToTreeAttributes(ITreeAttribute tree)
         {
             base.ToTreeAttributes(tree);
-            if (Map != null)
-            {
-                Map.Serialize(tree);
-            }
+            Map?.Serialize(tree);
         }
 
         public override void FromTreeAttributes(ITreeAttribute tree, IWorldAccessor worldForResolving)
@@ -183,36 +178,20 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MarkDirty();
         }
 
-        internal void UpdateFinalSoundType(EnumCartographyTableCloseSoundTypes soundType)
-        {
-            if (Api.Side == EnumAppSide.Server)
-            {
-                finalSoundType = soundType;
-                MarkDirty();
-            }
-        }
-
         internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && CoreClientAPI != null)
+            if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
             {
-                bool uploadStarted = KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel);
-                if (uploadStarted) {
-                    StartSoundAndParticles();
-                }
-                return uploadStarted;
+                return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel, this);
             }
             if (action == CartographyAction.DownloadMap)
             {
-                if (CoreServerAPI != null)
+                if (Side == EnumAppSide.Server)
                 {
-                    bool downloadStarted = KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel);
-                    return downloadStarted;
+                    return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel, this);
                 }
                 else
                 {
-                    // sound needs to happen client side
-                    StartSoundAndParticles();
                     return true;
                 }
             }
@@ -221,57 +200,148 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnCartographySessionStep(CartographyAction action, float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            if (action == CartographyAction.UploadMap)
             {
-                if ((int)(secondsUsed * 20) % 4 == 0)
+                if (Side == EnumAppSide.Client)
                 {
-                    SpawnMoreParticles(world);
+                    if ((int)(secondsUsed * 20) % 4 == 0)
+                    {
+                        SpawnWritingParticles(world);
+                    }
+                    if (!Map.IsWriting)
+                    {
+                        UpdateWritingSoundState(false);
+                    }
+                    KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
                 }
-                return KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
+                // always return true even when the session is complete to keep the interaction going until stopped by the player
+                return true;
             }
             if (action == CartographyAction.DownloadMap)
             {
-                if (CoreServerAPI != null)
+                if (Side == EnumAppSide.Server)
                 {
-                    blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position); 
-                    return KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, blockSel.Block, this);
+                    KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, world.BlockAccessor.GetBlock(blockSel.Position), this);
                 }
                 else
                 {
                     if ((int)(secondsUsed * 20) % 4 == 0)
                     {
-                        SpawnMoreParticles(world);
+                        SpawnWritingParticles(world);
                     }
-                    return true;
                 }
+                // always return true even when the session is complete to keep the interaction going until stopped by the player
+                return true;
             }
             return false;
         }
 
         internal void OnCartographySessionStop(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && Api.Side == EnumAppSide.Client)
+            if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
             {
-                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block);
+                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block, this);
+                if (!Map.IsWriting)
+                {
+                    UpdateWritingSoundState(false);
+                }
             }
-            if (action == CartographyAction.DownloadMap)
+            if (action == CartographyAction.DownloadMap && Side == EnumAppSide.Server)
             {
+                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, world.BlockAccessor.GetBlock(blockSel.Position), this);
+            }
+            if (action == CartographyAction.DownloadMap && Side == EnumAppSide.Client)
+            {
+                if (!Map.IsWriting)
+                {
+                    UpdateWritingSoundState(false);
+                }
+            }
+        }
+
+        public override void OnReceivedServerPacket(int packetid, byte[] data)
+        {
+            Api.Logger.Notification($"OnReceivedServerPacket {data} {Side}");
+            base.OnReceivedServerPacket(packetid, data);
+        }
+        public override void OnReceivedClientPacket(IPlayer fromPlayer, int packetid, byte[] data)
+        {
+            Api.Logger.Notification($"OnReceivedClientPacket {data} {Side}");
+            base.OnReceivedClientPacket(fromPlayer, packetid, data);
+        }
+
+        public void SetWriting(bool writing)
+        {
+            bool nowWriting = writing;
+
+            if (nowWriting != Map.IsWriting)
+            {
+                Api.Logger.Notification($"SetWriting {writing} {Side}");
+                UpdateWritingSoundState(nowWriting);
+
+                Map.IsWriting = nowWriting;
+
                 if (Api.Side == EnumAppSide.Server)
                 {
-                    KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(world, byPlayer, world.BlockAccessor.GetBlock(blockSel.Position));
-                }               
+                    MarkDirty();
+                }
             }
-            StopSoundAndParticles(EnumCartographyTableCloseSoundTypes.Unknown);
         }
-        public void StartSoundAndParticles()
+
+        bool beforeWiping;
+        public void SetWiping(bool wiping)
         {
-            if (ambientSound == null && Api?.Side == EnumAppSide.Client)
+            bool nowWiping = wiping;
+
+            if (nowWiping != beforeWiping)
             {
-                HasAnythingToWrite = true;
+                UpdateWipingSoundState(nowWiping);
+
+                beforeWiping = nowWiping;
+
+                if (Api.Side == EnumAppSide.Server)
+                {
+                    MarkDirty();
+                }
+            }
+        }
+
+        public void SetWritten(bool written)
+        {
+            Map.HasWrittenData = written;
+            Api.Logger.Notification($"SetWritten {written} {Side}");
+
+            if (Api.Side == EnumAppSide.Server)
+            {
+                MarkDirty();
+            }
+        }
+
+        private void UpdateWritingSoundState(bool nowWriting)
+        {
+            if (nowWriting) {
+                StartWritingSoundAndParticles();
+                return;
+            }
+
+            Api.Logger.Notification($"UpdateWritingSoundState data sent {Map.HasWrittenData} {Side}");
+            StopWritingSoundAndParticles(Map.HasWrittenData ? EnumCartographyTableCloseSoundTypes.SomethingWritten : EnumCartographyTableCloseSoundTypes.NothingWritten);
+        }
+
+        private void UpdateWipingSoundState(bool nowWiping)
+        {
+            if (nowWiping) StartWipingSoundAndParticles();
+            else StopWipingSoundAndParticles();
+        }
+
+        private void StartWritingSoundAndParticles()
+        {
+            if (ambientSound == null && Side == EnumAppSide.Client)
+            {
                 // TODO bugfix no sound on download sessions (server side)
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
-                    Location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting.ogg"),
+                    Location = new AssetLocation(Block is not BlockAdvancedCartographyTable ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting"),
                     ShouldLoop = true,
                     Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                     DisposeOnFinish = false,
@@ -281,14 +351,32 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 ambientSound.Start();
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = true;
-
-                MarkDirty();
             }
         }
 
-        private void SpawnMoreParticles(IWorldAccessor world)
+        private void StartWipingSoundAndParticles()
         {
-            if (SpawnParticles)
+            if (ambientSound == null && Side == EnumAppSide.Client)
+            {
+                // TODO bugfix no sound on download sessions (server side)
+                ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
+                {
+                    Location = new AssetLocation("game:sounds/player/scrape"),
+                    ShouldLoop = true,
+                    Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                    DisposeOnFinish = false,
+                    Volume = 1f
+                });
+
+                ambientSound.Start();
+                // TODO fix particles size and collision with book before reenabling them
+                // SpawnParticles = true;
+            }
+        }
+
+        private void SpawnWritingParticles(IWorldAccessor world)
+        {
+            if (SpawnParticles && Side == EnumAppSide.Client)
             {
                 ItemStack inkColorStack = ItemDetectorService.GetItemStacks(world, "charcoal")[0];
                 InkParticles.Color = InkParticles.Color = inkColorStack.Collectible.GetRandomColor(Api as ICoreClientAPI, inkColorStack);
@@ -312,56 +400,86 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                     PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                 }
-                Api.World.SpawnParticles(InkParticles);
-                Api.World.SpawnParticles(PaperDustParticles);
+                world.SpawnParticles(InkParticles);
+                world.SpawnParticles(PaperDustParticles);
             }
         }
 
-        public void StopSoundAndParticles(EnumCartographyTableCloseSoundTypes soundType)
+        public void SpawnWipingParticles(IWorldAccessor world)
+        {
+            if (SpawnParticles && Side == EnumAppSide.Client)
+            {
+                PaperDustParticles.AddQuantity = 1;
+                PaperDustParticles.MinQuantity = 2;
+
+                if (Block is not BlockAdvancedCartographyTable)
+                {
+                    InkParticles.MinPos.Set(Pos.X - 1 / 32f , Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 1 / 32f, Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
+                }
+                else
+                {
+                    InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                    PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
+                }
+                world.SpawnParticles(PaperDustParticles);
+            }
+        }
+        public void StopWipingSoundAndParticles()
         {
             if (ambientSound != null)
             {
-                HasAnythingToWrite = false;
                 ambientSound.Stop();
                 ambientSound.Dispose();
                 ambientSound = null;
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = false;
-                if (Api.Side == EnumAppSide.Client)
+            }
+        }
+
+        public void StopWritingSoundAndParticles(EnumCartographyTableCloseSoundTypes soundType)
+        {
+            if (ambientSound != null)
+            {
+                ambientSound.Stop();
+                ambientSound.Dispose();
+                ambientSound = null;
+                // TODO fix particles size and collision with book before reenabling them
+                // SpawnParticles = false;
+                AssetLocation location = null;
+                bool IsSimpleCartographyTable = Block is not BlockAdvancedCartographyTable;
+                if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
                 {
-                    AssetLocation location = null;
-                    if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
-                    {
-                        location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
-                    }
-                    else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten || finalSoundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
-                    {                        
-                        location = new AssetLocation(CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
-                    }
-                    else if (soundType != EnumCartographyTableCloseSoundTypes.None || finalSoundType != EnumCartographyTableCloseSoundTypes.None)
-                    {
-                        // fallback
-                        location = new AssetLocation("game:sounds/held/bookclose1");
-                    }
+                    Api.Logger.Notification($"playing map close sound (nothing written) {Side}");
+                    location = new AssetLocation(IsSimpleCartographyTable ? "game:sounds/held/bookturn1" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
+                }
+                else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
+                {
+                    Api.Logger.Notification($"playing {(IsSimpleCartographyTable ? "written sound":"written and close sound")} {Side}");            
+                    location = new AssetLocation(IsSimpleCartographyTable ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
+                }
 
-                    if (location != null)
+                if (location != null)
+                {
+                    // One last sound to confirm session is complete, for when the session doesn't last long enough and the sound doesn't have enough time to play
+                    ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                     {
-                        // One last sound to confirm session is complete, for when the session doesn't last long enough so the sound doesn't really play
-                        ILoadedSound finalAmbientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
-                        {
-                            Location = location,
-                            ShouldLoop = false,
-                            Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
-                            DisposeOnFinish = true,
-                            Volume = 1f
-                        });
+                        Location = location,
+                        ShouldLoop = false,
+                        Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
+                        DisposeOnFinish = true,
+                        Volume = 1f
+                    });
 
-                        finalAmbientSound.Start();
+                    finalAmbientSound.Start();
 
-                        finalSoundType = EnumCartographyTableCloseSoundTypes.None;
+                    Map.HasWrittenData = false;
+
+                    if (Side == EnumAppSide.Server)
+                    {
+                        MarkDirty();
                     }
                 }
-                MarkDirty();
             }
         }
     }

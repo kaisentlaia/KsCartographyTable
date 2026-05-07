@@ -132,7 +132,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE));
             }
-            beCartographyTable.StopSoundAndParticles(!mapUpdated && !waypointsUpdated ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
+            beCartographyTable.StopWritingSoundAndParticles(!mapUpdated && !waypointsUpdated ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
             if (!mapUpdated && !waypointsUpdated)
             {
                 return;
@@ -169,7 +169,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);
         }
 
-        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable blockEntity)
         {
             if (blockSel.Block == null)
             {
@@ -186,6 +186,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI.Logger.Notification($"MAP starting new session");
             MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
             activeSessions.Add(sessionId, session);
+            blockEntity.SetWriting(true);
             session.SendFirstBatch();
             return true; 
         }
@@ -202,8 +203,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             MapTransferSession session = activeSessions.Get(sessionId);
 
             if (session.IsComplete)
-            {
-                blockEntity.StopSoundAndParticles(session.HasSentData() ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
+            {                                          
                 return true; // Keep interaction alive, player still holding button
             }
 
@@ -211,13 +211,15 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             return true; // Always return true while player holds button
         }
 
-        internal void EndCartographyUploadSession(IPlayer byPlayer, Block block)
+
+        internal void EndCartographyUploadSession(IPlayer byPlayer, Block block,  BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
             if (activeSessions.ContainsKey(sessionId))
             {
                 MapTransferSession session = activeSessions.Get(sessionId);
+                blockEntity.SetWriting(false);
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }

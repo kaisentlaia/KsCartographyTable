@@ -8,14 +8,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     {
         public override string GetHeldTpHitAnimation(ItemSlot slot, Entity byEntity)
         {
-            return getMapWriteAnim(byEntity) ?? base.GetHeldTpHitAnimation(slot, byEntity);
+            return GetMapWriteAnim(byEntity) ?? base.GetHeldTpHitAnimation(slot, byEntity);
         }
         public override string GetHeldTpUseAnimation(ItemSlot activeHotbarSlot, Entity forEntity)
         {
-            return getMapWriteAnim(forEntity) ?? base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity);
+            return GetMapWriteAnim(forEntity) ?? base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity);
         }
 
-        public string getMapWriteAnim(Entity byEntity)
+        public string GetMapWriteAnim(Entity byEntity)
         {
             var plr = byEntity as EntityPlayer;
             var pos = plr?.BlockSelection?.Position;
@@ -23,7 +23,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 Block block = api.World.BlockAccessor.GetBlock(pos);
                 BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(pos);
-                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).HasAnythingToWrite)
+                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.HasWrittenData)
                 {
                     return "clayform";
                 }

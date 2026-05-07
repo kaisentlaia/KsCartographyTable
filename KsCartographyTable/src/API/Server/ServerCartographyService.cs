@@ -92,12 +92,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             Block table = CoreServerAPI.World.BlockAccessor.GetBlock(packet.BlockPos);
             BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
             ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
-            if (table is BlockAdvancedCartographyTable)
+            beCartographyTable.SetWriting(true);
+            if (table is not BlockCartographyTable)
             {
                 tableMapManager.UpdateMap(fromPlayer, packet, mapDB);
             }
 
-            if (table is BlockAdvancedCartographyTable)
+            if (table is not BlockCartographyTable)
             {   
                 beCartographyTable.UpdateMapExploredAreasIds(mapDB.GetAllMapPiecesIds());
             }
@@ -111,7 +112,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             uploadedChunks[fromPlayer.PlayerUID] = 0;
             WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
             
-            if (km2 == 0 && table is BlockAdvancedCartographyTable)
+            if (km2 == 0 && table is not BlockCartographyTable)
             {
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE), EnumChatType.Notification);
             }  
@@ -123,19 +124,21 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             // BUG UpdateFinalSoundType gets called too late, once the sound has already stopped. We will probably need to send a packet instead and stop the interaction sound client side when such packet is received
             if (km2 == 0 && !waypointResult.Synced)
             {
-
-                beCartographyTable.UpdateFinalSoundType(BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten);                    
-                beCartographyTable.MarkDirty();
+                CoreServerAPI.Logger.Notification("Setting written to false and writing to false");
+                beCartographyTable.SetWritten(false);
+                beCartographyTable.SetWriting(false);
                 return;
             }
-            beCartographyTable.UpdateFinalSoundType(BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);                    
-            beCartographyTable.MarkDirty();
-            if (km2 > 0 && table is BlockAdvancedCartographyTable)
+            if (km2 > 0 && table is not BlockCartographyTable)
             {
+                CoreServerAPI.Logger.Notification("Setting written to true");
+                beCartographyTable.SetWritten(true);
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
             }
             if (waypointResult.Synced)
             {
+                CoreServerAPI.Logger.Notification("Setting written to true");
+                beCartographyTable.SetWritten(true);
                 if (waypointResult.Added > 0)
                 {
                     CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_ADDED, waypointResult.Added), EnumChatType.Notification);
@@ -148,11 +151,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 {
                     CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted), EnumChatType.Notification);
                 }
-                if (waypointResult.Rejected > 0)
-                {
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
-                }
             }
+            if (waypointResult.Rejected > 0)
+            {
+                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
+                // TODO display error "You need to update your map"
+            }
+            CoreServerAPI.Logger.Notification("Setting writing to false");
+            beCartographyTable.SetWriting(false);
             beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());         
 		}
 
@@ -175,8 +181,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			if (hadData)
 			{
 				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED), EnumChatType.Notification);
-
-				byPlayer.Entity.World.PlaySoundAt(new AssetLocation("game:sounds/tool/hidescrape1"), byPlayer);
 			}
 			else
 			{
@@ -236,7 +240,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             });
         }
 
-        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel)
+        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel, BlockEntityCartographyTable beCartographyTable)
         {
             blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position);            
             string sessionId = blockSel.Block.Id.ToString() + forPlayer.PlayerUID;
@@ -244,6 +248,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             {
                 return false;
             }
+            beCartographyTable.SetWriting(true);
             CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.SESSION_STARTED), EnumChatType.Notification);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
@@ -272,7 +277,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (session.IsComplete)
             {
-                beCartographyTable.UpdateFinalSoundType(session.HasSentData() ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
+                beCartographyTable.SetWritten(session.HasSentData());
+                beCartographyTable.SetWriting(false);
                 return true; // Keep interaction alive, player still holding button
             }
 
@@ -280,13 +286,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             return true; // Always return true while player holds button
         }
 
-        internal void EndCartographyDownloadSession(IWorldAccessor world, IPlayer byPlayer, Block block)
+        internal void EndCartographyDownloadSession(IPlayer byPlayer, Block block, BlockEntityCartographyTable beCartographyTable)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
             if (activeSessions.ContainsKey(sessionId))
             {
                 MapTransferSession session = activeSessions.Get(sessionId);
+                beCartographyTable.SetWriting(false);
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }
