@@ -21,8 +21,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             var pos = plr?.BlockSelection?.Position;
             if (pos != null && (plr.Controls.HandUse != EnumHandInteract.None || plr.Controls.RightMouseDown))
             {
-                Block block = api.World.BlockAccessor.GetBlock(pos);
-                BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(pos);
+                Block selectedBlock = api.World.BlockAccessor.GetBlock(pos);
+                Block block = selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Block : selectedBlock;
+                BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Position : pos);
                 if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.HasWrittenData)
                 {
                     return "clayform";
@@ -36,5 +37,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (blockSel == null) return;
             OnHeldAttackStart(slot, byEntity, blockSel, entitySel, ref handling);
         }
+
+        public override bool OnHeldInteractStep(float secondsUsed, ItemSlot slot, EntityAgent byEntity, BlockSelection blockSel, EntitySelection entitySel)
+        {
+            if (blockSel == null) return false;
+            return OnHeldAttackStep(secondsUsed, slot, byEntity, blockSel, entitySel);
+        }
+        
     }
 }

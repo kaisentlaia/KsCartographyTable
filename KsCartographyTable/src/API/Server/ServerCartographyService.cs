@@ -233,6 +233,20 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             });
         }
 
+        internal bool HasCartographyDownloadSession(IPlayer byPlayer, Block block)
+        {
+            if (block == null)
+            {
+                return false;
+            }
+            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+            if (activeSessions.ContainsKey(sessionId))
+            {
+                return true;
+            }
+            return false;
+        }
+
         internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, Block block, BlockPos blockPos, BlockEntityCartographyTable beCartographyTable)
         {
             string sessionId = block.Id.ToString() + forPlayer.PlayerUID;

@@ -190,7 +190,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             MarkDirty();
         }
 
-        internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        internal bool OnCartographySessionStart(CartographyAction action)
         {
             if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
             {
@@ -198,14 +198,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (action == CartographyAction.DownloadMap)
             {
-                if (Side == EnumAppSide.Server)
-                {
-                    return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, Block, blockSel.Position, this);
-                }
-                else
-                {
-                    return true;
-                }
+                return true;
             }
             return false;
         }
@@ -221,15 +214,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                         SpawnWritingParticles(world);
                     }
                     bool hasSession = KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, Block);
-                    if (!hasSession && (int)(secondsUsed * 20) % 0.5 == 0)
+                    if (!hasSession && secondsUsed > 0.25)
                     {
                         KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Position, Block, this);
                     }
-                    if (!Map.IsWriting && hasSession && (int)(secondsUsed * 20) % 1 == 0)
+                    else if (hasSession)
+                    {                        
+                        KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, Block);
+                    }
+                    if (!Map.IsWriting && hasSession)
                     {
                         UpdateWritingSoundState(false);
                     }
-                    KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, Block);
                 }
                 // always return true even when the session is complete to keep the interaction going until stopped by the player
                 return true;
@@ -238,7 +234,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 if (Side == EnumAppSide.Server)
                 {
-                    KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, Block, this);
+                    bool hasSession = KsCartographyTableModSystem.ServerCartographyService.HasCartographyDownloadSession(byPlayer, Block);
+                    if (!hasSession && secondsUsed > 0.25)
+                    {
+                        KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action,  world, byPlayer, Block, blockSel.Position, this);
+                    }
+                    else if (hasSession)
+                    {
+                        KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, Block, this);
+                    }
                 }
                 else
                 {
@@ -469,7 +473,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
                 {
                     Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} playing {(!IsAdvanced ? "written sound":"written and close sound")} {Side}");            
-                    location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
+                    location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
                 }
 
                 if (location != null)

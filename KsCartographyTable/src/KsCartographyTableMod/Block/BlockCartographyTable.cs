@@ -100,7 +100,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (currentAction != CartographyAction.PonderMap)
             {
-                return beTable.OnCartographySessionStart(currentAction, world, byPlayer, blockSel);
+                return beTable.OnCartographySessionStart(currentAction);
             }
             return true;
         }
@@ -147,10 +147,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 if (secondsUsed >= 3 && !beTable.Map.Empty)
                 {
                     beTable.OnWipeTableMap(byPlayer);
-                    beTable.SetWiping(false);
                 }
 
-                // TODO stop looping scraping sound
+                beTable.SetWiping(false);
                 currentAction = CartographyAction.None;
                 return;
             }

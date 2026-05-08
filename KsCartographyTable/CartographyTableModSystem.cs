@@ -57,7 +57,6 @@ public class KsCartographyTableModSystem : ModSystem
         ServerCartographyService = new ServerCartographyService(api);
 
         // TODO add handbook entry
-        // TODO send a packet to the server
         api.ChatCommands.Create("wipewaypoints")
         .WithDescription("Wipes all the waypoints")
         .RequiresPrivilege(Privilege.root)
