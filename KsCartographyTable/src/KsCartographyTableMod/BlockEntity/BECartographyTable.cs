@@ -24,6 +24,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public EnumAppSide Side;
         public CartographyMap Map;
 
+        public bool IsAdvanced
+        {
+            get
+            {
+                return Block is BlockAdvancedCartographyTable || Block is BlockAdvancedCartographyTablePart;
+            }
+        }
+
         public enum EnumCartographyTableCloseSoundTypes
         {
             NothingWritten,
@@ -106,16 +114,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        internal bool OnWipeTableMap(IPlayer byPlayer, BlockPos blockPos)
+        internal bool OnWipeTableMap(IPlayer byPlayer)
         {
             EnsureMap();
-            if (CoreServerAPI != null)
+            if (Side == EnumAppSide.Server)
             {
-                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, blockPos);
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap server");
+                KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, this);
             }
 
-            if (CoreClientAPI != null)
+            if (Side == EnumAppSide.Client)
             {
+                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap client");
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
             }
 
@@ -126,7 +136,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void GetBlockInfo(IPlayer forPlayer, StringBuilder dsc)
         {
-            if (Block is not BlockAdvancedCartographyTable && Map != null && Map.WaypointCount > 0)
+            if (!IsAdvanced && Map != null && Map.WaypointCount > 0)
             {
                 dsc.AppendLine(Lang.Get(CartographyTableLangCodes.GUI_TABLE_WAYPOINTS, Map.WaypointCount));
             } else if (Block is BlockAdvancedCartographyTable && Map != null && (Map.WaypointCount > 0 || Map.ExploredAreasIds.Count > 0)) {
@@ -155,6 +165,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             EnsureMap();
             Map.ExploredAreasIds = [.. piecesIds.Select(pieceId => pieceId.ToChunkIndex())];
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMapExploredAreasIds {Map.ExploredAreasIds.Count}");
             MarkDirty();
         }
 
@@ -162,6 +173,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             EnsureMap();
             Map.WaypointCount = waypointCount;
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMapWaypointCount {Map.WaypointCount}");
             MarkDirty();
         }
 
@@ -182,13 +194,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
             {
-                return KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel, this);
+                return true;
             }
             if (action == CartographyAction.DownloadMap)
             {
                 if (Side == EnumAppSide.Server)
                 {
-                    return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, blockSel, this);
+                    return KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, Block, blockSel.Position, this);
                 }
                 else
                 {
@@ -208,11 +220,16 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     {
                         SpawnWritingParticles(world);
                     }
-                    if (!Map.IsWriting)
+                    bool hasSession = KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, Block);
+                    if (!hasSession && (int)(secondsUsed * 20) % 0.5 == 0)
+                    {
+                        KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Position, Block, this);
+                    }
+                    if (!Map.IsWriting && hasSession && (int)(secondsUsed * 20) % 1 == 0)
                     {
                         UpdateWritingSoundState(false);
                     }
-                    KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, blockSel.Block, this);
+                    KsCartographyTableModSystem.ClientCartographyService.ContinueCartographyUploadSession(byPlayer, secondsUsed, Block);
                 }
                 // always return true even when the session is complete to keep the interaction going until stopped by the player
                 return true;
@@ -221,7 +238,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 if (Side == EnumAppSide.Server)
                 {
-                    KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, world.BlockAccessor.GetBlock(blockSel.Position), this);
+                    KsCartographyTableModSystem.ServerCartographyService.ContinueCartographyDownloadSession(byPlayer, secondsUsed, Block, this);
                 }
                 else
                 {
@@ -240,7 +257,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
             {
-                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockSel.Block, this);
+                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, Block, this);
                 if (!Map.IsWriting)
                 {
                     UpdateWritingSoundState(false);
@@ -261,12 +278,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override void OnReceivedServerPacket(int packetid, byte[] data)
         {
-            Api.Logger.Notification($"OnReceivedServerPacket {data} {Side}");
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnReceivedServerPacket {data} {Side}");
             base.OnReceivedServerPacket(packetid, data);
         }
         public override void OnReceivedClientPacket(IPlayer fromPlayer, int packetid, byte[] data)
         {
-            Api.Logger.Notification($"OnReceivedClientPacket {data} {Side}");
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnReceivedClientPacket {data} {Side}");
             base.OnReceivedClientPacket(fromPlayer, packetid, data);
         }
 
@@ -276,7 +293,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             if (nowWriting != Map.IsWriting)
             {
-                Api.Logger.Notification($"SetWriting {writing} {Side}");
+                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetWriting {writing} {Side}");
                 UpdateWritingSoundState(nowWriting);
 
                 Map.IsWriting = nowWriting;
@@ -309,7 +326,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public void SetWritten(bool written)
         {
             Map.HasWrittenData = written;
-            Api.Logger.Notification($"SetWritten {written} {Side}");
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetWritten {written} {Side}");
 
             if (Api.Side == EnumAppSide.Server)
             {
@@ -324,7 +341,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
 
-            Api.Logger.Notification($"UpdateWritingSoundState data sent {Map.HasWrittenData} {Side}");
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateWritingSoundState data sent {Map.HasWrittenData} {Side}");
             StopWritingSoundAndParticles(Map.HasWrittenData ? EnumCartographyTableCloseSoundTypes.SomethingWritten : EnumCartographyTableCloseSoundTypes.NothingWritten);
         }
 
@@ -341,7 +358,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // TODO bugfix no sound on download sessions (server side)
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
-                    Location = new AssetLocation(Block is not BlockAdvancedCartographyTable ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting"),
+                    Location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting"),
                     ShouldLoop = true,
                     Position = Pos.ToVec3f().Add(0.5f, 0.25f, 0.5f),
                     DisposeOnFinish = false,
@@ -390,9 +407,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 PaperDustParticles.AddQuantity = 1;
                 PaperDustParticles.MinQuantity = 2;
 
-                if (Block is not BlockAdvancedCartographyTable)
+                if (!IsAdvanced)
                 {
-                    InkParticles.MinPos.Set(Pos.X - 1 / 32f , Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
                     PaperDustParticles.MinPos.Set(Pos.X - 1 / 32f, Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
                 }
                 else
@@ -412,14 +428,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 PaperDustParticles.AddQuantity = 1;
                 PaperDustParticles.MinQuantity = 2;
 
-                if (Block is not BlockAdvancedCartographyTable)
+                if (!IsAdvanced)
                 {
-                    InkParticles.MinPos.Set(Pos.X - 1 / 32f , Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
                     PaperDustParticles.MinPos.Set(Pos.X - 1 / 32f, Pos.Y + 16 / 16f, Pos.Z - 1 / 32f);
                 }
                 else
                 {
-                    InkParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                     PaperDustParticles.MinPos.Set(Pos.X - 10 / 16f, Pos.Y + 18 / 16f, Pos.Z - 1 / 32f);
                 }
                 world.SpawnParticles(PaperDustParticles);
@@ -447,16 +461,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 // TODO fix particles size and collision with book before reenabling them
                 // SpawnParticles = false;
                 AssetLocation location = null;
-                bool IsSimpleCartographyTable = Block is not BlockAdvancedCartographyTable;
                 if (soundType == EnumCartographyTableCloseSoundTypes.NothingWritten)
                 {
-                    Api.Logger.Notification($"playing map close sound (nothing written) {Side}");
-                    location = new AssetLocation(IsSimpleCartographyTable ? "game:sounds/held/bookturn1" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
+                    Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} playing map close sound (nothing written) {Side}");
+                    location = new AssetLocation(!IsAdvanced ? "game:sounds/held/bookturn1" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapclose");
                 }
                 else if (soundType == EnumCartographyTableCloseSoundTypes.SomethingWritten)
                 {
-                    Api.Logger.Notification($"playing {(IsSimpleCartographyTable ? "written sound":"written and close sound")} {Side}");            
-                    location = new AssetLocation(IsSimpleCartographyTable ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
+                    Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} playing {(!IsAdvanced ? "written sound":"written and close sound")} {Side}");            
+                    location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriteandclose");
                 }
 
                 if (location != null)

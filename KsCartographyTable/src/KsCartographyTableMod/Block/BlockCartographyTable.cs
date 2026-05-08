@@ -119,10 +119,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             if (currentAction == CartographyAction.WipeTable)
             {
-                // TODO play looping scraping sound
                 if (secondsUsed >= 3 && !beTable.Map.Empty)
                 {
-                    beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                    beTable.OnWipeTableMap(byPlayer);
                     beTable.SetWiping(false);
                 }
                 else if (api.Side == EnumAppSide.Client)
@@ -147,7 +146,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 if (secondsUsed >= 3 && !beTable.Map.Empty)
                 {
-                    beTable.OnWipeTableMap(byPlayer, blockSel.Position);
+                    beTable.OnWipeTableMap(byPlayer);
                     beTable.SetWiping(false);
                 }
 

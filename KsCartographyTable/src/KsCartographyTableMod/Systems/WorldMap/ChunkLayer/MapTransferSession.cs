@@ -13,7 +13,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     public class MapTransferSession
     {
         public IPlayer Player { get; }
-        public BlockSelection BlockSel { get; }
+        public Block Block { get; }
+        public BlockPos Position { get; }
         public CartographyAction Action { get; }
         public IWorldAccessor World { get; }
         public ICoreAPI Api { get; }
@@ -33,7 +34,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public MapTransferSession(
             IPlayer player,
-            BlockSelection blockSel,
+            Block block,
+            BlockPos position,
             CartographyAction action,
             IWorldAccessor world,
             Dictionary<FastVec2i, MapPieceDB> mapPieces,
@@ -43,7 +45,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         )
         {
             Player = player;
-            BlockSel = blockSel;
+            Block = block;
+            Position = position;
             Action = action;
             World = world;
             Api = api;
@@ -118,8 +121,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             MapSyncPacket packet = new MapSyncPacket(
                 batch,
-                BlockSel.Block,
-                BlockSel.Position
+                Block,
+                Position
             );
             SendPacket(packet);
 
@@ -138,11 +141,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (remainingBatches.Count > 0)
             {
                 var batch = remainingBatches.Dequeue();
-                packet = new MapSyncPacket(batch, BlockSel.Block, BlockSel.Position, true, WaypointSyncResult);
+                packet = new MapSyncPacket(batch, Block, Position, true, WaypointSyncResult);
             }
             else
             {
-                packet = new MapSyncPacket([], BlockSel.Block, BlockSel.Position, true, WaypointSyncResult);
+                packet = new MapSyncPacket([], Block, Position, true, WaypointSyncResult);
             }
             SendPacket(packet);
             IsComplete = true;

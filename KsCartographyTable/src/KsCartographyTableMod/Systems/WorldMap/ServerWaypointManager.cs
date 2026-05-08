@@ -98,8 +98,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				if (string.IsNullOrEmpty(w.Guid))
 				{
 					w.Guid = Guid.NewGuid().ToString();
-					CoreServerAPI.Logger.Notification(
-						$"[kscartographytable] Assigned missing Guid to waypoint '{w.Title}' for {player.PlayerName}");
+					CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Assigned missing Guid to waypoint '{w.Title}' for {player.PlayerName}");
 					changed = true;
 				}
 			}
@@ -240,9 +239,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return new WaypointSyncResult(0, 0, 0, 0);
         }
 
-        internal WaypointSyncResult UpdatePlayerWaypoints(IPlayer forPlayer, BlockPos blockPos, ServerMapDB mapDB)
+        internal WaypointSyncResult UpdatePlayerWaypoints(IPlayer forPlayer, BlockEntityCartographyTable blockEntity, ServerMapDB mapDB)
         {
-            BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
             if (blockEntity != null)
             {
                 // BUG if player A added a waypoint to the table and player B edited it, when player A updates their map a new waypoint gets created, it should modify the existing one instead
@@ -265,7 +263,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     }
                     else if (playerHasIdenticalWaypoint)
                     {
-					    CoreServerAPI.Logger.Notification($"Tracking existing waypoint: {playerIdenticalWaypoint.Guid} {playerIdenticalWaypoint.Title} {playerIdenticalWaypoint.Icon}");
+					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Tracking existing waypoint: {playerIdenticalWaypoint.Guid} {playerIdenticalWaypoint.Title} {playerIdenticalWaypoint.Icon}");
                         // the waypoint is present in the player's waypoint but doesn't exist on the db yet
                         CartographyWaypoint sharedWaypoint = new(playerIdenticalWaypoint)
                         {
@@ -285,7 +283,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                             OwningPlayerUid = forPlayer.PlayerUID,
                             Title = parentWaypoint.Title
                         };
-					    CoreServerAPI.Logger.Notification($"Creating new player waypoint: {newWaypoint.Guid} {newWaypoint.Title} {newWaypoint.Icon}");
+					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Creating new player waypoint: {newWaypoint.Guid} {newWaypoint.Title} {newWaypoint.Icon}");
                         WaypointMapLayer.Waypoints.Add(newWaypoint);
 
                         CartographyWaypoint sharedWaypoint = new(newWaypoint)

@@ -98,6 +98,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             return Parent.Block.OnBlockInteractStart(world, byPlayer, Parent.GetSelection(blockSel));
         }
+        public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            EnsureParent(world, blockSel.Position);
+
+            if (Parent == null || Parent.Block == null || Parent.Position == null) return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+
+            return Parent.Block.OnBlockInteractStep(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
+        }
+        public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        {
+            EnsureParent(world, blockSel.Position);
+
+            if (Parent == null || Parent.Block == null || Parent.Position == null) {
+                base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
+                return;
+            }
+
+            Parent.Block.OnBlockInteractStop(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
+        }
 
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
         {

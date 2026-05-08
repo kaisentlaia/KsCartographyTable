@@ -31,7 +31,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 string mapFolderPath = Path.Combine(GamePaths.DataPath, "ModData", CoreServerAPI.World.SavegameIdentifier, CartographyTableConstants.MOD_ID);
                 GamePaths.EnsurePathExists(mapFolderPath);
                 string mapPath = Path.Combine(mapFolderPath, blockId + ".db");
-                CoreServerAPI.Logger.Notification("Initializing map database at " + mapPath);
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT}Initializing map database at {mapPath}");
 				tableDBConnections.Add(blockId, new ServerMapDB(CoreServerAPI));
                 string error = null;
                 tableDBConnections.Get(blockId).OpenOrCreate(mapPath, ref error, true, true, false);
@@ -89,18 +89,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
             uploadedChunks[fromPlayer.PlayerUID] += packet.Pieces.Count;
 
-            Block table = CoreServerAPI.World.BlockAccessor.GetBlock(packet.BlockPos);
             BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
             ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
             beCartographyTable.SetWriting(true);
-            if (table is not BlockCartographyTable)
+            if (beCartographyTable.IsAdvanced)
             {
                 tableMapManager.UpdateMap(fromPlayer, packet, mapDB);
-            }
-
-            if (table is not BlockCartographyTable)
-            {   
-                beCartographyTable.UpdateMapExploredAreasIds(mapDB.GetAllMapPiecesIds());
             }
 
             if (!packet.IsFinalBatch)
@@ -112,7 +106,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             uploadedChunks[fromPlayer.PlayerUID] = 0;
             WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
             
-            if (km2 == 0 && table is not BlockCartographyTable)
+            if (km2 == 0 && beCartographyTable.IsAdvanced)
             {
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE), EnumChatType.Notification);
             }  
@@ -123,20 +117,20 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (km2 == 0 && !waypointResult.Synced)
             {
-                CoreServerAPI.Logger.Notification("Setting written to false and writing to false");
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to false and writing to false");
                 beCartographyTable.SetWritten(false);
                 beCartographyTable.SetWriting(false);
                 return;
             }
-            if (km2 > 0 && table is not BlockCartographyTable)
+            if (km2 > 0 && beCartographyTable.IsAdvanced)
             {
-                CoreServerAPI.Logger.Notification("Setting written to true");
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
                 beCartographyTable.SetWritten(true);
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
             }
             if (waypointResult.Synced)
             {
-                CoreServerAPI.Logger.Notification("Setting written to true");
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
                 beCartographyTable.SetWritten(true);
                 if (waypointResult.Added > 0)
                 {
@@ -156,15 +150,16 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
                 CoreServerAPI.SendIngameError(fromPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_UPDATE_FIRST));
             }
-            CoreServerAPI.Logger.Notification("Setting writing to false");
+            CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
             beCartographyTable.SetWriting(false);
             beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());         
 		}
 
-		public void WipeTableMap(Block block, IPlayer byPlayer, BlockPos blockPos)
+		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable blockEntity)
 		{
             bool hadData = false;
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+            CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} WipeTableMap blockId {block.Id} has mapDb {mapDB != null}");
 
             if (mapDB != null)
             {
@@ -172,7 +167,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 if (hadData)
                 {
                     mapDB.Wipe();
-                    BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable)CoreServerAPI.World.BlockAccessor.GetBlockEntity(blockPos);
                     blockEntity.UpdateMapWaypointCount(0);
                     blockEntity.UpdateMapExploredAreasIds([]);
                 }
@@ -239,10 +233,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             });
         }
 
-        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, BlockSelection blockSel, BlockEntityCartographyTable beCartographyTable)
+        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, Block block, BlockPos blockPos, BlockEntityCartographyTable beCartographyTable)
         {
-            blockSel.Block = world.BlockAccessor.GetBlock(blockSel.Position);            
-            string sessionId = blockSel.Block.Id.ToString() + forPlayer.PlayerUID;
+            string sessionId = block.Id.ToString() + forPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
                 return false;
@@ -251,13 +244,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.SESSION_STARTED), EnumChatType.Notification);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
-            ServerMapDB mapDB = GetBlockMapDB(blockSel.Block.Id.ToString());
-            if (blockSel.Block is BlockAdvancedCartographyTable)
+            ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
+            if (beCartographyTable.IsAdvanced)
             {
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, blockSel.Position, mapDB);
-            MapTransferSession session = new(forPlayer, blockSel, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
+            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, beCartographyTable, mapDB);
+            MapTransferSession session = new(forPlayer, block, blockPos, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
             return true;

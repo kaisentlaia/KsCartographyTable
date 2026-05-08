@@ -7,6 +7,7 @@ using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
+using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
@@ -115,16 +116,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (!packet.IsFinalBatch) return;
 
-            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos); 
-            Block blockTable = CoreClientAPI.World.BlockAccessor.GetBlock(packet.BlockPos); 
-            
+            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             downloadedChunks[currentPlayer.PlayerUID] = 0;
             bool mapUpdated = km2 > 0;
             bool waypointsUpdated = packet.WaypointSyncResult.Synced;
             // BUG chat messages not appearing on client when server is not local
-            if (!mapUpdated && blockTable is not BlockCartographyTable)
+            if (!mapUpdated && beCartographyTable.IsAdvanced)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE));
             }  
@@ -137,7 +136,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 return;
             }
-            if (mapUpdated && blockTable is not BlockCartographyTable)
+            if (mapUpdated && beCartographyTable.IsAdvanced)
             {
                 CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}"));
             }
@@ -169,29 +168,38 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);
         }
 
-        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable blockEntity)
+        internal bool HasCartographyUploadSession(IPlayer byPlayer, Block block)
         {
-            if (blockSel.Block == null)
+            if (block == null)
             {
                 return false;
             }
-            // BUG exception when interacting with left side of the advanced table
-            string sessionId = blockSel.Block.Id.ToString() + byPlayer.PlayerUID;
+            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
             {
-                CoreClientAPI.Logger.Notification($"MAP session already exists");
+                return true;
+            }
+            return false;
+        }
+
+        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockPos blockPos, Block block, BlockEntityCartographyTable blockEntity)
+        {
+            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+            if (activeSessions.ContainsKey(sessionId))
+            {
+                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} session already exists");
                 return false;
             }
             CoreClientAPI.ShowChatMessage(Lang.Get(CartographyTableLangCodes.SESSION_STARTED));
-            CoreClientAPI.Logger.Notification($"MAP starting new session");
-            MapTransferSession session = new(byPlayer, blockSel, action, world, playerMapManager.GetNewMapPieces(map, blockSel.Block), CoreClientAPI);
+            CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} starting new session");
+            MapTransferSession session = new(byPlayer, block, blockPos, action, world, playerMapManager.GetNewMapPieces(map,  blockEntity), CoreClientAPI);
             activeSessions.Add(sessionId, session);
             blockEntity.SetWriting(true);
             session.SendFirstBatch();
             return true; 
         }
 
-        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable blockEntity)
+        internal bool ContinueCartographyUploadSession(IPlayer byPlayer, float secondsUsed, Block block)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 

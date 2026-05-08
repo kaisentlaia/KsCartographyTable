@@ -8,6 +8,7 @@ using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using System;
 using System.Linq;
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
@@ -320,7 +321,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				createWaypointsCmd.Transaction = sqliteTransaction;
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
-            		coreApi.Logger.Notification($"INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
+            		coreApi.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
 					createWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
 					createWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
 					createWaypointsCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
@@ -344,7 +345,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				updateWaypointsCmd.Transaction = sqliteTransaction;
 				foreach (CartographyWaypoint waypoint in waypoints)
 				{
-            		coreApi.Logger.Notification($"UPDATING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
+            		coreApi.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UPDATING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
 					updateWaypointsCmd.Parameters["@guid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? waypoint.Guid : waypoint.ParentGuid;
 					updateWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
 					updateWaypointsCmd.Parameters["@icon"].Value = waypoint.Icon;
