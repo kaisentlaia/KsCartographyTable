@@ -5,7 +5,7 @@
   "settings": [
     {
       "code": "ImmersiveMode",
-      "name": "Immersive mode",
+      "name": "ImmersiveMode",
       "ingui": "kscartographytable:config-setting-immersivemode-name",
       "comment": "kscartographytable:config-setting-immersivemode-comment",
       "type": "boolean",
