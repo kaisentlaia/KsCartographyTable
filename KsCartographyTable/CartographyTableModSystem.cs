@@ -7,8 +7,19 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
+using System.IO;
+using System;
+using Vintagestory.API.Config;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Common;
+
+/// <summary>
+/// Represents the settings.json file structure.
+/// </summary>
+public class Settings
+{
+    public bool ImmersiveMode { get; set; } = true;
+}
 
 [HarmonyPatch]
 public class KsCartographyTableModSystem : ModSystem
@@ -37,6 +48,8 @@ public class KsCartographyTableModSystem : ModSystem
     public static ClientCartographyService ClientCartographyService;
     public static ModCompatibilityManager ModCompatibilityManager;
 
+    public static Settings Settings { get; private set; }
+
     public override void Start(ICoreAPI api)
     {
         base.Start(api);
@@ -45,7 +58,35 @@ public class KsCartographyTableModSystem : ModSystem
         api.RegisterBlockClass(Mod.Info.ModID + ".cartography-table", typeof(BlockCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
-        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));
+        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));        
+    }
+
+    public static void ReadSettings(ICoreAPI api, string modId)
+    {
+        string settingsPath = Path.Combine(api.GetOrCreateDataPath("ModConfig"), $"{modId}.json");
+        Settings settingsFile = null;
+        if (File.Exists(settingsPath))
+        {
+            try
+            {
+                string json = File.ReadAllText(settingsPath);
+                var ids = JsonUtil.FromString<Settings>(json);
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error($"Failed to load {modId}.json: {ex.Message}. Using defaults.");
+            }
+        }
+
+        // Apply boolean toggles from settings file (or use defaults)
+        if (settingsFile != null)
+        {
+            Settings.ImmersiveMode = settingsFile.ImmersiveMode;
+        } else
+        {        
+            string json = JsonUtil.ToString(Settings);
+            File.WriteAllText(settingsPath, json);
+        }
     }
 
     /// <summary>
@@ -91,6 +132,21 @@ public class KsCartographyTableModSystem : ModSystem
             int index = (int)args.Parsers[0].GetValue();
             IServerPlayer player = args.Caller.Player as IServerPlayer;
             ServerCartographyService.MarkWaypointDeleted(player, index);
+        }
+    }
+
+    public static void ShowChatMessage(ICoreAPI api, IPlayer player, string messageIdentifier, string data = "")
+    {
+        if (Settings.ImmersiveMode)
+        {
+            if (api.Side == EnumAppSide.Client)
+            {
+                (api as ICoreClientAPI).SendChatMessage(Lang.Get(messageIdentifier, data));
+            }
+            else if (api.Side == EnumAppSide.Server)
+            {
+                (api as ICoreServerAPI).SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(messageIdentifier, data), EnumChatType.Notification);
+            }
         }
     }
 

@@ -108,11 +108,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             
             if (km2 == 0 && beCartographyTable.IsAdvanced)
             {
-                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE);
             }  
             if (!waypointResult.Synced)
             {
-                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE);
             }
 
             if (km2 == 0 && !waypointResult.Synced)
@@ -126,7 +126,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
                 beCartographyTable.SetWritten(true);
-                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}"), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE, $"{km2:F1}");
             }
             if (waypointResult.Synced)
             {
@@ -134,20 +134,20 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 beCartographyTable.SetWritten(true);
                 if (waypointResult.Added > 0)
                 {
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_ADDED, waypointResult.Added), EnumChatType.Notification);
+                    KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_ADDED, waypointResult.Added.ToString());
                 }
                 if (waypointResult.Edited > 0)
                 {
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_EDITED, waypointResult.Edited), EnumChatType.Notification);
+                    KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_EDITED, waypointResult.Edited.ToString());
                 }
                 if (waypointResult.Deleted > 0)
                 {
-                    CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted), EnumChatType.Notification);
+                    KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted.ToString());
                 }
             }
             if (waypointResult.Rejected > 0)
             {
-                CoreServerAPI.SendMessage(fromPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected.ToString());
                 CoreServerAPI.SendIngameError(fromPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_UPDATE_FIRST));
             }
             CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
@@ -173,11 +173,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
 			if (hadData)
 			{
-				CoreServerAPI.SendMessage(byPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_WIPED), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_WIPED);
 			}
 			else
 			{
-                CoreServerAPI.SendMessage(null, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY), EnumChatType.Notification);
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY);
 			}
 		}
 
@@ -255,7 +255,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 return false;
             }
             beCartographyTable.SetWriting(true);
-            CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, Lang.Get(CartographyTableLangCodes.SESSION_STARTED), EnumChatType.Notification);
+            KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, forPlayer, CartographyTableLangCodes.SESSION_STARTED);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());

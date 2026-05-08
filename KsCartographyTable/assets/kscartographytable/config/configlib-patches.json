@@ -1,0 +1,16 @@
+{
+  "version": 1,
+  "file": "kscartographytable.json",
+  "patches": {},
+  "settings": [
+    {
+      "code": "ImmersiveMode",
+      "name": "Immersive mode",
+      "ingui": "kscartographytable:config-setting-immersivemode-name",
+      "comment": "kscartographytable:config-setting-immersivemode-comment",
+      "type": "boolean",
+      "default": false,
+      "weight": 0.1
+    }
+  ]
+}
