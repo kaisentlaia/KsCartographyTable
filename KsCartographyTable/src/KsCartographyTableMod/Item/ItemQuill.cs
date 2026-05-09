@@ -24,7 +24,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 Block selectedBlock = api.World.BlockAccessor.GetBlock(pos);
                 Block block = selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Block : selectedBlock;
                 BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Position : pos);
-                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.HasWrittenData)
+                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.IsWriting)
                 {
                     return "clayform";
                 }
