@@ -487,7 +487,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			getMatchingWaypointCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
 			getMatchingWaypointCmd.Parameters["@title"].Value = waypoint.Title;
 			getMatchingWaypointCmd.Parameters["@icon"].Value = waypoint.Icon;
-			getMatchingWaypointCmd.Parameters["@color"].Value = waypoint.Color;
 			getMatchingWaypointCmd.Parameters["@pinned"].Value = waypoint.Pinned;
 			using (var reader = getMatchingWaypointCmd.ExecuteReader())
 			{

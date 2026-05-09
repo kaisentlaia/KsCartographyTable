@@ -215,21 +215,33 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     CartographyWaypoint matching = mapDB.GetMatchingWaypoint(waypoint);
                     if (matching != null)
                     {
+					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Found a matching waypoint in db, creating with parentGuid: {matching.Guid} {matching.Title} {matching.Icon} {matching.Position}");
                         waypoint.ParentGuid = matching.Guid;
                         waypoint.LastUpdated = matching.LastUpdated;
                         existingWaypointsToTrack.Add(waypoint);
                     } 
                     else
                     {
+					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} No matching waypoint in db, creating with parent null: {waypoint.Guid} {waypoint.Title} {waypoint.Icon} {waypoint.Position}");
                         waypointsToCreate.Add(waypoint);
                     }
                 });
                 mapDB.CreateWaypoints(waypointsToCreate);
                 mapDB.CreateWaypoints(existingWaypointsToTrack);
 
-                List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
+                List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated >= playerLastDownload)];
 
-                List<CartographyWaypoint> updatedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated >= playerLastDownload)];
+                rejectedWaypoints.ForEach(rejectedWaypoint =>
+                {
+                    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Rejected waypoint: {rejectedWaypoint.Guid} {rejectedWaypoint.Title} {rejectedWaypoint.Icon} {rejectedWaypoint.Position} last updated {rejectedWaypoint.LastUpdated} vs player's last download {playerLastDownload}");
+                });
+
+                List<CartographyWaypoint> updatedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
+
+                updatedWaypoints.ForEach(updatedWaypoint =>
+                {
+                    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Updated waypoint: {updatedWaypoint.Guid} {updatedWaypoint.Title} {updatedWaypoint.Icon} {updatedWaypoint.Position} last updated {updatedWaypoint.LastUpdated} vs player's last download {playerLastDownload}");
+                });
 
                 mapDB.UpdateWaypoints(updatedWaypoints);
 
@@ -255,7 +267,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<Waypoint> currentPlayerWaypoints = GetPlayerWaypoints(forPlayer as IServerPlayer);
                 newWaypointsForPlayer.ForEach(parentWaypoint =>
                 {
-                    Waypoint playerIdenticalWaypoint = currentPlayerWaypoints.Find(playerWaypoint => playerWaypoint.Color == parentWaypoint.Color && playerWaypoint.Position == parentWaypoint.Position && playerWaypoint.Icon == parentWaypoint.Icon && playerWaypoint.Title == parentWaypoint.Title);
+                    Waypoint playerIdenticalWaypoint = currentPlayerWaypoints.Find(playerWaypoint => playerWaypoint.Position == parentWaypoint.Position && playerWaypoint.Icon == parentWaypoint.Icon && playerWaypoint.Title == parentWaypoint.Title);
                     bool playerHasIdenticalWaypoint = playerIdenticalWaypoint != null;
                     bool waypointTrackedInDb = playerIdenticalWaypoint != null && playerSharedWaypoints.Find(sharedWaypoint => sharedWaypoint.Guid == playerIdenticalWaypoint.Guid) != null;
                     if (waypointTrackedInDb)

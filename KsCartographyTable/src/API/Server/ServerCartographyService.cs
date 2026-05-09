@@ -111,8 +111,16 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE);
             }  
             if (!waypointResult.Synced)
-            {
-                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE);
+            {                
+                if (waypointResult.Rejected > 0)
+                {
+                    KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected.ToString());
+                    CoreServerAPI.SendIngameError(fromPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_UPDATE_FIRST));
+                }
+                else
+                {
+                    KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE);                    
+                }
             }
 
             if (km2 == 0 && !waypointResult.Synced)
@@ -126,7 +134,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
                 beCartographyTable.SetWritten(true);
-                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_UP_TO_DATE, $"{km2:F1}");
+                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}");
             }
             if (waypointResult.Synced)
             {
@@ -144,11 +152,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 {
                     KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted.ToString());
                 }
-            }
-            if (waypointResult.Rejected > 0)
-            {
-                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected.ToString());
-                CoreServerAPI.SendIngameError(fromPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_UPDATE_FIRST));
             }
             CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
             beCartographyTable.SetWriting(false);
