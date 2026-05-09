@@ -102,6 +102,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 return;
             }
 
+            beCartographyTable.SetPlayerSyncToNow(fromPlayer);
+
             double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             uploadedChunks[fromPlayer.PlayerUID] = 0;
             WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
@@ -111,7 +113,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE);
             }  
             if (!waypointResult.Synced)
-            {                
+            {
                 if (waypointResult.Rejected > 0)
                 {
                     KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_REJECTED, waypointResult.Rejected.ToString());
@@ -155,8 +157,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
             CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
             beCartographyTable.SetWriting(false);
-            beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());    
-            beCartographyTable.SetPlayerSyncToNow(fromPlayer);
+            beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
 		}
 
 		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable blockEntity)
