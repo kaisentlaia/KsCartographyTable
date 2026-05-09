@@ -158,7 +158,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             base.FromTreeAttributes(tree, worldForResolving);
             EnsureMap();
+            bool wasWriting = Map.IsWriting;
             Map.Deserialize(tree);
+
+            if (wasWriting != Map.IsWriting && Side == EnumAppSide.Client)
+            {
+                UpdateWritingSoundState(Map.IsWriting);
+            }
         }
         
         public void UpdateMapExploredAreasIds(List<FastVec2i> piecesIds)

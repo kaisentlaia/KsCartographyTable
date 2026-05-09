@@ -178,7 +178,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             catch (Exception ex)
             {                
                 api.Logger.Error("Failed to deserialize is writing: {0}", ex);
-                ExploredAreasIds = [];
+                IsWriting = false;
             }
             try
             {
@@ -191,13 +191,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 }
                 else
                 {
-                    IsWriting = false;
+                    HasWrittenData = false;
                 }
             }
             catch (Exception ex)
             {                
                 api.Logger.Error("Failed to deserialize has written data: {0}", ex);
-                ExploredAreasIds = [];
+                HasWrittenData = false;
             }
         }
 
