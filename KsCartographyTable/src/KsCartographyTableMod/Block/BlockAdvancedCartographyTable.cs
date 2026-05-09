@@ -1,4 +1,3 @@
-using System.Collections.Generic;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
@@ -36,26 +35,32 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
         {
-            // BUG results in not enough space when there's space on the right if there are blocks behind the table
-            // BUG south orientation doesn't detect correctly an occupied right block
-            // Get the position where the companion block would go
-            BlockPos companionPos = GetCompanionPosition(blockSel.Position);
+            // CRITICAL: Don't use Variant["side"] here — it holds the itemstack's default variant,
+            // not the orientation that will be used for placement. Compute from player facing instead.
+            string side = GetPlayerFacingSide(byPlayer);
+            BlockPos companionPos = GetCompanionPosition(blockSel.Position, side);
+            
+            world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} TryPlaceBlock Block position: {blockSel.Position} companion position: {companionPos} side: {side}");
 
-            // Check if companion position is clear
-            if (!world.BlockAccessor.GetBlock(companionPos).IsReplacableBy(this))
-            {
-                failureCode = "notenoughspace"; // Standard VS failure code
-                return false;
-            }
+            Block blockAtMain = world.BlockAccessor.GetBlock(blockSel.Position);
+            Block blockAtCompanion = world.BlockAccessor.GetBlock(companionPos);
 
-            // Check base position too (VS normally does this, but we're overriding)
-            if (!world.BlockAccessor.GetBlock(blockSel.Position).IsReplacableBy(this))
+            // Check main position
+            if (!blockAtMain.IsReplacableBy(this))
             {
+                world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Main position block isn't replaceable");
                 failureCode = "notenoughspace";
                 return false;
             }
 
-            // Both positions clear, proceed with placement
+            // Check companion position
+            if (!blockAtCompanion.IsReplacableBy(this))
+            {
+                world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Companion position block isn't replaceable");
+                failureCode = "notenoughspace";
+                return false;
+            }
+
             return base.TryPlaceBlock(world, byPlayer, itemstack, blockSel, ref failureCode);
         }
 
@@ -86,9 +91,22 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
         }
+
+        private string GetPlayerFacingSide(IPlayer byPlayer)
+        {
+            float yaw = byPlayer.Entity.Pos.Yaw;
+            BlockFacing facing = BlockFacing.HorizontalFromYaw(yaw);
+            return facing.ToString().ToLower();
+        }
+
         private BlockPos GetCompanionPosition(BlockPos pos)
         {
-            string side = Variant["side"];
+            return GetCompanionPosition(pos, Variant["side"]);
+        }
+
+        // Core logic shared by both
+        private BlockPos GetCompanionPosition(BlockPos pos, string side)
+        {
             return side switch
             {
                 "north" => pos.EastCopy(),
