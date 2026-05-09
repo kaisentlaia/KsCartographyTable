@@ -87,13 +87,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 {
                     if (api.Side == EnumAppSide.Client)
                     {
-                        (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY));
+                        KsCartographyTableModSystem.ShowChatMessage(api, byPlayer, Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY));
                     }
                     return false;
                 }
                 if (api.Side == EnumAppSide.Client)
                 {
-                    (api as ICoreClientAPI).ShowChatMessage(Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
+                    KsCartographyTableModSystem.ShowChatMessage(api, byPlayer, Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
                     beTable.SetWiping(true);
                 }
                 return true;

@@ -18,7 +18,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 /// </summary>
 public class Settings
 {
-    public bool ImmersiveMode { get; set; } = true;
+    public bool ImmersiveMode { get; set; } = false;
 }
 
 [HarmonyPatch]
@@ -58,19 +58,21 @@ public class KsCartographyTableModSystem : ModSystem
         api.RegisterBlockClass(Mod.Info.ModID + ".cartography-table", typeof(BlockCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
-        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));        
+        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));
+        ReadSettings(api, Mod.Info.ModID);        
     }
 
     public static void ReadSettings(ICoreAPI api, string modId)
     {
         string settingsPath = Path.Combine(api.GetOrCreateDataPath("ModConfig"), $"{modId}.json");
         Settings settingsFile = null;
+        Settings = new();
         if (File.Exists(settingsPath))
         {
             try
             {
                 string json = File.ReadAllText(settingsPath);
-                var ids = JsonUtil.FromString<Settings>(json);
+                settingsFile = JsonUtil.FromString<Settings>(json);
             }
             catch (Exception ex)
             {
@@ -83,7 +85,8 @@ public class KsCartographyTableModSystem : ModSystem
         {
             Settings.ImmersiveMode = settingsFile.ImmersiveMode;
         } else
-        {        
+        {
+            Settings.ImmersiveMode = false;
             string json = JsonUtil.ToString(Settings);
             File.WriteAllText(settingsPath, json);
         }
@@ -137,7 +140,7 @@ public class KsCartographyTableModSystem : ModSystem
 
     public static void ShowChatMessage(ICoreAPI api, IPlayer player, string messageIdentifier, string data = "")
     {
-        if (Settings.ImmersiveMode)
+        if (!Settings.ImmersiveMode)
         {
             if (api.Side == EnumAppSide.Client)
             {
