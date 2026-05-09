@@ -144,7 +144,7 @@ public class KsCartographyTableModSystem : ModSystem
         {
             if (api.Side == EnumAppSide.Client)
             {
-                (api as ICoreClientAPI).SendChatMessage(Lang.Get(messageIdentifier, data));
+                (api as ICoreClientAPI).ShowChatMessage(Lang.Get(messageIdentifier, data));
             }
             else if (api.Side == EnumAppSide.Server)
             {
