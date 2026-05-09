@@ -123,7 +123,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				getPlayerWaypointsCmd.Prepare();
 
 				getMatchingWaypointCmd = sqliteConn.CreateCommand();
-				getMatchingWaypointCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND parentGuid IS NULL AND title=@title AND position=@position AND icon=@icon AND color=@color AND pinned=@pinned";
+				getMatchingWaypointCmd.CommandText = "SELECT * FROM sharedwaypoints WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND parentGuid IS NULL AND title=@title AND position=@position AND icon=@icon AND pinned=@pinned";
 				getMatchingWaypointCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getMatchingWaypointCmd.Parameters.Add("@position", SqliteType.Text);
 				getMatchingWaypointCmd.Parameters.Add("@title", SqliteType.Text);
@@ -139,7 +139,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				setDeletedWaypointsCmd.Prepare();
 
 				getNewWaypointsForPlayerCmd = sqliteConn.CreateCommand();
-				getNewWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints sw WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND NOT EXISTS ( SELECT 1 FROM sharedwaypoints child WHERE child.parentGuid = sw.guid )";
+				getNewWaypointsForPlayerCmd.CommandText = @"SELECT * FROM sharedwaypoints sw 
+					WHERE parentGuid IS NULL
+					AND owningPlayerUid != @owningPlayerUid
+					AND deleted = 0
+					AND NOT EXISTS (
+						SELECT 1 
+						FROM sharedwaypoints child
+						WHERE child.parentGuid = sw.guid
+						AND child.owningPlayerUid = @owningPlayerUid
+					)";
+				// getNewWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints sw WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND NOT EXISTS ( SELECT 1 FROM sharedwaypoints child WHERE child.parentGuid = sw.guid )";
 				getNewWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getNewWaypointsForPlayerCmd.Prepare();
 
@@ -520,7 +530,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             setDeletedWaypointsCmd.Transaction = sqliteTransaction;
             foreach (CartographyWaypoint waypoint in deletedWaypoints)
             {
-                setDeletedWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
+				setDeletedWaypointsCmd.Parameters["@guid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? waypoint.Guid : waypoint.ParentGuid;
 				setDeletedWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
                 setDeletedWaypointsCmd.ExecuteNonQuery();
             }

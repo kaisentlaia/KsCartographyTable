@@ -186,6 +186,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 List<CartographyWaypoint> newWaypoints = [.. playerCurrentWaypoints.Where(w => playerSharedDbWaypoints.Find(sw => sw.Guid == w.Guid) == null).Select(waypoint => new CartographyWaypoint(waypoint))];
 
                 List<CartographyWaypoint> waypointsToCreate = [];
+                List<CartographyWaypoint> existingWaypointsToTrack = [];
                 List<CartographyWaypoint> waypointsToUpdate = [.. playerSharedDbWaypoints
                     .Select(sharedWaypoint =>
                     {
@@ -216,7 +217,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     {
                         waypoint.ParentGuid = matching.Guid;
                         waypoint.LastUpdated = matching.LastUpdated;
-                        waypointsToUpdate.Add(waypoint);
+                        existingWaypointsToTrack.Add(waypoint);
                     } 
                     else
                     {
@@ -224,6 +225,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     }
                 });
                 mapDB.CreateWaypoints(waypointsToCreate);
+                mapDB.CreateWaypoints(existingWaypointsToTrack);
 
                 List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
 
@@ -231,7 +233,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                 mapDB.UpdateWaypoints(updatedWaypoints);
 
-                List<CartographyWaypoint> deletedWaypoints = mapDB.GetWaypointsToDelete(GetDeletedWaypointsIds(fromPlayer));
+                List<CartographyWaypoint> deletedWaypoints = mapDB.GetWaypointsToDelete(GetDeletedWaypointsIds(fromPlayer));                
                 mapDB.DeleteWaypoints(deletedWaypoints);
 
                 return new WaypointSyncResult(waypointsToCreate.Count, updatedWaypoints.Count, rejectedWaypoints.Count, deletedWaypoints.Count);
@@ -243,7 +245,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (blockEntity != null)
             {
-                // BUG if player A added a waypoint to the table and player B edited it, when player A updates their map a new waypoint gets created, it should modify the existing one instead
                 List<CartographyWaypoint> playerSharedWaypoints = mapDB.GetPlayerSharedWaypoints(forPlayer);
                 List<CartographyWaypoint> newWaypointsForPlayer = mapDB.GetNewWaypointsForPlayer(forPlayer);
                 List<CartographyWaypoint> updatedWaypointsForPlayer = mapDB.GetUpdatedWaypointsForPlayer(forPlayer, blockEntity.GetPlayerLastDownload(forPlayer));
@@ -259,6 +260,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     bool waypointTrackedInDb = playerIdenticalWaypoint != null && playerSharedWaypoints.Find(sharedWaypoint => sharedWaypoint.Guid == playerIdenticalWaypoint.Guid) != null;
                     if (waypointTrackedInDb)
                     {
+					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} New waypoint already exists in db: {parentWaypoint.Guid} {parentWaypoint.Title} {parentWaypoint.Icon}");
 					    CoreServerAPI.Logger.Error($"New waypoint already exists in db: {playerIdenticalWaypoint.Guid} {playerIdenticalWaypoint.Title} {playerIdenticalWaypoint.Icon}");
                     }
                     else if (playerHasIdenticalWaypoint)
@@ -301,14 +303,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 int updatedCount = 0;
                 updatedWaypointsForPlayer.ForEach(waypoint =>
                 {
-                    Waypoint updatedWaypoint = WaypointMapLayer.Waypoints.Find(playerWaypoint => playerWaypoint.Guid == waypoint.Guid);
-                    if (updatedWaypoint.Color != waypoint.Color || updatedWaypoint.Title != waypoint.Title || updatedWaypoint.Icon != waypoint.Icon || updatedWaypoint.Pinned != waypoint.Pinned)
+                    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Updated waypoint to use: {waypoint.Guid} {waypoint.Title} {waypoint.Icon} {waypoint.Color} pinned {waypoint.Pinned}");
+                    Waypoint playerWaypointToUpdate = WaypointMapLayer.Waypoints.Find(playerWaypoint => playerWaypoint.Guid == waypoint.Guid);
+                    if (playerWaypointToUpdate.Color != waypoint.Color || playerWaypointToUpdate.Title != waypoint.Title || playerWaypointToUpdate.Icon != waypoint.Icon || playerWaypointToUpdate.Pinned != waypoint.Pinned)
                     {
-                        updatedWaypoint.Color = waypoint.Color;
-                        updatedWaypoint.Title = waypoint.Title;
-                        updatedWaypoint.Icon = waypoint.Icon;
-                        updatedWaypoint.Pinned = waypoint.Pinned;
-                        updatedCount = 0;
+                        CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Player waypoint to update: {playerWaypointToUpdate.Guid} {playerWaypointToUpdate.Title} {playerWaypointToUpdate.Icon} {playerWaypointToUpdate.Color} pinned {playerWaypointToUpdate.Pinned}");
+                        playerWaypointToUpdate.Color = waypoint.Color;
+                        playerWaypointToUpdate.Title = waypoint.Title;
+                        playerWaypointToUpdate.Icon = waypoint.Icon;
+                        playerWaypointToUpdate.Pinned = waypoint.Pinned;
+                        updatedCount += 1;
+                        
+                        CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Player waypoint updated to: {playerWaypointToUpdate.Guid} {playerWaypointToUpdate.Title} {playerWaypointToUpdate.Icon} {playerWaypointToUpdate.Color} pinned {playerWaypointToUpdate.Pinned}");
                     }
                 });
 
