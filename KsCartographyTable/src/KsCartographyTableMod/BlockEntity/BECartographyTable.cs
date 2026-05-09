@@ -180,13 +180,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal DateTime GetPlayerLastDownload(IPlayer forPlayer)
         {
             EnsureMap();
-            return Map.GetPlayerLastDownload(forPlayer);
+            return Map.GetPlayerLastSync(forPlayer);
         }
 
-        internal void SetPlayerLastDownload(IPlayer player)
+        internal void SetPlayerSyncToNow(IPlayer player)
         {
             EnsureMap();
-            Map.SetPlayerLastDownload(player);
+            Map.SetPlayerLastSync(player);
             MarkDirty();
         }
 

@@ -28,11 +28,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             get { return ExploredAreasIds.Count < 1 && waypointCount < 1; }
         }
-        private Dictionary<string, long> lastPlayerDownloads = [];
-        public Dictionary<string, long> LastPlayerDownloads
+        private Dictionary<string, long> lastPlayerSyncs = [];
+        public Dictionary<string, long> LastPlayerSyncs
         {
-            get { return lastPlayerDownloads; }
-            set { lastPlayerDownloads = value; }
+            get { return lastPlayerSyncs; }
+            set { lastPlayerSyncs = value; }
         }
         private bool isWriting = false;
         public bool IsWriting
@@ -66,12 +66,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             try
             {
-                tree.SetString("LastPlayerDownloads", JsonUtil.ToString(LastPlayerDownloads));
+                tree.SetString("LastPlayerSyncs", JsonUtil.ToString(LastPlayerSyncs));
             }
             catch (Exception ex)
             {
                 api.Logger.Error("Failed to serialize last player updates: {0}", ex);
-                tree.SetString("LastPlayerDownloads", JsonUtil.ToString(new Dictionary<string, int>()));
+                tree.SetString("LastPlayerSyncs", JsonUtil.ToString(new Dictionary<string, int>()));
             }
             try
             {
@@ -125,22 +125,22 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             try
             {
-                if (tree.HasAttribute("LastPlayerDownloads"))
+                if (tree.HasAttribute("LastPlayerSyncs"))
                 {
-                    var lastPlayerDownloads = tree.GetString("LastPlayerDownloads");
-                    LastPlayerDownloads = lastPlayerDownloads != null
-                        ? JsonUtil.FromString<Dictionary<string, long>>(lastPlayerDownloads)
+                    var lastPlayerSyncs = tree.GetString("LastPlayerSyncs");
+                    LastPlayerSyncs = lastPlayerSyncs != null
+                        ? JsonUtil.FromString<Dictionary<string, long>>(lastPlayerSyncs)
                         : [];
                 }
                 else
                 {
-                    LastPlayerDownloads = [];
+                    LastPlayerSyncs = [];
                 }
             }
             catch (Exception ex)
             {
                 api.Logger.Error("Failed to deserialize last player updates: {0}", ex);
-                    LastPlayerDownloads = [];
+                    LastPlayerSyncs = [];
             }
             try
             {
@@ -201,26 +201,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        internal DateTime GetPlayerLastDownload(IPlayer fromPlayer)
+        internal DateTime GetPlayerLastSync(IPlayer fromPlayer)
         {
-            if (!LastPlayerDownloads.ContainsKey(fromPlayer.PlayerUID))
+            if (!LastPlayerSyncs.TryGetValue(fromPlayer.PlayerUID, out long lastPlayerSyncMillis))
             {
                 return DateTime.Now.AddYears(-1);
             }
             return DateTimeOffset
-                .FromUnixTimeMilliseconds(LastPlayerDownloads[fromPlayer.PlayerUID])
+                .FromUnixTimeMilliseconds(lastPlayerSyncMillis)
                 .LocalDateTime;
         }
 
-        internal void SetPlayerLastDownload(IPlayer forPlayer)
+        internal void SetPlayerLastSync(IPlayer forPlayer)
         {
             long now = ((DateTimeOffset)DateTime.Now.ToUniversalTime()).ToUnixTimeMilliseconds();
-            if (!LastPlayerDownloads.ContainsKey(forPlayer.PlayerUID))
+            if (LastPlayerSyncs.TryAdd(forPlayer.PlayerUID, now))
             {
-                LastPlayerDownloads.Add(forPlayer.PlayerUID, now);
                 return;
             }
-            LastPlayerDownloads[forPlayer.PlayerUID] = now;
+            LastPlayerSyncs[forPlayer.PlayerUID] = now;
         }
     }
 }

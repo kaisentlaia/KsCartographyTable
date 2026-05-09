@@ -155,7 +155,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                     KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, packet.WaypointSyncResult.Deleted.ToString());
                 }
             }
-            beCartographyTable.SetPlayerLastDownload(currentPlayer);
+            beCartographyTable.SetPlayerSyncToNow(currentPlayer);
             beCartographyTable.MarkDirty();
         }
 

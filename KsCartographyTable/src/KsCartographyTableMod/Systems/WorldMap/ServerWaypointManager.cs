@@ -179,7 +179,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 {
                     ResendWaypointsToPlayer(fromPlayer);
                 }
-                DateTime playerLastDownload = blockEntity.Map.GetPlayerLastDownload(fromPlayer);
+                DateTime playerLastDownload = blockEntity.Map.GetPlayerLastSync(fromPlayer);
                 List<CartographyWaypoint> playerSharedDbWaypoints = mapDB.GetPlayerSharedWaypoints(fromPlayer);
                 List<Waypoint> playerCurrentWaypoints = GetPlayerWaypoints(fromPlayer);
 
@@ -229,14 +229,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 mapDB.CreateWaypoints(waypointsToCreate);
                 mapDB.CreateWaypoints(existingWaypointsToTrack);
 
-                List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated >= playerLastDownload)];
+                List<CartographyWaypoint> rejectedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
 
                 rejectedWaypoints.ForEach(rejectedWaypoint =>
                 {
                     CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Rejected waypoint: {rejectedWaypoint.Guid} {rejectedWaypoint.Title} {rejectedWaypoint.Icon} {rejectedWaypoint.Position} last updated {rejectedWaypoint.LastUpdated} vs player's last download {playerLastDownload}");
                 });
 
-                List<CartographyWaypoint> updatedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated < playerLastDownload)];
+                List<CartographyWaypoint> updatedWaypoints = [.. waypointsToUpdate.Where(w => w.LastUpdated >= playerLastDownload)];
 
                 updatedWaypoints.ForEach(updatedWaypoint =>
                 {
