@@ -7,9 +7,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockAdvancedCartographyTable : BlockCartographyTable
     {
-        internal Vec3f candleWickPosition = new Vec3f(0.1875f, 1.29f, 0.1875f);
+        internal Vec3f candleWickPosition = new(0.1875f, 1.26f, 0.1875f);
 
-        Vec3f[] candleWickPositionsByRot = new Vec3f[4];
+        readonly Vec3f[] candleWickPositionsByRot = new Vec3f[4];
 
         public override void OnLoaded(ICoreAPI api)
         {
@@ -23,11 +23,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 Matrixf m = new Matrixf();
                 m.Translate(0.5f, 0.5f, 0.5f);
-                m.RotateYDeg(i * 90);
+                m.RotateYDeg(-i * 90);  // ← Negated: clockwise to match VS block orientation
                 m.Translate(-0.5f, -0.5f, -0.5f);
 
-                // BUG the particles get spawned in the wrong position for non-north orientations
-                // BUG the particles are too high on north orientation
                 Vec4f rotated = m.TransformVector(new Vec4f(candleWickPosition.X, candleWickPosition.Y, candleWickPosition.Z, 1));
                 candleWickPositionsByRot[i] = new Vec3f(rotated.X, rotated.Y, rotated.Z);
             }
@@ -35,8 +33,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public override bool TryPlaceBlock(IWorldAccessor world, IPlayer byPlayer, ItemStack itemstack, BlockSelection blockSel, ref string failureCode)
         {
-            // CRITICAL: Don't use Variant["side"] here — it holds the itemstack's default variant,
-            // not the orientation that will be used for placement. Compute from player facing instead.
             string side = GetPlayerFacingSide(byPlayer);
             BlockPos companionPos = GetCompanionPosition(blockSel.Position, side);
             
