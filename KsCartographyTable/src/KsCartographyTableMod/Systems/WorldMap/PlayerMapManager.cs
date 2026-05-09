@@ -65,26 +65,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             WorldMapManager = CoreClientAPI.ModLoader.GetModSystem<WorldMapManager>();
 		}
 
-        public Dictionary<FastVec2i, MapPieceDB> GetNewMapPieces(CartographyMap map, BlockEntityCartographyTable blockEntity)
+        public Dictionary<FastVec2i, MapPieceDB> GetNewMapPieces(BlockEntityCartographyTable blockEntity)
         {
             if (!blockEntity.IsAdvanced)
             {
                 return [];
             }
             List<FastVec2i> playerMapPiecesIds = PlayerMapDbReader.GetAllMapPiecesIds();
-            HashSet<ulong> tableMapPiecesIds = [.. map.ExploredAreasIds];
+            HashSet<ulong> tableMapPiecesIds = [.. blockEntity.Map.ExploredAreasIds];
             Dictionary<FastVec2i, MapPieceDB> pieces = [];
             if (tableMapPiecesIds.Count == 0)
             {
-                // TEST this should happen only the first time a player uploads to an empty table
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} no pieces id on map, uploading all player's map pieces");
                 pieces = PlayerMapDbReader.GetAllMapPieces();
+                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} no pieces ids on map, uploading all player's map pieces {pieces.Count}");
             }
             else
             {
                 List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? [.. playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex()))] : playerMapPiecesIds;
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} uploading filtered player's map pieces not present on map");
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
+                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} uploading filtered player's map pieces not present on map {pieces.Count}");
             }
             return pieces;
         }

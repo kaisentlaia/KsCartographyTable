@@ -122,7 +122,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             downloadedChunks[currentPlayer.PlayerUID] = 0;
             bool mapUpdated = km2 > 0;
             bool waypointsUpdated = packet.WaypointSyncResult.Synced;
-            // BUG chat messages not appearing on client when server is not local
             if (!mapUpdated && beCartographyTable.IsAdvanced)
             {                
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE);
@@ -182,7 +181,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             return false;
         }
 
-        internal bool StartCartographyUploadSession(CartographyAction action, CartographyMap map, IWorldAccessor world, IPlayer byPlayer, BlockPos blockPos, Block block, BlockEntityCartographyTable blockEntity)
+        internal bool StartCartographyUploadSession(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockPos blockPos, Block block, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
@@ -192,7 +191,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             }
             KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, byPlayer, CartographyTableLangCodes.SESSION_STARTED);
             CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} starting new session");
-            MapTransferSession session = new(byPlayer, block, blockPos, action, world, playerMapManager.GetNewMapPieces(map,  blockEntity), CoreClientAPI);
+            MapTransferSession session = new(byPlayer, block, blockPos, action, world, playerMapManager.GetNewMapPieces(blockEntity), CoreClientAPI);
             activeSessions.Add(sessionId, session);
             blockEntity.SetWriting(true);
             session.SendFirstBatch();

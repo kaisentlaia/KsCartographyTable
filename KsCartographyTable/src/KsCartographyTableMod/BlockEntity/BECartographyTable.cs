@@ -216,7 +216,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     bool hasSession = KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, Block);
                     if (!hasSession && secondsUsed > 0.25)
                     {
-                        KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, Map, world, byPlayer, blockSel.Position, Block, this);
+                        KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, world, byPlayer, blockSel.Position, Block, this);
                     }
                     else if (hasSession)
                     {                        
@@ -359,7 +359,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (ambientSound == null && Side == EnumAppSide.Client)
             {
-                // TODO bugfix no sound on download sessions (server side)
+                // BUG the sound doesn't seem to play on download sessions on clients that are running on a different machine from the server
+                // when the server is on the same machine as the client (es. I'm playing and hosting the game) the sound works perfectly.
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
                     Location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting"),
@@ -379,7 +380,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (ambientSound == null && Side == EnumAppSide.Client)
             {
-                // TODO bugfix no sound on download sessions (server side)
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
                     Location = new AssetLocation("game:sounds/player/scrape"),
@@ -489,14 +489,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     });
 
                     finalAmbientSound.Start();
-
-                    Map.HasWrittenData = false;
-
-                    if (Side == EnumAppSide.Server)
-                    {
-                        MarkDirty();
-                    }
                 }
+            }
+
+            Map.HasWrittenData = false;
+            Map.IsWriting = false;
+
+            if (Side == EnumAppSide.Server)
+            {
+                MarkDirty();
             }
         }
     }
