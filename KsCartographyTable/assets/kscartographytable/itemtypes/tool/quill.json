@@ -26,8 +26,8 @@
   "materialDensity": 20,
   "combustibleProps": { "burnTemperature": 600, "burnDuration": 2 },
   "guiTransform": {
-    "translation": { "x": 0, "y": 0, "z": 0 },
-    "rotation": { "x": 87, "y": -45, "z": -3 },
+    "translation": { "x": 0, "y": -1, "z": 0 },
+    "rotation": { "x": 73, "y": 22, "z": 9 },
     "origin": { "x": 0.49, "y": -0.52, "z": 0.51 },
     "scale": 2.65
   },
