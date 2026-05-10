@@ -158,10 +158,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             beCartographyTable.MarkDirty();
         }
 
-        public void Ponder(IClientPlayer byPlayer)
+        public void Ponder(IClientPlayer byPlayer, BlockEntityCartographyTable blockEntity)
         {
             PalantirTravelPacket palantirTravel = new PalantirTravelPacket(
-                playerWaypointManager.GetPalantirWaypoints(),
+                [.. blockEntity.Map.PalantirWaypoints.Select(waypoint =>
+                {
+                    return new CoordsPacket(waypoint.X, waypoint.Y, waypoint.Z);
+                })],
                 new CoordsPacket(byPlayer.Entity.Pos.X, byPlayer.Entity.Pos.Y, byPlayer.Entity.Pos.Z)
             );
             CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR).SendPacket(palantirTravel);

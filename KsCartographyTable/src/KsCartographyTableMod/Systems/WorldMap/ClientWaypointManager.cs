@@ -46,10 +46,5 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			}
 			return waypoints;
 		}
-
-        public List<CoordsPacket> GetPalantirWaypoints()
-        {
-            return GetPlayerWaypoints().Where(waypoint => waypoint.Icon == "palantir-manual").Select(waypoint => new CoordsPacket(waypoint.Position.X, waypoint.Position.Y, waypoint.Position.Z)).ToList();
-        }
     }
 }

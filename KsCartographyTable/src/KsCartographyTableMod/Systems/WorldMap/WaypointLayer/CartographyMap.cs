@@ -46,6 +46,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return hasWrittenData; }
             set { hasWrittenData = value; }
         }
+        private List<Vec3d> palantirWaypoints = new List<Vec3d>();
+        public List<Vec3d> PalantirWaypoints
+        {
+            get { return palantirWaypoints; }
+            set { palantirWaypoints = value; }
+        }
         ICoreAPI api;
 
         public CartographyMap(ICoreAPI api)
@@ -99,6 +105,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 api.Logger.Error("Failed to serialize has written data: {0}", ex);
                 tree.SetString("HasWrittenData", JsonUtil.ToString(false));
+            }
+            try
+            {
+                tree.SetString("PalantirWaypoints", JsonUtil.ToString(PalantirWaypoints));
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to serialize palantir waypoints: {0}", ex);
+                tree.SetString("PalantirWaypoints", JsonUtil.ToString(new List<Vec3d>()));
             }
         }
 
@@ -198,6 +213,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {                
                 api.Logger.Error("Failed to deserialize has written data: {0}", ex);
                 HasWrittenData = false;
+            }
+            try
+            {
+                if (tree.HasAttribute("PalantirWaypoints"))
+                {
+                    var palantirWaypointsStr = tree.GetString("PalantirWaypoints");
+                    PalantirWaypoints = palantirWaypointsStr != null
+                        ? JsonUtil.FromString<List<Vec3d>>(palantirWaypointsStr)
+                        : [];
+                }
+                else
+                {
+                    PalantirWaypoints = [];
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize palantir waypoints: {0}", ex);
+                PalantirWaypoints = [];
             }
         }
 

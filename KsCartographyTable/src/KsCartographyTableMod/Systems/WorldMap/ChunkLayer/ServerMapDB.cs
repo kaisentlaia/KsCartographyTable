@@ -544,6 +544,27 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			return Convert.ToInt32(cmd.ExecuteScalar());
         }
 
+        internal List<Vec3d> GetPalantirWaypointPositions()
+        {
+			using var cmd = sqliteConn.CreateCommand();
+			cmd.CommandText = "SELECT * FROM sharedwaypoints WHERE parentGuid IS NULL AND icon='palantir-manual' AND deleted=0";
+			List<Vec3d> waypointPositions = [];
+
+            using var reader = cmd.ExecuteReader();
+            while (reader.Read())
+            {
+                var positionParts = reader["position"].ToString().Split(',');
+                
+                waypointPositions.Add(new Vec3d(
+                    double.Parse(positionParts[0]),
+                    double.Parse(positionParts[1]),
+                    double.Parse(positionParts[2])
+                ));
+            }
+                
+			return waypointPositions;
+        }
+
         internal List<CartographyWaypoint> GetWaypointsToDelete(List<string> deletedWaypointIds)
         {
 			List<CartographyWaypoint> waypoints = [];

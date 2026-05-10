@@ -108,7 +108,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (CoreClientAPI != null)
             {
-                KsCartographyTableModSystem.ClientCartographyService.Ponder(byPlayer as IClientPlayer);
+                KsCartographyTableModSystem.ClientCartographyService.Ponder(byPlayer as IClientPlayer, this);
             }
 
             return true;
@@ -180,6 +180,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             Map.WaypointCount = waypointCount;
             Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMapWaypointCount {Map.WaypointCount}");
+            MarkDirty();
+        }
+
+        internal void SetPalantirWaypointPositions(List<Vec3d> palantirWaypoints)
+        {
+            EnsureMap();
+            Map.PalantirWaypoints = palantirWaypoints;
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdatePalantirWaypoints {Map.PalantirWaypoints.Count}");
             MarkDirty();
         }
 

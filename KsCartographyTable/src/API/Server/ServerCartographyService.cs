@@ -158,6 +158,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
             beCartographyTable.SetWriting(false);
             beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
+            beCartographyTable.SetPalantirWaypointPositions(mapDB.GetPalantirWaypointPositions());
 		}
 
 		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable blockEntity)
