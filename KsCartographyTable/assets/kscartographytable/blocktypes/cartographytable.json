@@ -50,6 +50,7 @@
   },
   "combustibleProps": { "burnTemperature": 600, "burnDuration": 35 },
   "materialDensity": 400,
+  "heldTpIdleAnimation": "holdunderarm",
   "tpHandTransform": {
     "translation": { "x": -0.7, "y": -0.6, "z": -0.9 },
     "rotation": { "x": 80, "y": 0, "z": 0 },
