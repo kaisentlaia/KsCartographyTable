@@ -83,18 +83,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             if (currentAction == CartographyAction.WipeTable)
             {
-                if (beTable.Map.Empty)
+                if (api.Side == EnumAppSide.Client)
                 {
-                    if (api.Side == EnumAppSide.Client)
+                    if (beTable.Map.Empty)
                     {
                         KsCartographyTableModSystem.ShowChatMessage(api, byPlayer, Lang.Get(CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY));
                     }
-                    return false;
-                }
-                if (api.Side == EnumAppSide.Client)
-                {
-                    KsCartographyTableModSystem.ShowChatMessage(api, byPlayer, Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
-                    beTable.SetWiping(true);
+                    else
+                    {
+                        KsCartographyTableModSystem.ShowChatMessage(api, byPlayer, Lang.Get(CartographyTableLangCodes.WIPE_STARTED));
+                        beTable.SetWiping(true);
+                    }
                 }
                 return true;
             }

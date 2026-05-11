@@ -22,11 +22,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (pos != null && (plr.Controls.HandUse != EnumHandInteract.None || plr.Controls.RightMouseDown))
             {
                 Block selectedBlock = api.World.BlockAccessor.GetBlock(pos);
-                Block block = selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Block : selectedBlock;
-                BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Position : pos);
-                if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.IsWriting)
+                if (selectedBlock != null)
                 {
-                    return "clayform";
+                    Block block = selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Block : selectedBlock;
+                    BlockEntity blockEntity = api.World.BlockAccessor.GetBlockEntity(selectedBlock is BlockAdvancedCartographyTablePart ? (selectedBlock as BlockAdvancedCartographyTablePart).Parent.Position : pos);
+                    if (block is BlockCartographyTable && plr?.BlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea && blockEntity is BlockEntityCartographyTable && (blockEntity as BlockEntityCartographyTable).Map.IsWriting)
+                    {
+                        return "clayform";
+                    }
                 }
             }
             return null;
