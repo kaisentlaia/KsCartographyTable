@@ -31,7 +31,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 string mapFolderPath = Path.Combine(GamePaths.DataPath, "ModData", CoreServerAPI.World.SavegameIdentifier, CartographyTableConstants.MOD_ID);
                 GamePaths.EnsurePathExists(mapFolderPath);
                 string mapPath = Path.Combine(mapFolderPath, blockId + ".db");
-                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT}Initializing map database at {mapPath}");
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Initializing map database at {mapPath}");
 				tableDBConnections.Add(blockId, new ServerMapDB(CoreServerAPI));
                 string error = null;
                 tableDBConnections.Get(blockId).OpenOrCreate(mapPath, ref error, true, true, false);
@@ -171,19 +171,16 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 hadData = mapDB.GetMapPieceCount() > 0 || mapDB.GetSharedWaypointsCount() > 0;
                 if (hadData)
                 {
+                    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} map had data, wiping");
                     mapDB.Wipe();
-                    blockEntity.UpdateMapWaypointCount(0);
-                    blockEntity.UpdateMapExploredAreasIds([]);
                 }
             }
 			if (hadData)
 			{
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_WIPED);
 			}
-			else
-			{
-                KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_ALREADY_EMPTY);
-			}
+            blockEntity.UpdateMapWaypointCount(0);
+            blockEntity.UpdateMapExploredAreasIds([]);
 		}
 
         public void CleanupMapData(Block block)

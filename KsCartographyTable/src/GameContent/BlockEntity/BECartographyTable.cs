@@ -119,7 +119,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (Side == EnumAppSide.Server)
             {
-                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap server");
+                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap server - Waypoint count {Map.WaypointCount} - Areas count {Map.ExploredAreasIds.Count}");
                 KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, this);
             }
 
