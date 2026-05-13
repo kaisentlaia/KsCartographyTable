@@ -15,17 +15,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
         {
             return selectionBoxIndex switch
             {
-                0 => GetTableHelp(),
+                0 => [],
                 1 => GetInkAndQuillHelp(world, empty),
                 2 => GetMapHelp(world, mapEmpty),
                 _ => []
             };
-        }
-
-        private static WorldInteraction[] GetTableHelp()
-        {
-            var interactions = new List<WorldInteraction>();
-            return interactions.ToArray();
         }
 
         private static WorldInteraction[] GetInkAndQuillHelp(IWorldAccessor world, bool empty)

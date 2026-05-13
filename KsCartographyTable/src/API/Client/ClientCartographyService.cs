@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
@@ -6,7 +5,6 @@ using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
@@ -57,7 +55,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         ICoreClientAPI CoreClientAPI;
         WorldMapManager WorldMapManager;
         private Dictionary<string, MapTransferSession> activeSessions = [];
-		private readonly ClientWaypointManager playerWaypointManager;
 		private readonly PlayerMapManager playerMapManager;
         ChunkMapLayer chunkMapLayer;
         private Dictionary<string, int> downloadedChunks = [];
@@ -83,7 +80,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             CoreClientAPI = api;
 
             playerMapManager = new PlayerMapManager(CoreClientAPI);
-            playerWaypointManager = new ClientWaypointManager(CoreClientAPI);
 
             RegisterChannels();
         }

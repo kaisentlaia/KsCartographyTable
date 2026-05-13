@@ -70,11 +70,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
         }
 
-        public override void OnBlockPlaced(IWorldAccessor world, BlockPos pos, ItemStack byItemStack = null)
-        {
-            base.OnBlockPlaced(world, pos, byItemStack);
-        }
-
         public override bool DoPartialSelection(IWorldAccessor world, BlockPos pos)
         {
             return true; // Essential for boxes outside 0-1 range

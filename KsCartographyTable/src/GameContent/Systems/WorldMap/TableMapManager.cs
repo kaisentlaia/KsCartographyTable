@@ -27,10 +27,5 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				blockEntity?.UpdateMapExploredAreasIds(mapDB.GetAllMapPiecesIds());
             }
         }
-
-        internal Dictionary<FastVec2i, MapPieceDB> GetNewMapPieces(IPlayer forPlayer, Block block)
-        {
-            throw new NotImplementedException();
-        }
     }
 }
