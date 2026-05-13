@@ -12,8 +12,6 @@ using Vintagestory.API.Server;
 using Vintagestory.API.Util;
 using Vintagestory.GameContent;
 
-
-// TODO fix namespaces not matching folder structure
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     [ProtoContract]

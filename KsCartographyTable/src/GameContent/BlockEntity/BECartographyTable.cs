@@ -373,8 +373,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (ambientSound == null && Side == EnumAppSide.Client)
             {
-                // BUG the sound doesn't seem to play on download sessions on clients that are running on a different machine from the server
-                // when the server is on the same machine as the client (es. I'm playing and hosting the game) the sound works perfectly.
                 ambientSound = (Api as ICoreClientAPI).World.LoadSound(new SoundParams()
                 {
                     Location = new AssetLocation(!IsAdvanced ? "game:sounds/effect/writing" : CartographyTableConstants.MOD_ID + ":sounds/effect/mapwriting"),
