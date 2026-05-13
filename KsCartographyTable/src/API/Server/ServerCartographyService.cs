@@ -36,7 +36,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 string error = null;
                 tableDBConnections.Get(blockId).OpenOrCreate(mapPath, ref error, true, true, false);
 
-                // Check if connection failed
                 if (error != null) {
                     CoreServerAPI.Logger.Error("Failed to open map database: {0}", error);
                     return null;
@@ -231,12 +230,28 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         public void Dispose()
         {
-            // BUG sometimes this causes an Exception: Collection was modified; enumeration operation may not execute. when saving and exiting the game
-            tableDBConnections.Values.ToList().ForEach(connection =>
+            try
             {
-                connection.Close();
-                connection.Dispose();
-            });
+                var connections = tableDBConnections.Values.ToList();
+                tableDBConnections.Clear();
+                foreach (var connection in connections)
+                {
+                    try
+                    {
+                        connection?.Close();
+                        connection?.Dispose();
+                    }
+                    catch (Exception ex)
+                    {
+                        CoreServerAPI.Logger.Error("Error disposing map database: {0}", ex);
+                    }
+                }
+            }
+            catch (InvalidOperationException)
+            {
+                tableDBConnections.Clear();
+                CoreServerAPI.Logger.Warning("Map database connections were modified during disposal; some SQLite connections may not have been closed cleanly.");
+            }
         }
 
         internal bool HasCartographyDownloadSession(IPlayer byPlayer, Block block)
