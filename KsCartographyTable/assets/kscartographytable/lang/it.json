@@ -18,6 +18,7 @@
   "message-session-started": "Inizi a trascrivere la mappa...",
   "message-wipe-started": "Inizi a raschiare via l'inchiostro dalla mappa...",
   "mapfailure-updatefirst": "La tua mappa non è aggiornata. Devi prima trascrivere dalla mappa del tavolo.",
+  "mapfailure-busy": "Aspetta il tuo turno.",
   "message-new-waypoints-count": "Hai aggiunto {0} nuovi punti di riferimento al tavolo da cartografia.",
   "message-edited-waypoints-count": "Hai modificato {0} punti di riferimento sul tavolo da cartografia.",
   "message-deleted-waypoints-count": "Hai rimosso {0} punti di riferimento dal tavolo da cartografia.",

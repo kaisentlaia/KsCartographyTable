@@ -101,6 +101,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 return;
             }
 
+            FinalizeUpload(packet, beCartographyTable, fromPlayer, mapDB);
+		}
+
+        private void FinalizeUpload(MapSyncPacket packet, BlockEntityCartographyTable beCartographyTable, IServerPlayer fromPlayer, ServerMapDB mapDB)
+        {          
+
             beCartographyTable.SetPlayerSyncToNow(fromPlayer);
 
             double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
@@ -131,6 +137,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 beCartographyTable.SetWriting(false);
                 return;
             }
+
             if (km2 > 0 && beCartographyTable.IsAdvanced)
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
@@ -158,9 +165,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             beCartographyTable.SetWriting(false);
             beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
             beCartographyTable.SetPalantirWaypointPositions(mapDB.GetPalantirWaypointPositions());
-		}
+        }
 
-		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable blockEntity)
+		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable beCartographyTable)
 		{
             bool hadData = false;
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
@@ -179,8 +186,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			{
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_WIPED);
 			}
-            blockEntity.UpdateMapWaypointCount(0);
-            blockEntity.UpdateMapExploredAreasIds([]);
+            beCartographyTable.UpdateMapWaypointCount(0);
+            beCartographyTable.UpdateMapExploredAreasIds([]);
+            beCartographyTable.SetWiping(false);
 		}
 
         public void CleanupMapData(Block block)

@@ -8,7 +8,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     internal class Parent
     {
         public BlockPos Position;
-        public Block Block;
+        public BlockAdvancedCartographyTable Block;
 
         public Parent(IWorldAccessor world, BlockPos pos)
         {
@@ -28,7 +28,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     !block.Code.Path.Contains(CartographyTableConstants.ADVANCED_PART_SUFFIX))
                 {
                     Position = neighborPos;
-                    Block = world.BlockAccessor.GetBlock(Position);
+                    Block = world.BlockAccessor.GetBlock(Position) as BlockAdvancedCartographyTable;
                     break;
                 }
             }
@@ -112,6 +112,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             Parent.Block.OnBlockInteractStop(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
         }
+        public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
+        {
+            Block selectedBlock = world.BlockAccessor.GetBlock(byPlayer.CurrentBlockSelection.Position);
+
+            if (cancelReason == EnumItemUseCancelReason.MovedAway && selectedBlock is BlockAdvancedCartographyTable)
+            {
+                return false;
+            }
+
+            return Parent.Block.OnBlockInteractCancel(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel), cancelReason);
+        }
 
         public override void OnBlockBroken(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)
         {
@@ -123,6 +134,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
             base.OnBlockBroken(world, pos, byPlayer, dropQuantityMultiplier);
+        }
+
+        public override BlockEntityCartographyTable GetBlockEntity<BlockEntityCartographyTable>(BlockPos position)
+        {
+            if (Parent != null && Parent.Block != null && Parent.Position != null)
+            {
+                return Parent.Block.GetBlockEntity<BlockEntityCartographyTable>(position);
+            }
+            return null;
         }
 
         public override ItemStack[] GetDrops(IWorldAccessor world, BlockPos pos, IPlayer byPlayer, float dropQuantityMultiplier = 1)

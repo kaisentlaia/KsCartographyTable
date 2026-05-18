@@ -1,12 +1,8 @@
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using Kaisentlaia.KsCartographyTableMod.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Datastructures;
 using Vintagestory.API.MathTools;
-using Vintagestory.API.Server;
-using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
@@ -34,6 +30,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             get { return lastPlayerSyncs; }
             set { lastPlayerSyncs = value; }
         }
+        private bool isWiping = false;
+        public bool IsWiping
+        {
+            get { return isWiping; }
+            set { isWiping = value; }
+        }
         private bool isWriting = false;
         public bool IsWriting
         {
@@ -45,6 +47,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             get { return hasWrittenData; }
             set { hasWrittenData = value; }
+        }
+        private bool isPondering = false;
+        public bool IsPondering
+        {
+            get { return isPondering; }
+            set { isPondering = value; }
         }
         private List<Vec3d> palantirWaypoints = new List<Vec3d>();
         public List<Vec3d> PalantirWaypoints
@@ -90,6 +98,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             }
             try
             {
+                tree.SetString("IsWiping", JsonUtil.ToString(IsWiping));
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to serialize is wiping: {0}", ex);
+                tree.SetString("IsWiping", JsonUtil.ToString(false));
+            }
+            try
+            {
                 tree.SetString("IsWriting", JsonUtil.ToString(IsWriting));
             }
             catch (Exception ex)
@@ -105,6 +122,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 api.Logger.Error("Failed to serialize has written data: {0}", ex);
                 tree.SetString("HasWrittenData", JsonUtil.ToString(false));
+            }
+            try
+            {
+                tree.SetString("IsPondering", JsonUtil.ToString(IsPondering));
+            }
+            catch (Exception ex)
+            {
+                api.Logger.Error("Failed to serialize is pondering: {0}", ex);
+                tree.SetString("IsPondering", JsonUtil.ToString(false));
             }
             try
             {
@@ -138,6 +164,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 api.Logger.Error("Failed to deserialize waypoint count: {0}", ex);
                 WaypointCount = 0;
             }
+            
             try
             {
                 if (tree.HasAttribute("LastPlayerSyncs"))
@@ -155,8 +182,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             catch (Exception ex)
             {
                 api.Logger.Error("Failed to deserialize last player updates: {0}", ex);
-                    LastPlayerSyncs = [];
+                LastPlayerSyncs = [];
             }
+
             try
             {
                 if (tree.HasAttribute("ExploredAreasIds"))
@@ -176,6 +204,27 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 api.Logger.Error("Failed to deserialize explored areas ids: {0}", ex);
                 ExploredAreasIds = [];
             }
+            
+            try
+            {
+                if (tree.HasAttribute("IsWiping"))
+                {
+                    var isWipingStr = tree.GetString("IsWiping");
+                    IsWiping = isWipingStr != null
+                        ? JsonUtil.FromString<bool>(isWipingStr)
+                        : false;
+                }
+                else
+                {
+                    IsWiping = false;
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize is wiping: {0}", ex);
+                IsWiping = false;
+            }
+
             try
             {
                 if (tree.HasAttribute("IsWriting"))
@@ -195,6 +244,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 api.Logger.Error("Failed to deserialize is writing: {0}", ex);
                 IsWriting = false;
             }
+
             try
             {
                 if (tree.HasAttribute("HasWrittenData"))
@@ -214,6 +264,27 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 api.Logger.Error("Failed to deserialize has written data: {0}", ex);
                 HasWrittenData = false;
             }
+
+            try
+            {
+                if (tree.HasAttribute("IsPondering"))
+                {
+                    var isPonderingStr = tree.GetString("IsPondering");
+                    IsPondering = isPonderingStr != null
+                        ? JsonUtil.FromString<bool>(isPonderingStr)
+                        : false;
+                }
+                else
+                {
+                    IsPondering = false;
+                }
+            }
+            catch (Exception ex)
+            {                
+                api.Logger.Error("Failed to deserialize has is pondering: {0}", ex);
+                IsPondering = false;
+            }
+            
             try
             {
                 if (tree.HasAttribute("PalantirWaypoints"))

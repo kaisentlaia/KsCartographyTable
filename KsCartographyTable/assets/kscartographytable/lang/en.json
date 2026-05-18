@@ -18,6 +18,7 @@
   "message-session-started": "You begin transcribing the map...",
   "message-wipe-started": "You begin scraping the ink from the map...",
   "mapfailure-updatefirst": "Your map isn't up to date. You need to transcribe from the table first.",
+  "mapfailure-busy": "Wait for your turn.",
   "message-new-waypoints-count": "You added {0} new waypoints to the cartography table.",
   "message-edited-waypoints-count": "You modified {0} waypoints on the cartography table.",
   "message-deleted-waypoints-count": "You removed {0} waypoints from the cartography table.",

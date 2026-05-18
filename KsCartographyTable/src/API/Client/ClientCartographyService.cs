@@ -112,6 +112,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
             if (!packet.IsFinalBatch) return;
 
+            FinalizeDownload(packet, currentPlayer);
+        }
+
+        private void FinalizeDownload(MapSyncPacket packet, IClientPlayer currentPlayer)
+        {
             BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
@@ -126,7 +131,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE);
             }
-            beCartographyTable.StopWritingSoundAndParticles(!mapUpdated && !waypointsUpdated ? BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.NothingWritten : BlockEntityCartographyTable.EnumCartographyTableCloseSoundTypes.SomethingWritten);
+            beCartographyTable.SetWriting(false);
+            beCartographyTable.SetPlayerSyncToNow(currentPlayer);
             if (!mapUpdated && !waypointsUpdated)
             {
                 return;
@@ -150,8 +156,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                     KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_DELETED, packet.WaypointSyncResult.Deleted.ToString());
                 }
             }
-            beCartographyTable.SetPlayerSyncToNow(currentPlayer);
-            beCartographyTable.MarkDirty();
         }
 
         public void Ponder(IClientPlayer byPlayer, BlockEntityCartographyTable blockEntity)

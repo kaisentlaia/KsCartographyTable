@@ -30,6 +30,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
         public readonly static string SESSION_STARTED = GetLangCode("message-session-started");
         public readonly static string WIPE_STARTED = GetLangCode("message-wipe-started");
         public readonly static string FAILURE_UPDATE_FIRST = GetLangCode("mapfailure-updatefirst");
+        public readonly static string FAILURE_BUSY = GetLangCode("mapfailure-busy");
 
 		private static string GetLangCode(string code)
 		{
