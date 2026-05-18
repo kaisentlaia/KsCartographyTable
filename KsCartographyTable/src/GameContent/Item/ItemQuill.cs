@@ -25,10 +25,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 if (selectedBlock != null)
                 {
                     BlockEntityCartographyTable blockEntity = selectedBlock.GetBlockEntity<BlockEntityCartographyTable>(plr?.BlockSelection);
-                    if (blockEntity?.Map?.IsWriting ?? false)
-                    {
-                        return "clayform";
-                    }
+                    return blockEntity?.GetWritingAnimation();
                 }
             }
             return null;

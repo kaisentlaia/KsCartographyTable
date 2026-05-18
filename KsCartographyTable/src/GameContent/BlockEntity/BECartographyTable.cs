@@ -324,5 +324,27 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             return Map.IsWiping || Map.IsPondering || Map.IsWriting;
         }
+
+        internal string GetWritingAnimation()
+        {
+            EnsureMap();
+            return Map.IsWriting ? "clayform" : null;
+        }
+
+        internal void SetIdle(IPlayer byPlayer, BlockCartographyTable blockCartographyTable)
+        {
+            EnsureMap();
+            SetWiping(false);
+            SetWriting(false);
+            SetPondering(false);
+            if (KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, blockCartographyTable))
+            {
+                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockCartographyTable, this);
+            }
+            if (KsCartographyTableModSystem.ServerCartographyService.HasCartographyDownloadSession(byPlayer, blockCartographyTable))
+            {
+                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, blockCartographyTable, this);
+            }
+        }
     }
 }

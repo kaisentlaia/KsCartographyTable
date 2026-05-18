@@ -47,7 +47,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 _ => 0
             };
 
-            BlockSelection parentSel = new BlockSelection
+            BlockSelection parentSel = new()
             {
                 Position = Position,
                 Face = blockSel.Face,
