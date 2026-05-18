@@ -308,45 +308,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		public void CreateWaypoints(List<CartographyWaypoint> waypoints)
 		{
-			// DEBUG: Check what's actually in the table right now
-			using (var checkCmd = sqliteConn.CreateCommand())
-			{
-				checkCmd.CommandText = "SELECT guid FROM sharedwaypoints";
-				using var reader = checkCmd.ExecuteReader();
-				while (reader.Read())
-				{
-					coreApi.Logger.Error($"DB ALREADY CONTAINS: {reader["guid"]}");
-				}
-			}
+            using SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction();
+            createWaypointsCmd.Transaction = sqliteTransaction;
+            foreach (CartographyWaypoint waypoint in waypoints)
+            {
+                coreApi.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
+                createWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
+                createWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
+                createWaypointsCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
+                createWaypointsCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
+                createWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
+                createWaypointsCmd.Parameters["@icon"].Value = waypoint.Icon;
+                createWaypointsCmd.Parameters["@color"].Value = waypoint.Color;
+                createWaypointsCmd.Parameters["@pinned"].Value = waypoint.Pinned;
+                createWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)waypoint.LastUpdated.ToUniversalTime()).ToUnixTimeMilliseconds();
+                createWaypointsCmd.ExecuteNonQuery();
+            }
 
-			// DEBUG: Check for duplicates in the incoming list
-			var dupes = waypoints.GroupBy(w => w.Guid).Where(g => g.Count() > 1).ToList();
-			foreach (var g in dupes)
-			{
-				coreApi.Logger.Error($"INCOMING DUPLICATE GUID: {g.Key} appears {g.Count()} times");
-			}
-
-			using (SqliteTransaction sqliteTransaction = sqliteConn.BeginTransaction())
-			{
-				createWaypointsCmd.Transaction = sqliteTransaction;
-				foreach (CartographyWaypoint waypoint in waypoints)
-				{
-            		coreApi.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} INSERTING guid={waypoint.Guid}, title={waypoint.Title}, parentGuid={waypoint.ParentGuid ?? "null"}");
-					createWaypointsCmd.Parameters["@guid"].Value = waypoint.Guid;
-					createWaypointsCmd.Parameters["@parentGuid"].Value = string.IsNullOrEmpty(waypoint.ParentGuid) ? DBNull.Value : waypoint.ParentGuid;
-					createWaypointsCmd.Parameters["@owningPlayerUid"].Value = waypoint.OwningPlayerUid;
-					createWaypointsCmd.Parameters["@position"].Value = $"{waypoint.Position.X},{waypoint.Position.Y},{waypoint.Position.Z}";
-					createWaypointsCmd.Parameters["@title"].Value = waypoint.Title;
-					createWaypointsCmd.Parameters["@icon"].Value = waypoint.Icon;
-					createWaypointsCmd.Parameters["@color"].Value = waypoint.Color;
-					createWaypointsCmd.Parameters["@pinned"].Value = waypoint.Pinned;
-					createWaypointsCmd.Parameters["@lastUpdated"].Value = ((DateTimeOffset)waypoint.LastUpdated.ToUniversalTime()).ToUnixTimeMilliseconds();
-					createWaypointsCmd.ExecuteNonQuery();
-				}
-
-				sqliteTransaction.Commit();
-			}
-		}
+            sqliteTransaction.Commit();
+        }
 
 		public void UpdateWaypoints(List<CartographyWaypoint> waypoints)
 		{

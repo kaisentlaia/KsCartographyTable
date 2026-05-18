@@ -271,7 +271,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     if (waypointTrackedInDb)
                     {
 					    CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} New waypoint already exists in db: {parentWaypoint.Guid} {parentWaypoint.Title} {parentWaypoint.Icon}");
-					    CoreServerAPI.Logger.Error($"New waypoint already exists in db: {playerIdenticalWaypoint.Guid} {playerIdenticalWaypoint.Title} {playerIdenticalWaypoint.Icon}");
                     }
                     else if (playerHasIdenticalWaypoint)
                     {
