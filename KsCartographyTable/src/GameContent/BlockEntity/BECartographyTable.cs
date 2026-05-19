@@ -328,7 +328,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal string GetWritingAnimation()
         {
             EnsureMap();
-            return Map.IsWriting ? "clayform" : null;
+            return Map.IsWriting ? "mapwrite" : null;
         }
 
         internal void SetIdle(IPlayer byPlayer, BlockCartographyTable blockCartographyTable)
