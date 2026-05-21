@@ -1,5 +1,3 @@
-
-using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
@@ -7,6 +5,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class ItemQuill : Item
     {
+
         public override string GetHeldTpHitAnimation(ItemSlot slot, Entity byEntity)
         {
             return GetMapWriteAnim(byEntity) ?? base.GetHeldTpHitAnimation(slot, byEntity);
@@ -16,7 +15,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return GetMapWriteAnim(forEntity) ?? base.GetHeldTpUseAnimation(activeHotbarSlot, forEntity);
         }
 
-        public string GetMapWriteAnim(Entity byEntity)
+        public static string GetMapWriteAnim(Entity byEntity)
         {
             var plr = byEntity as EntityPlayer;
             Block selectedBlock = plr?.BlockSelection?.Block;

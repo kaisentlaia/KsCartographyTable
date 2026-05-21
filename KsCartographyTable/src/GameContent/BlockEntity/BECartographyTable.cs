@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
-using Kaisentlaia.KsCartographyTableMod.API.Utils;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
@@ -16,7 +15,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
     public class BlockEntityCartographyTable : BlockEntity
     {
         protected ILoadedSound ambientSound;
-        protected bool SpawnParticles = false;
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
@@ -55,18 +53,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 CoreClientAPI = Api as ICoreClientAPI;
                 fxController = new CartographyTableFxController(CoreClientAPI, Pos, IsAdvanced);
                 RegisterGameTickListener(Every50ms, 50);
-                RegisterGameTickListener(Every500ms, 500);
             }
         }
     
         private void Every50ms(float dt)
         {
             fxController?.Tick(dt);
-        }
-
-        private void Every500ms(float dt)
-        {
-            
         }
 
         public void EnsureMap()
