@@ -99,7 +99,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
                 case FxState.Wiping:
                     if (particleAccumulator >= 0.2f)
                     {
-                        SpawnWipingParticles();
+                        // SpawnWipingParticles();
                         particleAccumulator = 0;
                     }
                     break;
@@ -107,7 +107,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
                 case FxState.Writing:
                     if (particleAccumulator >= 0.2f)
                     {
-                        SpawnWritingParticles();
+                        // SpawnWritingParticles();
                         particleAccumulator = 0;
                     }
                     break;
@@ -115,7 +115,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
                 case FxState.Pondering:
                     if (particleAccumulator >= 0.2f)
                     {
-                        SpawnPonderingParticles();
+                        // SpawnPonderingParticles();
                         particleAccumulator = 0;
                     }
                     break;
