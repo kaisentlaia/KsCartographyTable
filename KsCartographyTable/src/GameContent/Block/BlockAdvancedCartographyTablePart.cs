@@ -147,7 +147,16 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (Parent != null && Parent.Block != null && Parent.Position != null)
             {
-                return Parent.Block.GetBlockEntity<BlockEntityCartographyTable>(position);
+                return Parent.Block.GetBlockEntity<BlockEntityCartographyTable>(Parent.Position);
+            }
+            return null;
+        }
+
+        public override BlockEntityCartographyTable GetBlockEntity<BlockEntityCartographyTable>(BlockSelection blockSel)
+        {
+            if (Parent != null && Parent.Block != null && Parent.Position != null && blockSel.Block is BlockAdvancedCartographyTablePart)
+            {
+                return Parent.Block.GetBlockEntity<BlockEntityCartographyTable>(Parent.Position);
             }
             return null;
         }

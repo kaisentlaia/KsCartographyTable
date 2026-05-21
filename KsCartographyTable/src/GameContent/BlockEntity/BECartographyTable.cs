@@ -330,6 +330,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal string GetWritingAnimation()
         {
             EnsureMap();
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} GetWritingAnimation {(Map.IsWriting ? "mapwrite" : null)}");
             return Map.IsWriting ? "mapwrite" : null;
         }
 

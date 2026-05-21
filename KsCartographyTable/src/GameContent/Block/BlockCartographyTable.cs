@@ -339,7 +339,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             bool isAdvancedBlock = newSelectedBlock is BlockAdvancedCartographyTable || newSelectedBlock is BlockAdvancedCartographyTablePart;
             bool preserveSession = cancelReason == EnumItemUseCancelReason.MovedAway 
                 && isAdvancedBlock 
-                && (action == CartographyAction.UploadMap || action == CartographyAction.DownloadMap);
+                && (action == CartographyAction.UploadMap || action == CartographyAction.DownloadMap)
+                && byPlayer.CurrentBlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea;
             
             if (preserveSession)
             {

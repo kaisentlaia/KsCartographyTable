@@ -1,4 +1,5 @@
 
+using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
 
@@ -18,15 +19,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public string GetMapWriteAnim(Entity byEntity)
         {
             var plr = byEntity as EntityPlayer;
-            var pos = plr?.BlockSelection?.Position;
-            if (pos != null && (plr.Controls.HandUse != EnumHandInteract.None || plr.Controls.RightMouseDown))
+            Block selectedBlock = plr?.BlockSelection?.Block;
+            if (selectedBlock != null && (plr.Controls.HandUse != EnumHandInteract.None || plr.Controls.RightMouseDown))
             {
-                Block selectedBlock = api.World.BlockAccessor.GetBlock(pos);
-                if (selectedBlock != null)
-                {
-                    BlockEntityCartographyTable blockEntity = selectedBlock.GetBlockEntity<BlockEntityCartographyTable>(plr?.BlockSelection);
-                    return blockEntity?.GetWritingAnimation();
-                }
+                BlockEntityCartographyTable blockEntity = selectedBlock.GetBlockEntity<BlockEntityCartographyTable>(plr?.BlockSelection);
+                return blockEntity?.GetWritingAnimation();
             }
             return null;
         }
