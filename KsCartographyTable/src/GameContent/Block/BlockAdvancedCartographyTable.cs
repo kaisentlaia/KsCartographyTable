@@ -95,7 +95,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return facing.ToString().ToLower();
         }
 
-        private BlockPos GetCompanionPosition(BlockPos pos)
+        public BlockPos GetCompanionPosition(BlockPos pos)
         {
             return GetCompanionPosition(pos, Variant["side"]);
         }
@@ -111,17 +111,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 "west" => pos.NorthCopy(),
                 _ => pos.EastCopy()
             };
-        }
-        public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
-        {
-            Block selectedBlock = world.BlockAccessor.GetBlock(byPlayer.CurrentBlockSelection.Position);
-
-            if (cancelReason == EnumItemUseCancelReason.MovedAway && selectedBlock is BlockAdvancedCartographyTablePart)
-            {
-                return false;
-            }
-
-            return base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
         }
 
         public override void OnAsyncClientParticleTick(IAsyncParticleManager manager, BlockPos pos, float windAffectednessAtPos, float secondsTicking)

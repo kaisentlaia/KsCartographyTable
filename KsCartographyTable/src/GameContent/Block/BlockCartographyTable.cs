@@ -43,7 +43,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return base.GetBlockEntity<BlockEntityCartographyTable>(position);
         }
 
-        private bool OnInstantInteractionTakeQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel) {
+        private bool OnInstantInteractionTakeQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable) {
             ItemStack stack = new ItemStack(world.GetItem(new AssetLocation(CartographyTableConstants.MOD_ID+":"+CartographyTableConstants.QUILL_ITEM_CODE)));
             if (byPlayer.InventoryManager.TryGiveItemstack(stack, true))
             {
@@ -60,7 +60,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return false;
         }
 
-        private bool OnInstantInteractionPutQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel) {
+        private bool OnInstantInteractionPutQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable) {
             ItemStack heldStack = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack;
             if (heldStack != null && heldStack.Collectible.Code.Path.Equals(CartographyTableConstants.QUILL_ITEM_CODE))
             {
@@ -89,12 +89,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return false;
         }
 
-        private bool OnTimedInteractionWipeStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionWipeStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (api.Side == EnumAppSide.Client)
             {
-                if (beTable.IsBusy())
+                if (beTable.IsBusy() && beTable.HasAnotherPlayerInteracting(byPlayer))
                 {
                     return OnBusyError(byPlayer);
                 }
@@ -111,12 +110,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionPonderStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionPonderStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (api.Side == EnumAppSide.Client)
             {
-                if (beTable.IsBusy())
+                if (beTable.IsBusy() && beTable.HasAnotherPlayerInteracting(byPlayer))
                 {
                     return OnBusyError(byPlayer);
                 }
@@ -125,20 +123,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionUploadStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionUploadStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (beTable.IsBusy() && api.Side == EnumAppSide.Client)
+            if (beTable.IsBusy() && beTable.HasAnotherPlayerInteracting(byPlayer) && api.Side == EnumAppSide.Client)
             {
                 return OnBusyError(byPlayer);
             }
             return beTable.OnCartographySessionStart(CartographyAction.UploadMap, world, byPlayer, blockSel);
         }
 
-        private bool OnTimedInteractionDownloadStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionDownloadStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (beTable.IsBusy() && api.Side == EnumAppSide.Client)
+            if (beTable.IsBusy() && beTable.HasAnotherPlayerInteracting(byPlayer) && api.Side == EnumAppSide.Client)
             {
                 return OnBusyError(byPlayer);
             }
@@ -148,9 +144,19 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
-            Dictionary<CartographyAction, System.Func<IWorldAccessor, IPlayer, BlockSelection, bool>> interactionHandlers = new()
+
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            CartographyAction? recentAction = beTable.GetRecentInteraction(byPlayer);
+            if (recentAction.HasValue)
             {
-                [CartographyAction.None] = (world, byPlayer, blockSel) => false,
+                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart has recent action by player, returning true");
+                beTable.RegisterInteraction(byPlayer, recentAction.Value);
+                return true;
+            }
+
+            Dictionary<CartographyAction, System.Func<IWorldAccessor, IPlayer, BlockSelection, BlockEntityCartographyTable, bool>> interactionHandlers = new()
+            {
+                [CartographyAction.None] = (world, byPlayer, blockSel, beTable) => false,
                 [CartographyAction.TakeQuill] = OnInstantInteractionTakeQuill,
                 [CartographyAction.PutQuill] = OnInstantInteractionPutQuill,
                 [CartographyAction.WipeTable] = OnTimedInteractionWipeStart,
@@ -159,16 +165,20 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 [CartographyAction.DownloadMap] = OnTimedInteractionDownloadStart,
             };
 
-            bool canStart = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(world, byPlayer, blockSel) : base.OnBlockInteractStart(world, byPlayer, blockSel);
+            bool canStart = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(world, byPlayer, blockSel, beTable) : base.OnBlockInteractStart(world, byPlayer, blockSel);
 
             api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart {currentAction}, {canStart}");
+
+            if (canStart && currentAction != CartographyAction.None)
+            {
+                beTable.RegisterInteraction(byPlayer, currentAction);
+            }
             
             return canStart;
         }
 
-        private bool OnTimedInteractionWipeStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionWipeStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnWipeTableMap(byPlayer);
@@ -176,9 +186,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionPonderStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionPonderStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnPonderMap(byPlayer);
@@ -186,21 +195,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionUploadStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionUploadStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             return beTable.OnCartographySessionStep(CartographyAction.UploadMap, secondsUsed, world, byPlayer, blockSel);
         }
         
-        private bool OnTimedInteractionDownloadStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionDownloadStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             return beTable.OnCartographySessionStep(CartographyAction.DownloadMap, secondsUsed, world, byPlayer, blockSel);
         }
         
-        private bool OnTimedInteractionInvalidStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionInvalidStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             beTable.SetIdle(byPlayer, this);
             return false;
         }
@@ -208,7 +214,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
-            Dictionary<CartographyAction, System.Func<float, IWorldAccessor, IPlayer, BlockSelection, bool>> interactionHandlers = new()
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (currentAction != CartographyAction.None && beTable != null)
+            {
+                beTable.RegisterInteraction(byPlayer, currentAction);
+            }
+            Dictionary<CartographyAction, System.Func<float, IWorldAccessor, IPlayer, BlockSelection, BlockEntityCartographyTable, bool>> interactionHandlers = new()
             {
                 [CartographyAction.None] = OnTimedInteractionInvalidStep,
                 [CartographyAction.TakeQuill] = OnTimedInteractionInvalidStep,
@@ -219,7 +230,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 [CartographyAction.DownloadMap] = OnTimedInteractionDownloadStep,
             };
 
-            bool canContinue = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel) : base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+            bool canContinue = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel, beTable) : base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+            
 
             api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStep {currentAction}, {canContinue}");
             
@@ -280,9 +292,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             base.OnBlockInteractStop(secondsUsed, world, byPlayer, blockSel);
         }
 
-        private bool OnTimedInteractionWipeCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionWipeCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnWipeTableMap(byPlayer);
@@ -294,9 +305,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionPonderCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionPonderCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnPonderMap(byPlayer);
@@ -308,40 +318,79 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return true;
         }
 
-        private bool OnTimedInteractionUploadCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionUploadCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             beTable.OnCartographySessionStop(CartographyAction.UploadMap, world, byPlayer, blockSel);
             return true;
         }
         
-        private bool OnTimedInteractionDownloadCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
+        private bool OnTimedInteractionDownloadCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable)
         {
-            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             beTable.OnCartographySessionStop(CartographyAction.DownloadMap, world, byPlayer, blockSel);
             return true;
         }
 
         public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
         {
+            BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
-            Dictionary<CartographyAction, System.Func<float, IWorldAccessor, IPlayer, BlockSelection, bool>> interactionHandlers = new()
+            CartographyAction action = beTable.GetRecentInteraction(byPlayer) ?? CartographyAction.None;
+            Block newSelectedBlock = byPlayer.CurrentBlockSelection.Block;
+            bool isAdvancedBlock = newSelectedBlock is BlockAdvancedCartographyTable || newSelectedBlock is BlockAdvancedCartographyTablePart;
+            bool preserveSession = cancelReason == EnumItemUseCancelReason.MovedAway 
+                && isAdvancedBlock 
+                && (action == CartographyAction.UploadMap || action == CartographyAction.DownloadMap);
+            
+            if (preserveSession)
             {
-                [CartographyAction.None] = (secondsUsed, world, byPlayer, blockSel) => true,
-                [CartographyAction.TakeQuill] = (secondsUsed, world, byPlayer, blockSel) => true,
-                [CartographyAction.PutQuill] = (secondsUsed, world, byPlayer, blockSel) => true,
+                // Refresh the timestamp so the companion Start will see its
+                beTable.RegisterInteraction(byPlayer, action);
+                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel preserving {action} session");
+                return true;
+            }
+            beTable.ClearRecentInteraction(byPlayer);
+            
+            Dictionary<CartographyAction, System.Func<float, IWorldAccessor, IPlayer, BlockSelection, BlockEntityCartographyTable, bool>> interactionHandlers = new()
+            {
+                [CartographyAction.None] = (secondsUsed, world, byPlayer, blockSel, beTable) => true,
+                [CartographyAction.TakeQuill] = (secondsUsed, world, byPlayer, blockSel, beTable) => true,
+                [CartographyAction.PutQuill] = (secondsUsed, world, byPlayer, blockSel, beTable) => true,
                 [CartographyAction.WipeTable] = OnTimedInteractionWipeCancel,
                 [CartographyAction.PonderMap] = OnTimedInteractionPonderCancel,
                 [CartographyAction.UploadMap] = OnTimedInteractionUploadCancel,
                 [CartographyAction.DownloadMap] = OnTimedInteractionDownloadCancel,
             };
 
+            bool canCancel = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel, beTable) : base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
 
-            bool canCancel = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel) : base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
-
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel {currentAction}, {canCancel}");
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel {currentAction}, {canCancel}, {cancelReason}");
             
-            return canCancel;
+            return true;
+        }
+
+        private bool IsCompanionBlock(BlockPos targetPos, BlockPos fromPos, IWorldAccessor world)
+        {
+            if (targetPos == null) return false;
+            
+            Block targetBlock = world.BlockAccessor.GetBlock(targetPos);
+            Block fromBlock = world.BlockAccessor.GetBlock(fromPos);
+            
+            // From main to part
+            if (fromBlock is BlockAdvancedCartographyTable advancedTable)
+            {
+                BlockPos expectedCompanion = advancedTable.GetCompanionPosition(fromPos);
+                return targetPos.Equals(expectedCompanion) && targetBlock is BlockAdvancedCartographyTablePart;
+            }
+            
+            // From part to main
+            if (fromBlock is BlockAdvancedCartographyTablePart part)
+            {
+                part.EnsureParent(world, fromPos);
+                return part.Parent?.Position != null && targetPos.Equals(part.Parent.Position) 
+                    && targetBlock is BlockAdvancedCartographyTable;
+            }
+            
+            return false;
         }
 
         private static CartographyAction GetPerformedAction(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

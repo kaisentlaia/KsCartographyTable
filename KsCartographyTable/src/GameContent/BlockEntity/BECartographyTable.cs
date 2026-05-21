@@ -38,6 +38,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Unknown,
             None
         }
+        private readonly Dictionary<string, (CartographyAction action, long timestamp)> recentInteractions = new();
+        private const long INTERACTION_GRACE_MS = 500;
 
         public override void Initialize(ICoreAPI api)
         {
@@ -345,6 +347,34 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, blockCartographyTable, this);
             }
+        }
+        
+        public void RegisterInteraction(IPlayer player, CartographyAction action)
+        {
+            recentInteractions[player.PlayerUID] = (action, Api.World.ElapsedMilliseconds);
+        }
+
+        public CartographyAction? GetRecentInteraction(IPlayer player)
+        {
+            if (recentInteractions.TryGetValue(player.PlayerUID, out var data))
+            {
+                if (Api.World.ElapsedMilliseconds - data.timestamp < INTERACTION_GRACE_MS)
+                {
+                    return data.action;
+                }
+                recentInteractions.Remove(player.PlayerUID);
+            }
+            return null;
+        }
+
+        public bool HasAnotherPlayerInteracting(IPlayer player)
+        {
+            return recentInteractions.Keys.Any(uid => uid != player.PlayerUID);
+        }
+
+        public void ClearRecentInteraction(IPlayer player)
+        {
+            recentInteractions.Remove(player.PlayerUID);
         }
     }
 }

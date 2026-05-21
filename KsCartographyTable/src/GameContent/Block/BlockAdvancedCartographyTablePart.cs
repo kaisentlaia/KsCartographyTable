@@ -88,17 +88,23 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override bool OnBlockInteractStart(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             EnsureParent(world, blockSel.Position);
+            
+            if (Parent == null || Parent.Block == null || Parent.Position == null) {
+                return base.OnBlockInteractStart(world, byPlayer, blockSel);
+            }
 
-            if (Parent == null || Parent.Block == null || Parent.Position == null) return base.OnBlockInteractStart(world, byPlayer, blockSel);
-
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStart to parent");
             return Parent.Block.OnBlockInteractStart(world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             EnsureParent(world, blockSel.Position);
 
-            if (Parent == null || Parent.Block == null || Parent.Position == null) return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+            if (Parent == null || Parent.Block == null || Parent.Position == null) {
+                return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
+            }
 
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStep to parent");
             return Parent.Block.OnBlockInteractStep(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -110,17 +116,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
 
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStop to parent");
             Parent.Block.OnBlockInteractStop(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
         {
-            Block selectedBlock = world.BlockAccessor.GetBlock(byPlayer.CurrentBlockSelection.Position);
+            EnsureParent(world, blockSel.Position);
 
-            if (cancelReason == EnumItemUseCancelReason.MovedAway && selectedBlock is BlockAdvancedCartographyTable)
-            {
-                return false;
+            if (Parent == null || Parent.Block == null || Parent.Position == null) {
+                return base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
             }
 
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractCancel to parent");
             return Parent.Block.OnBlockInteractCancel(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel), cancelReason);
         }
 
