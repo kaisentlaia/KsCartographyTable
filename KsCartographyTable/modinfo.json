@@ -5,9 +5,9 @@
     "authors": [
         "Kaisentlaia"
     ],
-    "description": "Waypoint and map sharing between players through a cartography table.",
-    "networkVersion": "2.0.0-rc.3",
-    "version": "2.0.0-rc.3",
+    "description": "Share your map with friends in a vanilla-friendly way!",
+    "networkVersion": "2.0.0-rc.4",
+    "version": "2.0.0-rc.4",
     "side" : "Universal",
     "requiredOnClient": true,
     "requiredOnServer": true,
