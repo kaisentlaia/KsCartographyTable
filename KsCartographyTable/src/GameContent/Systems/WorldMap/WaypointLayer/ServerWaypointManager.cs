@@ -76,9 +76,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             GamePaths.EnsurePathExists(modDataPath);
 		}
 
-		private List<Waypoint> GetPlayerWaypoints(IServerPlayer player)
+		private List<Waypoint> GetPlayerWaypoints(IPlayer player)
 		{
-			List<Waypoint> waypoints = new List<Waypoint>();
+			List<Waypoint> waypoints = [];
+            if (player == null)
+            {
+                CoreServerAPI?.Logger.Error($"{CartographyTableConstants.MAP_EVENT} GetPlayerWaypoints for null player!");
+			    return waypoints;
+            }
 			if (WaypointMapLayer != null)
 			{
 				waypoints = WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerUid == player.PlayerUID);
@@ -106,6 +111,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		public void ResendWaypointsToPlayer(IServerPlayer toPlayer)
 		{
 			List<Waypoint> list = [];
+            if (toPlayer == null)
+            {
+                CoreServerAPI.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Resending waypoints to null player!");
+                return;
+            }
 			foreach (Waypoint waypoint in WaypointMapLayer.Waypoints)
 			{
 				if (toPlayer.PlayerUID == waypoint.OwningPlayerUid)
@@ -262,7 +272,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                 List<CartographyWaypoint> matchingPlayerWaypoints = [];
                 List<CartographyWaypoint> newSharedWaypoints = [];
-                List<Waypoint> currentPlayerWaypoints = GetPlayerWaypoints(forPlayer as IServerPlayer);
+                List<Waypoint> currentPlayerWaypoints = GetPlayerWaypoints(forPlayer);
                 newWaypointsForPlayer.ForEach(parentWaypoint =>
                 {
                     Waypoint playerIdenticalWaypoint = currentPlayerWaypoints.Find(playerWaypoint => playerWaypoint.Position == parentWaypoint.Position && playerWaypoint.Icon == parentWaypoint.Icon && playerWaypoint.Title == parentWaypoint.Title);

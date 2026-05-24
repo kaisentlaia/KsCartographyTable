@@ -117,13 +117,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
 
         private void FinalizeDownload(MapSyncPacket packet, IClientPlayer currentPlayer)
         {
-            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
+            BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             downloadedChunks[currentPlayer.PlayerUID] = 0;
             bool mapUpdated = km2 > 0;
             bool waypointsUpdated = packet.WaypointSyncResult.Synced;
-            if (!mapUpdated && beCartographyTable.IsAdvanced)
+            if (!mapUpdated && blockEntity.IsAdvanced)
             {                
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE);
             }  
@@ -131,13 +131,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE);
             }
-            beCartographyTable.SetWriting(false);
-            beCartographyTable.SetPlayerSyncToNow(currentPlayer);
+            blockEntity.SetWriting(false);
+            blockEntity.SetPlayerSyncToNow(currentPlayer);
             if (!mapUpdated && !waypointsUpdated)
             {
                 return;
             }
-            if (mapUpdated && beCartographyTable.IsAdvanced)
+            if (mapUpdated && blockEntity.IsAdvanced)
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_MAP_UPDATED, $"{km2:F1}");
             }
@@ -229,10 +229,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             if (activeSessions.ContainsKey(sessionId))
             {
                 MapTransferSession session = activeSessions.Get(sessionId);
-                blockEntity.SetWriting(false);
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }
+            blockEntity.SetWriting(false);
+            blockEntity.ClearRecentInteraction(byPlayer);
         }
     }
 }

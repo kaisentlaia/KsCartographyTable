@@ -175,14 +175,21 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal bool OnCartographySessionStart(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
+            if (action == CartographyAction.UploadMap)
             {
-                KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, world, byPlayer, blockSel.Position, Block, this);
+                if (Side == EnumAppSide.Client)
+                {
+                    KsCartographyTableModSystem.ClientCartographyService.StartCartographyUploadSession(action, world, byPlayer, blockSel.Position, Block, this);
+                }
                 return true;
             }
-            if (action == CartographyAction.DownloadMap && Side == EnumAppSide.Server)
+            if (action == CartographyAction.DownloadMap)
             {
-                KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action,  world, byPlayer, Block, blockSel.Position, this);
+                if (Side == EnumAppSide.Server)
+                {
+                    KsCartographyTableModSystem.ServerCartographyService.StartCartographyDownloadSession(action, world, byPlayer, Block, blockSel.Position, this);
+                }
+                
                 return true;
             }
             return false;
@@ -213,13 +220,19 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         internal void OnCartographySessionStop(CartographyAction action, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
-            if (action == CartographyAction.UploadMap && Side == EnumAppSide.Client)
+            if (action == CartographyAction.UploadMap)
             {
-                KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, Block, this);
+                if (Side == EnumAppSide.Client)
+                {
+                    KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, Block, this);
+                }
             }
-            if (action == CartographyAction.DownloadMap && Side == EnumAppSide.Server)
+            if (action == CartographyAction.DownloadMap)
             {
-                KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, world.BlockAccessor.GetBlock(blockSel.Position), this);
+                if (Side == EnumAppSide.Server)
+                {
+                    KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, world.BlockAccessor.GetBlock(blockSel.Position), this);
+                }
             }
         }
 
@@ -322,7 +335,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal string GetWritingAnimation()
         {
             EnsureMap();
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} GetWritingAnimation {(Map.IsWriting ? "mapwrite" : null)}");
             return Map.IsWriting ? "mapwrite" : null;
         }
 
@@ -332,11 +344,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             SetWiping(false);
             SetWriting(false);
             SetPondering(false);
-            if (KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, blockCartographyTable))
+            if (Side == EnumAppSide.Client && KsCartographyTableModSystem.ClientCartographyService.HasCartographyUploadSession(byPlayer, blockCartographyTable))
             {
                 KsCartographyTableModSystem.ClientCartographyService.EndCartographyUploadSession(byPlayer, blockCartographyTable, this);
             }
-            if (KsCartographyTableModSystem.ServerCartographyService.HasCartographyDownloadSession(byPlayer, blockCartographyTable))
+            if (Side == EnumAppSide.Server && KsCartographyTableModSystem.ServerCartographyService.HasCartographyDownloadSession(byPlayer, blockCartographyTable))
             {
                 KsCartographyTableModSystem.ServerCartographyService.EndCartographyDownloadSession(byPlayer, blockCartographyTable, this);
             }
@@ -344,6 +356,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         
         public void RegisterInteraction(IPlayer player, CartographyAction action)
         {
+            if (!recentInteractions.TryGetValue(player.PlayerUID, out var value))
+            {
+                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Registering interaction {action} for {player.PlayerUID}");
+            }
             recentInteractions[player.PlayerUID] = (action, Api.World.ElapsedMilliseconds);
         }
 
@@ -355,18 +371,31 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 {
                     return data.action;
                 }
+                else
+                {
+                    Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Removing interaction {data.action} for {player.PlayerUID}");
+                }
                 recentInteractions.Remove(player.PlayerUID);
+            }
+            else
+            {
+                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} No interaction for {player.PlayerUID}");
             }
             return null;
         }
 
         public bool HasAnotherPlayerInteracting(IPlayer player)
         {
+            if (recentInteractions.Keys.Any(uid => uid != player.PlayerUID))
+            {
+                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Another player is interacting, {recentInteractions.Keys}");
+            }
             return recentInteractions.Keys.Any(uid => uid != player.PlayerUID);
         }
 
         public void ClearRecentInteraction(IPlayer player)
         {
+            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Clearing interaction for {player.PlayerUID}");
             recentInteractions.Remove(player.PlayerUID);
         }
     }

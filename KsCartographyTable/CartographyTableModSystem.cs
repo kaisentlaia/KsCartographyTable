@@ -142,11 +142,11 @@ public class KsCartographyTableModSystem : ModSystem
     {
         if (!Settings.ImmersiveMode)
         {
-            if (api.Side == EnumAppSide.Client)
+            if (api.Side == EnumAppSide.Client && player is IClientPlayer)
             {
                 (api as ICoreClientAPI).ShowChatMessage(Lang.Get(messageIdentifier, data));
             }
-            else if (api.Side == EnumAppSide.Server)
+            else if (api.Side == EnumAppSide.Server && player is IServerPlayer)
             {
                 (api as ICoreServerAPI).SendMessage(player, GlobalConstants.GeneralChatGroup, Lang.Get(messageIdentifier, data), EnumChatType.Notification);
             }

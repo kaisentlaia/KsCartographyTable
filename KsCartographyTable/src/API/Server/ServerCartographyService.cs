@@ -88,10 +88,10 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
             uploadedChunks[fromPlayer.PlayerUID] += packet.Pieces.Count;
 
-            BlockEntityCartographyTable beCartographyTable = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
+            BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
             ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
-            beCartographyTable.SetWriting(true);
-            if (beCartographyTable.IsAdvanced)
+            blockEntity.SetWriting(true);
+            if (blockEntity.IsAdvanced)
             {
                 tableMapManager.UpdateMap(fromPlayer, packet, mapDB);
             }
@@ -101,19 +101,19 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 return;
             }
 
-            FinalizeUpload(packet, beCartographyTable, fromPlayer, mapDB);
+            FinalizeUpload(packet, blockEntity, fromPlayer, mapDB);
 		}
 
-        private void FinalizeUpload(MapSyncPacket packet, BlockEntityCartographyTable beCartographyTable, IServerPlayer fromPlayer, ServerMapDB mapDB)
+        private void FinalizeUpload(MapSyncPacket packet, BlockEntityCartographyTable blockEntity, IServerPlayer fromPlayer, ServerMapDB mapDB)
         {          
 
-            beCartographyTable.SetPlayerSyncToNow(fromPlayer);
+            blockEntity.SetPlayerSyncToNow(fromPlayer);
 
             double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             uploadedChunks[fromPlayer.PlayerUID] = 0;
             WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
             
-            if (km2 == 0 && beCartographyTable.IsAdvanced)
+            if (km2 == 0 && blockEntity.IsAdvanced)
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE);
             }  
@@ -133,21 +133,21 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             if (km2 == 0 && !waypointResult.Synced)
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to false and writing to false");
-                beCartographyTable.SetWritten(false);
-                beCartographyTable.SetWriting(false);
+                blockEntity.SetWritten(false);
+                blockEntity.SetWriting(false);
                 return;
             }
 
-            if (km2 > 0 && beCartographyTable.IsAdvanced)
+            if (km2 > 0 && blockEntity.IsAdvanced)
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
-                beCartographyTable.SetWritten(true);
+                blockEntity.SetWritten(true);
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}");
             }
             if (waypointResult.Synced)
             {
                 CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting written to true");
-                beCartographyTable.SetWritten(true);
+                blockEntity.SetWritten(true);
                 if (waypointResult.Added > 0)
                 {
                     KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_ADDED, waypointResult.Added.ToString());
@@ -162,12 +162,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 }
             }
             CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Setting writing to false");
-            beCartographyTable.SetWriting(false);
-            beCartographyTable.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
-            beCartographyTable.SetPalantirWaypointPositions(mapDB.GetPalantirWaypointPositions());
+            blockEntity.SetWriting(false);
+            blockEntity.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
+            blockEntity.SetPalantirWaypointPositions(mapDB.GetPalantirWaypointPositions());
         }
 
-		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable beCartographyTable)
+		public void WipeTableMap(Block block, IPlayer byPlayer, BlockEntityCartographyTable blockEntity)
 		{
             bool hadData = false;
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
@@ -186,9 +186,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			{
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, byPlayer, CartographyTableLangCodes.TABLE_MAP_WIPED);
 			}
-            beCartographyTable.UpdateMapWaypointCount(0);
-            beCartographyTable.UpdateMapExploredAreasIds([]);
-            beCartographyTable.SetWiping(false);
+            blockEntity.UpdateMapWaypointCount(0);
+            blockEntity.UpdateMapExploredAreasIds([]);
+            blockEntity.SetWiping(false);
 		}
 
         public void CleanupMapData(Block block)
@@ -273,30 +273,30 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             return false;
         }
 
-        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, Block block, BlockPos blockPos, BlockEntityCartographyTable beCartographyTable)
+        internal bool StartCartographyDownloadSession(CartographyAction action, IWorldAccessor world, IPlayer forPlayer, Block block, BlockPos blockPos, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + forPlayer.PlayerUID;
             if (activeSessions.Get(sessionId) != null)
             {
                 return false;
             }
-            beCartographyTable.SetWriting(true);
+            blockEntity.SetWriting(true);
             KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, forPlayer, CartographyTableLangCodes.SESSION_STARTED);
 
             Dictionary<FastVec2i, MapPieceDB> newMapPiecesForPlayer = [];
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
-            if (beCartographyTable.IsAdvanced)
+            if (blockEntity.IsAdvanced)
             {
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, beCartographyTable, mapDB);
+            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB);
             MapTransferSession session = new(forPlayer, block, blockPos, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
             return true;
         }
 
-        internal bool ContinueCartographyDownloadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable beCartographyTable)
+        internal bool ContinueCartographyDownloadSession(IPlayer byPlayer, float secondsUsed, Block block, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
@@ -309,8 +309,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (session.IsComplete)
             {
-                beCartographyTable.SetWritten(session.HasSentData());
-                beCartographyTable.SetWriting(false);
+                blockEntity.SetWritten(session.HasSentData());
+                blockEntity.SetWriting(false);
                 return true; // Keep interaction alive, player still holding button
             }
 
@@ -318,17 +318,18 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             return true; // Always return true while player holds button
         }
 
-        internal void EndCartographyDownloadSession(IPlayer byPlayer, Block block, BlockEntityCartographyTable beCartographyTable)
+        internal void EndCartographyDownloadSession(IPlayer byPlayer, Block block, BlockEntityCartographyTable blockEntity)
         {
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
 
             if (activeSessions.ContainsKey(sessionId))
             {
                 MapTransferSession session = activeSessions.Get(sessionId);
-                beCartographyTable.SetWriting(false);
                 session.Dispose();
                 activeSessions.Remove(sessionId);
             }
+            blockEntity.SetWriting(false);
+            blockEntity.ClearRecentInteraction(byPlayer);
         }
 
         internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)

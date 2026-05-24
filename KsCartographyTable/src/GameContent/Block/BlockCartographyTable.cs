@@ -232,8 +232,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             bool canContinue = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel, beTable) : base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
             
-
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStep {currentAction}, {canContinue}");
+            if (!canContinue)
+            {
+                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStep {currentAction}, {canContinue}");
+            }
             
             return canContinue;
         }
