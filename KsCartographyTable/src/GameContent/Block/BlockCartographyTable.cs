@@ -44,11 +44,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         }
 
         private bool OnInstantInteractionTakeQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable) {
-            ItemStack stack = new ItemStack(world.GetItem(new AssetLocation(CartographyTableConstants.MOD_ID+":"+CartographyTableConstants.QUILL_ITEM_CODE)));
+            if (Variant["state"] != "filled") return false;
+            ItemStack stack = new(world.GetItem(new AssetLocation(CartographyTableConstants.MOD_ID+":"+CartographyTableConstants.QUILL_ITEM_CODE)));
             if (byPlayer.InventoryManager.TryGiveItemstack(stack, true))
             {
-                Block filledBlock = world.GetBlock(CodeWithVariant("state", "empty"));
-                world.BlockAccessor.ExchangeBlock(filledBlock.BlockId, blockSel.Position);
+                Block emptyBlock = world.GetBlock(CodeWithVariant("state", "empty"));
+                world.BlockAccessor.ExchangeBlock(emptyBlock.BlockId, blockSel.Position);
 
                 if (Sounds?.Place != null)
                 {
@@ -61,6 +62,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         }
 
         private bool OnInstantInteractionPutQuill(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, BlockEntityCartographyTable beTable) {
+            if (Variant["state"] != "empty") return false;
             ItemStack heldStack = byPlayer.InventoryManager.ActiveHotbarSlot.Itemstack;
             if (heldStack != null && heldStack.Collectible.Code.Path.Equals(CartographyTableConstants.QUILL_ITEM_CODE))
             {
