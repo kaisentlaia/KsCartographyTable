@@ -148,6 +148,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
 
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (beTable == null)
+            {
+                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart cannot find blockEntity!");
+                return false;
+            }
             CartographyAction? recentAction = beTable.GetRecentInteraction(byPlayer);
             if (recentAction.HasValue)
             {
@@ -169,7 +174,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             bool canStart = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(world, byPlayer, blockSel, beTable) : base.OnBlockInteractStart(world, byPlayer, blockSel);
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart {currentAction}, {canStart}");
+            api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart {currentAction}, {canStart}");
 
             if (canStart && currentAction != CartographyAction.None)
             {
@@ -217,7 +222,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (currentAction != CartographyAction.None && beTable != null)
+            if (beTable == null)
+            {
+                api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStep cannot find blockEntity!");
+                return false;
+            }
+            if (currentAction != CartographyAction.None)
             {
                 beTable.RegisterInteraction(byPlayer, currentAction);
             }
@@ -337,6 +347,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
+            if (beTable == null)
+            {
+                api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel cannot find blockEntity!");
+                return true;
+            }
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
             CartographyAction action = beTable.GetRecentInteraction(byPlayer) ?? CartographyAction.None;
             Block newSelectedBlock = byPlayer.CurrentBlockSelection.Block;

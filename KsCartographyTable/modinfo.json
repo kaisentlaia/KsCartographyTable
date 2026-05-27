@@ -6,8 +6,8 @@
         "Kaisentlaia"
     ],
     "description": "Share your map with friends in a vanilla-friendly way!",
-    "networkVersion": "2.0.0-rc.6",
-    "version": "2.0.0-rc.6",
+    "networkVersion": "2.0.0-rc.7",
+    "version": "2.0.0-rc.7",
     "side" : "Universal",
     "requiredOnClient": true,
     "requiredOnServer": true,
