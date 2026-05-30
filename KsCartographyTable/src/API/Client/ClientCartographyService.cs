@@ -1,3 +1,4 @@
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
@@ -50,7 +51,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         }
     }
 
-    public class ClientCartographyService
+    public class ClientCartographyService : IDisposable
     {
         ICoreClientAPI CoreClientAPI;
         WorldMapManager WorldMapManager;
@@ -242,7 +243,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             blockEntity.ClearRecentInteraction(byPlayer);
         }
 
-        internal void Dispose()
+        public void Dispose()
         {
             activeSessions.Values.Foreach((session) => session.Dispose());
             playerMapManager.Dispose();

@@ -10,7 +10,7 @@ using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
-	public class PlayerMapManager
+	public class PlayerMapManager : IDisposable
 	{
         WorldMapManager WorldMapManager;
 		public ICoreClientAPI CoreClientAPI;
@@ -85,6 +85,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
                 CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} uploading filtered player's map pieces not present on map {pieces.Count}");
             }
+
+            playerMapDbReader?.Dispose();
+            playerMapDbReader = null;
+
             return pieces;
         }
 
@@ -93,10 +97,11 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             PlayerMapDb.SetMapPieces(packet.Pieces);
         }
 
-        internal void Dispose()
+        public void Dispose()
         {
-            playerMapDbReader?.Close();
-            playerMapDbReader?.Dispose();
+            CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} disposing playerMapDbReader {playerMapDbReader}");
+            playerMapDb?.Dispose();
+            playerMapDb = null;
         }
     }
 }

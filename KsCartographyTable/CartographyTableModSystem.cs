@@ -76,7 +76,7 @@ public class KsCartographyTableModSystem : ModSystem
             }
             catch (Exception ex)
             {
-                api.Logger.Error($"Failed to load {modId}.json: {ex.Message}. Using defaults.");
+                api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Failed to load {modId}.json: {ex.Message}. Using defaults.");
             }
         }
 
@@ -101,7 +101,7 @@ public class KsCartographyTableModSystem : ModSystem
         ServerCartographyService = new ServerCartographyService(api);
 
         // TODO add handbook entry
-        api.ChatCommands.Create("wipewaypoints")
+        CoreServerAPI.ChatCommands.Create("wipewaypoints")
         .WithDescription("Wipes all the waypoints")
         .RequiresPrivilege(Privilege.root)
         .RequiresPlayer()
@@ -115,7 +115,7 @@ public class KsCartographyTableModSystem : ModSystem
             harmony.PatchAll(); // Applies all harmony patches
         }
 
-        api.Event.PlayerDisconnect += OnPlayerDisconnect;
+        CoreServerAPI.Event.PlayerDisconnect += OnPlayerDisconnect;
     }
 
     private void OnPlayerDisconnect(IServerPlayer player)
@@ -133,6 +133,14 @@ public class KsCartographyTableModSystem : ModSystem
         CoreClientAPI = api;
         ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
         ClientCartographyService = new ClientCartographyService(CoreClientAPI);
+        CoreClientAPI.Event.LeaveWorld += OnLeaveWorld;
+    }
+
+    private void OnLeaveWorld()
+    {
+        CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} leaving world, disposing db connections");
+        ClientCartographyService?.Dispose();
+        ClientCartographyService = null;
     }
 
     [HarmonyPrefix]
@@ -165,8 +173,11 @@ public class KsCartographyTableModSystem : ModSystem
     /// </summary>
     public override void Dispose()
     {
-        ServerCartographyService?.Dispose();
         ClientCartographyService?.Dispose();
+        ClientCartographyService = null;
+        ServerCartographyService?.Dispose();
+        ServerCartographyService = null;
+
         CoreClientAPI = null;
         CoreAPI = null;
         CoreServerAPI = null;

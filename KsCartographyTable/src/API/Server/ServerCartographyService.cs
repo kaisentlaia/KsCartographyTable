@@ -13,7 +13,7 @@ using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Server
 {
-	public class ServerCartographyService
+	public class ServerCartographyService : IDisposable
 	{
 		readonly ICoreServerAPI CoreServerAPI;
 		private readonly ServerWaypointManager tableWaypointManager;

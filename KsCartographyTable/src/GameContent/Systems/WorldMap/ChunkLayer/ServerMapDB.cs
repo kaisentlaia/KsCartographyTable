@@ -7,7 +7,6 @@ using ProtoBuf;
 using Vintagestory.API.MathTools;
 using Vintagestory.API.Util;
 using System;
-using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
@@ -46,7 +45,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		SqliteCommand getAllMapPiecesCmd;
 		SqliteCommand setPlayerExploredMapPieceCmd;
 		SqliteCommand getNewMapPiecesForPlayerCmd;
-		SqliteCommand getMapPieceCmd;
+		SqliteCommand getMapPieceWithPosCmd;
 		SqliteCommand createWaypointsCmd;
 		SqliteCommand updateWaypointsCmd;
 		SqliteCommand getPlayerWaypointsCmd;
@@ -71,10 +70,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			getAllMapPiecesCmd.CommandText = "SELECT position, data FROM mappiece";
 			getAllMapPiecesCmd.Prepare();
 
-			getMapPieceCmd = sqliteConn.CreateCommand();
-			getMapPieceCmd.CommandText = "SELECT position, data FROM mappiece WHERE position=@pos";
-			getMapPieceCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
-			getMapPieceCmd.Prepare();
+			getMapPieceWithPosCmd = sqliteConn.CreateCommand();
+			getMapPieceWithPosCmd.CommandText = "SELECT position, data FROM mappiece WHERE position=@pos";
+			getMapPieceWithPosCmd.Parameters.Add("@pos", SqliteType.Integer, 1);
+			getMapPieceWithPosCmd.Prepare();
 
 
 			if (coreApi.Side == EnumAppSide.Server)
@@ -233,8 +232,8 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			Dictionary<FastVec2i, MapPieceDB> pieces = new Dictionary<FastVec2i, MapPieceDB>();
 			for (int i = 0; i < chunkCoords.Count; i++)
 			{
-				getMapPieceCmd.Parameters["@pos"].Value = chunkCoords[i].ToChunkIndex();
-				using SqliteDataReader sqliteDataReader = getMapPieceCmd.ExecuteReader();
+				getMapPieceWithPosCmd.Parameters["@pos"].Value = chunkCoords[i].ToChunkIndex();
+				using SqliteDataReader sqliteDataReader = getMapPieceWithPosCmd.ExecuteReader();
 				while (sqliteDataReader.Read())
 				{
 					object data = sqliteDataReader["data"];
@@ -578,5 +577,34 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 			return waypoints;
         }
+
+		private void DisposeAllCmds()
+		{			
+			getAllMapPiecesCmd?.Dispose();
+			setPlayerExploredMapPieceCmd?.Dispose();
+			getNewMapPiecesForPlayerCmd?.Dispose();
+			getMapPieceWithPosCmd?.Dispose();
+			createWaypointsCmd?.Dispose();
+			updateWaypointsCmd?.Dispose();
+			getPlayerWaypointsCmd?.Dispose();
+			getMatchingWaypointCmd?.Dispose();
+			setDeletedWaypointsCmd?.Dispose();
+			getNewWaypointsForPlayerCmd?.Dispose();
+			getUpdatedWaypointsForPlayerCmd?.Dispose();
+			getDeletedWaypointsForPlayerCmd?.Dispose();
+			getWaypointsToDeleteCmd?.Dispose();
+		}
+
+		public override void Close()
+		{
+			DisposeAllCmds();
+			base.Close();
+		}
+		
+		public override void Dispose()
+		{			
+			DisposeAllCmds();
+			base.Dispose();
+		}
     }
 }
