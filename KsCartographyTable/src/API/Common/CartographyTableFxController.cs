@@ -206,6 +206,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
 
         private void SpawnWritingParticles()
         {
+            // Api.World.SpawnCubeParticles(blockSel.Position.ToVec3d().Add(blockSel.HitPosition), slot.Itemstack, 0.25f, 1, 0.5f, byPlayer, new Vec3f(0, 1, 0));
             ItemStack inkColorStack = ItemDetectorService.GetItemStacks(Api.World, "charcoal")[0];
             InkParticles.Color = InkParticles.Color = inkColorStack.Collectible.GetRandomColor(Api as ICoreClientAPI, inkColorStack);
             InkParticles.Color &= 0xffffff;

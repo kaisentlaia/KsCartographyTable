@@ -118,6 +118,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
         private void FinalizeDownload(MapSyncPacket packet, IClientPlayer currentPlayer)
         {
             BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable) CoreClientAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
+
+            if (blockEntity == null)
+            {
+                CoreClientAPI.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Cannot finalize download for null blockentity!");
+                return;
+            }
        
             double km2 = downloadedChunks.TryGetValue(currentPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             downloadedChunks[currentPlayer.PlayerUID] = 0;
@@ -234,6 +240,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             }
             blockEntity.SetWriting(false);
             blockEntity.ClearRecentInteraction(byPlayer);
+        }
+
+        internal void Dispose()
+        {
+            activeSessions.Values.Foreach((session) => session.Dispose());
+            playerMapManager.Dispose();
         }
     }
 }

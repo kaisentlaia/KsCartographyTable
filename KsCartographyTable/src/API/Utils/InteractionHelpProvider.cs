@@ -51,6 +51,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 
         private static WorldInteraction[] GetMapHelp(IWorldAccessor world, bool mapEmpty)
         {
+            ItemStack[] quill = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.QUILL_ITEM_CODE);
+            if (quill == null)
+            {
+                world.Api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Can't find quill item stack!");
+                return [];
+            }
             var interactions = new List<WorldInteraction>
             {
                 new()
@@ -58,14 +64,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
                     ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_UPDATE,
                     HotKeyCode = null,
                     MouseButton = EnumMouseButton.Right,
-                    Itemstacks = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.QUILL_ITEM_CODE)
+                    Itemstacks = quill
                 },
                 new()
                 {
                     ActionLangCode = CartographyTableLangCodes.INTERACTION_USER_UPDATE,
                     HotKeyCode = "sprint",
                     MouseButton = EnumMouseButton.Right,
-                    Itemstacks = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.QUILL_ITEM_CODE)
+                    Itemstacks = quill
                 }
             };
 
@@ -83,12 +89,17 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 
             if (KsCartographyTableModSystem.ModCompatibilityManager.IsPalantirEnabled)
             {
+                ItemStack[] palantir = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.PALANTIR_BLOCK_CODE);
+                if (palantir == null)
+                {                    
+                    return [];
+                }
                 interactions.Add(new WorldInteraction()
                 {
                     ActionLangCode = CartographyTableLangCodes.INTERACTION_TABLE_PONDER,
                     HotKeyCode = null,
                     MouseButton = EnumMouseButton.Right,
-                    Itemstacks = ItemDetectorService.GetItemStacks(world, CartographyTableConstants.PALANTIR_BLOCK_CODE)
+                    Itemstacks = palantir
                 });
             }
 

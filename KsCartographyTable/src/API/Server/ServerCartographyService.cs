@@ -89,6 +89,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             uploadedChunks[fromPlayer.PlayerUID] += packet.Pieces.Count;
 
             BlockEntityCartographyTable blockEntity = (BlockEntityCartographyTable) CoreServerAPI.World.BlockAccessor.GetBlockEntity(packet.BlockPos);
+            if (blockEntity == null)
+            {
+                CoreServerAPI.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Cannot upload map for null blockentity!");
+                return;
+            }
             ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
             blockEntity.SetWriting(true);
             if (blockEntity.IsAdvanced)
@@ -197,6 +202,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (mapDB != null)
             {
+                mapDB?.Close();
                 mapDB?.Dispose();
                 // Delete the .db file from disk
                 string mapPath = Path.Combine(GamePaths.DataPath, "ModData",
@@ -335,6 +341,26 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
         internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)
         {
             tableWaypointManager.ResendWaypointsToPlayer(toPlayer);
+        }
+
+        internal void CleanupPlayerSessions(IServerPlayer player)
+        {
+            var sessionKeysToRemove = activeSessions.Keys
+                .Where(key => key == player.PlayerUID)
+                .ToList();
+            
+            foreach (var key in sessionKeysToRemove)
+            {
+                try
+                {
+                    activeSessions[key]?.Dispose();
+                    activeSessions.Remove(key);
+                }
+                catch (Exception ex)
+                {
+                    CoreServerAPI.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Error cleaning up session for player {player.PlayerUID}: {ex}");
+                }
+            }
         }
     }
 }

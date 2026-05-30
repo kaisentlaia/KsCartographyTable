@@ -4,7 +4,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
   public static class CartographyTableConstants
   {
       public const string MOD_ID = "kscartographytable";
-      public const string MAP_EVENT = "MapEvent";
+      public const string MAP_EVENT = "kscartographytable";
       public const string ADVANCED_PREFIX = "advancedcartographytable-";
       public const string ADVANCED_PART_SUFFIX = "part-";
       public const string PALANTIR_MOD_ID = "palantir";

@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
-using Vintagestory.API.Common;
-using Vintagestory.API.MathTools;
 using Vintagestory.API.Server;
-using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {

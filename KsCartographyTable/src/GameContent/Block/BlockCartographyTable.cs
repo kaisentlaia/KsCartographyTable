@@ -81,12 +81,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             return false;
         }
 
-        private bool OnBusyError( IPlayer byPlayer)
+        private bool OnBusyError(IPlayer byPlayer)
         {
             api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBusyError {api.Side}");
             if (api.Side == EnumAppSide.Client)
             {
-                (api as ICoreClientAPI).TriggerIngameError(byPlayer as IServerPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_BUSY));
+                (api as ICoreClientAPI).TriggerIngameError(byPlayer as IClientPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_BUSY));
             }
             return false;
         }
@@ -255,7 +255,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private void OnTimedInteractionWipeStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (secondsUsed >= 3 && !beTable.Map.Empty)
+            if (beTable != null && secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnWipeTableMap(byPlayer);
             }
@@ -264,7 +264,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private void OnTimedInteractionPonderStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            if (secondsUsed >= 3 && !beTable.Map.Empty)
+            if (beTable != null && secondsUsed >= 3 && !beTable.Map.Empty)
             {
                 beTable.OnPonderMap(byPlayer);
             }
@@ -273,13 +273,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         private void OnTimedInteractionUploadStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            beTable.OnCartographySessionStop(CartographyAction.UploadMap, world, byPlayer, blockSel);
+            beTable?.OnCartographySessionStop(CartographyAction.UploadMap, world, byPlayer, blockSel);
         }
         
         private void OnTimedInteractionDownloadStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
         {
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
-            beTable.OnCartographySessionStop(CartographyAction.DownloadMap, world, byPlayer, blockSel);
+            beTable?.OnCartographySessionStop(CartographyAction.DownloadMap, world, byPlayer, blockSel);
         }
 
         public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

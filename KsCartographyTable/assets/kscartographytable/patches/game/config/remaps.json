@@ -3,7 +3,7 @@
     "side": "server",
     "file": "game:config/remaps",
     "op": "add",
-    "path": "/kscartographytable:v2.0.0-rc.7",
+    "path": "/kscartographytable:v2.0.0-rc.8",
     "value": [
       "/bir remapq kscartographytable:cartographytable-filled-north kscartographytable:cartography-table force"
     ]

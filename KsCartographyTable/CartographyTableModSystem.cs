@@ -114,6 +114,13 @@ public class KsCartographyTableModSystem : ModSystem
             harmony = new Harmony(Mod.Info.ModID);
             harmony.PatchAll(); // Applies all harmony patches
         }
+
+        api.Event.PlayerDisconnect += OnPlayerDisconnect;
+    }
+
+    private void OnPlayerDisconnect(IServerPlayer player)
+    {
+        ServerCartographyService.CleanupPlayerSessions(player);
     }
 
     private static bool IsMapDisallowed()
@@ -159,6 +166,7 @@ public class KsCartographyTableModSystem : ModSystem
     public override void Dispose()
     {
         ServerCartographyService?.Dispose();
+        ClientCartographyService?.Dispose();
         CoreClientAPI = null;
         CoreAPI = null;
         CoreServerAPI = null;

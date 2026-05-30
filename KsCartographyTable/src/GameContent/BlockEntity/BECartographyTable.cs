@@ -14,7 +14,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
     public class BlockEntityCartographyTable : BlockEntity
     {
-        protected ILoadedSound ambientSound;
         private ICoreServerAPI CoreServerAPI;
         private ICoreClientAPI CoreClientAPI;
         public EnumAppSide Side;
@@ -36,7 +35,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             Unknown,
             None
         }
-        private readonly Dictionary<string, (CartographyAction action, long timestamp)> recentInteractions = new();
+        private readonly Dictionary<string, (CartographyAction action, long timestamp)> recentInteractions = [];
         private const long INTERACTION_GRACE_MS = 500;
 
         public override void Initialize(ICoreAPI api)
@@ -63,10 +62,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public void EnsureMap()
         {
-            if (Map == null)
-            {
-                Map = new CartographyMap(Api);
-            }
+            Map ??= new CartographyMap(Api);
         }
 
         internal bool OnPonderMap(IPlayer byPlayer)

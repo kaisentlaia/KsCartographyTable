@@ -217,9 +217,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			{
 				object data = sqlite_datareader["data"];
 				ulong chunkId = Convert.ToUInt64(sqlite_datareader["position"]);
-				if (data == null) return null;
+				if (data == null || data == DBNull.Value) continue;
 
-				pieces.Add(ChunkIdToFastVect2i(chunkId), SerializerUtil.Deserialize<MapPieceDB>(data as byte[]));
+                if (data is not byte[] bytes)
+                    continue;
+
+                pieces.Add(ChunkIdToFastVect2i(chunkId), SerializerUtil.Deserialize<MapPieceDB>(bytes));
 			}
 
 			return pieces;
@@ -236,12 +239,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					object data = sqliteDataReader["data"];
 					ulong chunkId = Convert.ToUInt64(sqliteDataReader["position"]);
-					if (data == null)
-					{
-						return null;
-					}
+                    if (data == null || data == DBNull.Value) continue;
 
-					pieces.Add(ChunkIdToFastVect2i(chunkId), SerializerUtil.Deserialize<MapPieceDB>(data as byte[]));
+                    if (data is not byte[] bytes)
+                        continue;
+
+					pieces.Add(ChunkIdToFastVect2i(chunkId), SerializerUtil.Deserialize<MapPieceDB>(bytes));
 				}
 			}
 
@@ -360,7 +363,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					waypoints.Add(new CartographyWaypoint(
 						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
+						reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 						reader["owningPlayerUid"].ToString(),
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
@@ -387,7 +390,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					waypoints.Add(new CartographyWaypoint(
 						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
+						reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 						reader["owningPlayerUid"].ToString(),
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
@@ -415,7 +418,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					waypoints.Add(new CartographyWaypoint(
 						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
+						reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 						reader["owningPlayerUid"].ToString(),
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
@@ -443,7 +446,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					waypoints.Add(new CartographyWaypoint(
 						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
+						reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 						reader["owningPlayerUid"].ToString(),
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
@@ -474,7 +477,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				{
 					matchingWaypoint = new CartographyWaypoint(
 						reader["guid"].ToString(),
-						reader["parentGuid"].ToString(),
+						reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 						reader["owningPlayerUid"].ToString(),
 						reader["title"].ToString(),
 						reader["icon"].ToString(),
@@ -559,7 +562,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 					{
 						waypoints.Add(new CartographyWaypoint(
 							reader["guid"].ToString(),
-							reader["parentGuid"].ToString(),
+							reader["parentGuid"] != DBNull.Value ? reader["parentGuid"].ToString() : null,
 							reader["owningPlayerUid"].ToString(),
 							reader["title"].ToString(),
 							reader["icon"].ToString(),

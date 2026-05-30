@@ -1,6 +1,5 @@
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
-using Vintagestory.API.Util;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 {
@@ -19,8 +18,8 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Utils
 
 		public static ItemStack[] GetItemStacks(IWorldAccessor world, string codePart)
 		{
-			var ink = world.Collectibles.Find(obj => obj.FirstCodePart() == codePart);
-			return ink?.GetHandBookStacks(world.Api as ICoreClientAPI)?.ToArray();
+			var itemStack = world.Collectibles.Find(obj => obj.FirstCodePart() == codePart);
+			return itemStack?.GetHandBookStacks(world.Api as ICoreClientAPI)?.ToArray();
 		}
 	}
 }

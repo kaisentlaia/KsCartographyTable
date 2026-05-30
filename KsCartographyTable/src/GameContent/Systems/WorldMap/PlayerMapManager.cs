@@ -1,9 +1,9 @@
+using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Vintagestory.API.Client;
-using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
 using Vintagestory.GameContent;
@@ -91,6 +91,12 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         internal void UpdateMap(MapSyncPacket packet)
         {
             PlayerMapDb.SetMapPieces(packet.Pieces);
+        }
+
+        internal void Dispose()
+        {
+            playerMapDbReader?.Close();
+            playerMapDbReader?.Dispose();
         }
     }
 }
