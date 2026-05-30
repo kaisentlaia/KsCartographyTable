@@ -129,6 +129,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (Side == EnumAppSide.Client)
             {
                 UpdateFxState(wasWiping, wasPondering, wasWriting);
+                CoreClientAPI.World.Config.SetBool("allowMap", !Map.IsWriting);
             }
         }
         
