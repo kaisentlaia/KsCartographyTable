@@ -1,0 +1,470 @@
+{
+  "code": "advancedcartographytable",
+  "class": "kscartographytable.advanced-cartography-table",
+  "entityClass": "kscartographytable.cartography-table-entity",
+  "variantgroups": [
+    { "code": "state", "states": ["empty", "filled"] },
+    { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
+  ],
+  "behaviors": [
+    {
+      "name": "HorizontalOrientable",
+      "properties": { "dropBlockFace": "north" }
+    }
+  ],
+  "maxStackSize": 1,
+  "collisionSelectionBoxesByType": {
+    "*-north": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 2.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.09,
+        "y1": 1.0,
+        "z1": 0.53,
+        "x2": 0.28,
+        "y2": 1.51,
+        "z2": 0.78,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.36,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 1.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 2.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.23,
+        "y1": 1.0,
+        "z1": 0.09,
+        "x2": 0.405,
+        "y2": 1.51,
+        "z2": 0.255,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": 0.36,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 1.98,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.72,
+        "y1": 1.0,
+        "z1": 0.22,
+        "x2": 0.91,
+        "y2": 1.51,
+        "z2": 0.47,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": -0.98,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.64,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.6,
+        "y1": 1.0,
+        "z1": 0.72,
+        "x2": 0.78,
+        "y2": 1.51,
+        "z2": 0.91,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.98,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.64,
+        "comment": "Cartography Book"
+      }
+    ]
+  },
+  "collisionBoxesByType": {
+    "*-north": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 2.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.09,
+        "y1": 1.0,
+        "z1": 0.53,
+        "x2": 0.28,
+        "y2": 1.51,
+        "z2": 0.78,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.36,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 1.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 2.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.23,
+        "y1": 1.0,
+        "z1": 0.09,
+        "x2": 0.405,
+        "y2": 1.51,
+        "z2": 0.255,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": 0.36,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 1.98,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.72,
+        "y1": 1.0,
+        "z1": 0.22,
+        "x2": 0.91,
+        "y2": 1.51,
+        "z2": 0.47,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": -0.98,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.64,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.6,
+        "y1": 1.0,
+        "z1": 0.72,
+        "x2": 0.78,
+        "y2": 1.51,
+        "z2": 0.91,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.98,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.64,
+        "comment": "Cartography Book"
+      }
+    ]
+  },
+  "particleCollisionBoxesByType": {
+    "*-north": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 2.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.09,
+        "y1": 1.0,
+        "z1": 0.53,
+        "x2": 0.28,
+        "y2": 1.51,
+        "z2": 0.78,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.36,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 1.98,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-east": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 2.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.23,
+        "y1": 1.0,
+        "z1": 0.09,
+        "x2": 0.405,
+        "y2": 1.51,
+        "z2": 0.255,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": 0.36,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 1.98,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-south": [
+      {
+        "x1": -1.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.72,
+        "y1": 1.0,
+        "z1": 0.22,
+        "x2": 0.91,
+        "y2": 1.51,
+        "z2": 0.47,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": -0.98,
+        "y1": 1.0,
+        "z1": 0.03,
+        "x2": 0.64,
+        "y2": 1.16,
+        "z2": 0.97,
+        "comment": "Cartography Book"
+      }
+    ],
+    "*-west": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": -1.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Table"
+      },
+      {
+        "x1": 0.6,
+        "y1": 1.0,
+        "z1": 0.72,
+        "x2": 0.78,
+        "y2": 1.51,
+        "z2": 0.91,
+        "comment": "Ink and Quill"
+      },
+      {
+        "x1": 0.03,
+        "y1": 1.0,
+        "z1": -0.98,
+        "x2": 0.97,
+        "y2": 1.16,
+        "z2": 0.64,
+        "comment": "Cartography Book"
+      }
+    ]
+  },
+  "fileReplaceMode": "ReplaceAll",
+  "blockmaterial": "wood",
+  "creativeinventory": {
+    "general": ["*-filled-north"],
+    "kscartographytable": ["*-filled-north"]
+  },
+  "shapeByType": {
+    "*-north": {
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
+      "rotateY": 0
+    },
+    "*-east": {
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
+      "rotateY": 270
+    },
+    "*-south": {
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
+      "rotateY": 180
+    },
+    "*-west": {
+      "base": "kscartographytable:block/advancedcartographytable/{state}",
+      "rotateY": 90
+    }
+  },
+  "replaceable": 900,
+  "resistance": 1.5,
+  "lightAbsorption": 0,
+  "sidesolid": { "all": false },
+  "sideopaque": { "up": true, "all": false },
+  "sounds": {
+    "place": "game:block/planks",
+    "hit": "game:block/planks",
+    "break": "game:block/planks",
+    "walk": "game:walk/wood"
+  },
+  "combustibleProps": { "burnTemperature": 600, "burnDuration": 35 },
+  "materialDensity": 400,
+  "heldTpIdleAnimation": "holdunderarm",
+  "guiTransform": {
+    "origin": { "x": 1, "y": 0.8, "z": 0.5 },
+    "rotation": { "x": -22.6, "y": 45, "z": 0 },
+    "scale": 0.95
+  },
+  "tpHandTransform": {
+    "translation": { "x": -0.7, "y": -0.6, "z": -0.9 },
+    "rotation": { "x": 80, "y": 0, "z": 0 },
+    "scale": 0.56
+  },
+  "fpHandTransform": {
+    "translation": { "x": 0.08, "y": -0.2, "z": 0.6 },
+    "rotation": { "x": 33, "y": 134, "z": -102 }
+  },
+  "particleProperties": [
+    {
+      "hsvaColor": [
+        { "avg": 20, "var": 20 },
+        { "avg": 255, "var": 50 },
+        { "avg": 255, "var": 50 },
+        { "avg": 255, "var": 0 }
+      ],
+      "opacityEvolve": { "transform": "quadratic", "factor": -16 },
+      "gravityEffect": { "avg": 0, "var": 0 },
+      "velocity": [
+        { "avg": 0, "var": 0.0125 },
+        { "avg": 0.03, "var": 0.01 },
+        { "avg": 0, "var": 0.0125 }
+      ],
+      "quantity": { "avg": 0.5 },
+      "size": { "avg": 0.1, "var": 0.05 },
+      "lifeLength": { "avg": 0.25 },
+      "sizeEvolve": { "transform": "linear", "factor": 0.1 },
+      "particleModel": "Quad",
+      "vertexFlags": 255,
+      "windAffectednes": 0.05
+    },
+    {
+      "hsvaColor": [
+        { "avg": 0, "var": 0 },
+        { "avg": 0, "var": 0 },
+        { "avg": 30, "var": 15 },
+        { "avg": 220, "var": 50 }
+      ],
+      "opacityEvolve": { "transform": "quadratic", "factor": -16 },
+      "gravityEffect": { "avg": 0, "var": 0 },
+      "velocity": [
+        { "avg": 0, "var": 0.025 },
+        { "avg": 0.1, "var": 0.025 },
+        { "avg": 0, "var": 0.025 }
+      ],
+      "quantity": { "avg": 0.025 },
+      "size": { "avg": 0.1, "var": 0.05 },
+      "sizeEvolve": { "transform": "linear", "factor": 0.25 },
+      "particleModel": "Quad"
+    }
+  ],
+  "lightHsv": [7, 7, 10],
+  "dropsByType": {
+    "*-empty-*": [{ "code": "advancedcartographytable-empty-north" }],
+    "*-filled-*": [{ "code": "advancedcartographytable-filled-north" }]
+  }
+}

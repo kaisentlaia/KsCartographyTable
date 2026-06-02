@@ -1,0 +1,113 @@
+{
+  "code": "cartographytable",
+  "class": "kscartographytable.cartography-table",
+  "entityClass": "kscartographytable.cartography-table-entity",
+  "blockmaterial": "wood",
+  "creativeinventory": {
+    "general": ["*-filled-north"],
+    "kscartographytable": ["*-filled-north"]
+  },
+  "shape": { "base": "block/cartographytable" },
+  "replaceable": 900,
+  "resistance": 1.5,
+  "maxStackSize": 1,
+  "lightAbsorption": 1,
+  "variantgroups": [
+    { "code": "state", "states": ["empty", "filled"] },
+    { "code": "side", "loadFromProperties": "abstract/horizontalorientation" }
+  ],
+  "behaviors": [
+    {
+      "name": "HorizontalOrientable",
+      "properties": { "dropBlockFace": "north" }
+    }
+  ],
+  "shapeByType": {
+    "*-north": {
+      "base": "kscartographytable:block/cartographytable/{state}",
+      "rotateY": 0
+    },
+    "*-east": {
+      "base": "kscartographytable:block/cartographytable/{state}",
+      "rotateY": 270
+    },
+    "*-south": {
+      "base": "kscartographytable:block/cartographytable/{state}",
+      "rotateY": 180
+    },
+    "*-west": {
+      "base": "kscartographytable:block/cartographytable/{state}",
+      "rotateY": 90
+    }
+  },
+  "sidesolid": { "all": false },
+  "sideopaque": { "up": true, "all": false },
+  "sounds": {
+    "place": "game:block/planks",
+    "hit": "game:block/planks",
+    "break": "game:block/planks",
+    "walk": "game:walk/wood"
+  },
+  "combustibleProps": { "burnTemperature": 600, "burnDuration": 35 },
+  "materialDensity": 400,
+  "heldTpIdleAnimation": "holdunderarm",
+  "tpHandTransform": {
+    "translation": { "x": -0.7, "y": -0.6, "z": -0.9 },
+    "rotation": { "x": 80, "y": 0, "z": 0 },
+    "scale": 0.56
+  },
+  "fpHandTransform": {
+    "translation": { "x": 0.08, "y": -0.2, "z": 0.6 },
+    "rotation": { "x": 33, "y": 134, "z": -102 }
+  },
+  "collisionSelectionBoxesByType": {
+    "*-north": [
+      {
+        "x1": 0.0,
+        "y1": 0.0,
+        "z1": 0.0,
+        "x2": 1.0,
+        "y2": 1.0,
+        "z2": 1.0,
+        "comment": "Box 0: Table base"
+      },
+      {
+        "x1": 0.72,
+        "y1": 1,
+        "z1": 0.13,
+        "x2": 0.91,
+        "y2": 1.51,
+        "z2": 0.32,
+        "comment": "Box 1: Ink and quill"
+      },
+      {
+        "x1": 0.2,
+        "y1": 1.0,
+        "z1": 0.18,
+        "x2": 0.8,
+        "y2": 1.08,
+        "z2": 0.92,
+        "comment": "Box 2: Map"
+      }
+    ],
+    "*-east": [
+      { "x1": 0.0, "y1": 0.0, "z1": 0.0, "x2": 1.0, "y2": 1.0, "z2": 1.0 },
+      { "x1": 0.67, "y1": 1, "z1": 0.72, "x2": 0.86, "y2": 1.51, "z2": 0.9 },
+      { "x1": 0.08, "y1": 1.0, "z1": 0.2, "x2": 0.82, "y2": 1.08, "z2": 0.8 }
+    ],
+    "*-south": [
+      { "x1": 0.0, "y1": 0.0, "z1": 0.0, "x2": 1.0, "y2": 1.0, "z2": 1.0 },
+      { "x1": 0.1, "y1": 1, "z1": 0.68, "x2": 0.28, "y2": 1.51, "z2": 0.87 },
+      { "x1": 0.2, "y1": 1.0, "z1": 0.08, "x2": 0.8, "y2": 1.08, "z2": 0.82 }
+    ],
+    "*-west": [
+      { "x1": 0.0, "y1": 0.0, "z1": 0.0, "x2": 1.0, "y2": 1.0, "z2": 1.0 },
+      { "x1": 0.13, "y1": 1, "z1": 0.1, "x2": 0.31, "y2": 1.51, "z2": 0.28 },
+      { "x1": 0.18, "y1": 1.0, "z1": 0.2, "x2": 0.92, "y2": 1.08, "z2": 0.8 }
+    ]
+  },
+  "dropsByType": {
+    "*-empty-*": [{ "code": "cartographytable-empty-north" }],
+    "*-filled-*": [{ "code": "cartographytable-filled-north" }]
+  }
+}
