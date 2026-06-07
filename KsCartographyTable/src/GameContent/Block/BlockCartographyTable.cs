@@ -83,7 +83,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         private bool OnBusyError(IPlayer byPlayer)
         {
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBusyError {api.Side}");
+            KsCartographyTableModSystem.DebugLog(api, $"OnBusyError {api.Side}");
             if (api.Side == EnumAppSide.Client)
             {
                 (api as ICoreClientAPI).TriggerIngameError(byPlayer as IClientPlayer, "mapfailure", Lang.Get(CartographyTableLangCodes.FAILURE_BUSY));
@@ -150,13 +150,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             BlockEntityCartographyTable beTable = FindBlockEntity(world, blockSel.Position);
             if (beTable == null)
             {
-                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart cannot find blockEntity!");
+                KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractStart cannot find blockEntity!");
                 return false;
             }
             CartographyAction? recentAction = beTable.GetRecentInteraction(byPlayer);
             if (recentAction.HasValue)
             {
-                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart has recent action by player, returning true");
+                KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractStart has recent action by player, returning true");
                 beTable.RegisterInteraction(byPlayer, recentAction.Value);
                 return true;
             }
@@ -174,7 +174,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             bool canStart = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(world, byPlayer, blockSel, beTable) : base.OnBlockInteractStart(world, byPlayer, blockSel);
 
-            api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStart {currentAction}, {canStart}");
+            KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractStart {currentAction}, {canStart}");
 
             if (canStart && currentAction != CartographyAction.None)
             {
@@ -246,7 +246,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             
             if (!canContinue)
             {
-                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStep {currentAction}, {canContinue}");
+                KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractStep {currentAction}, {canContinue}");
             }
             
             return canContinue;
@@ -296,7 +296,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 [CartographyAction.DownloadMap] = OnTimedInteractionDownloadStop,
             };
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractStop {currentAction}");
+            KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractStop {currentAction}");
             
             if (interactionHandlers.TryGetValue(currentAction, out var handler))
             {
@@ -365,7 +365,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             {
                 // Refresh the timestamp so the companion Start will see its
                 beTable.RegisterInteraction(byPlayer, action);
-                api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel preserving {action} session");
+                KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractCancel preserving {action} session");
                 return true;
             }
             beTable.ClearRecentInteraction(byPlayer);
@@ -383,7 +383,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             bool canCancel = interactionHandlers.TryGetValue(currentAction, out var handler) ? handler(secondsUsed, world, byPlayer, blockSel, beTable) : base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnBlockInteractCancel {currentAction}, {canCancel}, {cancelReason}");
+            KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractCancel {currentAction}, {canCancel}, {cancelReason}");
             
             return true;
         }

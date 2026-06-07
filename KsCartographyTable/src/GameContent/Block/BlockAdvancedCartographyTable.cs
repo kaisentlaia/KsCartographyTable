@@ -36,7 +36,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             string side = GetPlayerFacingSide(byPlayer);
             BlockPos companionPos = GetCompanionPosition(blockSel.Position, side);
             
-            world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} TryPlaceBlock Block position: {blockSel.Position} companion position: {companionPos} side: {side}");
+            KsCartographyTableModSystem.DebugLog(api, $"TryPlaceBlock Block position: {blockSel.Position} companion position: {companionPos} side: {side}");
 
             Block blockAtMain = world.BlockAccessor.GetBlock(blockSel.Position);
             Block blockAtCompanion = world.BlockAccessor.GetBlock(companionPos);
@@ -44,7 +44,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             // Check main position
             if (!blockAtMain.IsReplacableBy(this))
             {
-                world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Main position block isn't replaceable");
+                KsCartographyTableModSystem.DebugLog(api, $"Main position block isn't replaceable");
                 failureCode = "notenoughspace";
                 return false;
             }
@@ -52,7 +52,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             // Check companion position
             if (!blockAtCompanion.IsReplacableBy(this))
             {
-                world.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Companion position block isn't replaceable");
+                KsCartographyTableModSystem.DebugLog(api, $"Companion position block isn't replaceable");
                 failureCode = "notenoughspace";
                 return false;
             }

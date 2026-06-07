@@ -27,8 +27,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         
         private Queue<Dictionary<FastVec2i, MapPieceDB>> remainingBatches;
         
-        private const int BATCH_SIZE = 25;
-        private const double SEND_EVERY_SECONDS = 0.2;
         private string channel;
         private double lastSendTime;
 
@@ -88,9 +86,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             var piecesList = MapPieces.ToList();
 
-            for (int i = 0; i < piecesList.Count; i += BATCH_SIZE)
+            for (int i = 0; i < piecesList.Count; i += KsCartographyTableModSystem.Settings.ChunksPerPacket)
             {
-                var batch = piecesList.Skip(i).Take(BATCH_SIZE).ToDictionary(
+                var batch = piecesList.Skip(i).Take(KsCartographyTableModSystem.Settings.ChunksPerPacket).ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value
                 );
@@ -102,7 +100,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public bool TrySendNextBatch(double currentSeconds)
         {
             // Only send if 1/4 second has passed since last send
-            if (currentSeconds - lastSendTime < SEND_EVERY_SECONDS)
+            if (currentSeconds - lastSendTime < KsCartographyTableModSystem.Settings.PacketDelay)
             {
                 return true; // Still alive, just not sending yet
             }

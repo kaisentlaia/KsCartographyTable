@@ -93,7 +93,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return base.OnBlockInteractStart(world, byPlayer, blockSel);
             }
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStart to parent");
             return Parent.Block.OnBlockInteractStart(world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override bool OnBlockInteractStep(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -104,7 +103,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return base.OnBlockInteractStep(secondsUsed, world, byPlayer, blockSel);
             }
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStep to parent");
             return Parent.Block.OnBlockInteractStep(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override void OnBlockInteractStop(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)
@@ -116,7 +114,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return;
             }
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractStop to parent");
             Parent.Block.OnBlockInteractStop(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel));
         }
         public override bool OnBlockInteractCancel(float secondsUsed, IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel, EnumItemUseCancelReason cancelReason)
@@ -127,7 +124,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return base.OnBlockInteractCancel(secondsUsed, world, byPlayer, blockSel, cancelReason);
             }
 
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} AdvancedCartographyTablePart forwarding OnBlockInteractCancel to parent");
             return Parent.Block.OnBlockInteractCancel(secondsUsed, world, byPlayer, Parent.GetSelection(blockSel), cancelReason);
         }
 

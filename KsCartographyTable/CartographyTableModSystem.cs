@@ -19,6 +19,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 public class Settings
 {
     public bool ImmersiveMode { get; set; } = false;
+    public int ChunksPerPacket { get; set; } = 25;
+    public double PacketDelay { get; set; } = 0.2;
+    public bool VerboseDebug { get; set; } = false;
 }
 
 [HarmonyPatch]
@@ -84,9 +87,15 @@ public class KsCartographyTableModSystem : ModSystem
         if (settingsFile != null)
         {
             Settings.ImmersiveMode = settingsFile.ImmersiveMode;
+            Settings.ChunksPerPacket = settingsFile.ChunksPerPacket;
+            Settings.PacketDelay = settingsFile.PacketDelay;
+            Settings.VerboseDebug = settingsFile.VerboseDebug;
         } else
         {
             Settings.ImmersiveMode = false;
+            Settings.ChunksPerPacket = 25;
+            Settings.PacketDelay = 0.2;
+            Settings.VerboseDebug = false;
             string json = JsonUtil.ToString(Settings);
             File.WriteAllText(settingsPath, json);
         }
@@ -138,9 +147,17 @@ public class KsCartographyTableModSystem : ModSystem
 
     private void OnLeaveWorld()
     {
-        CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} leaving world, disposing db connections");
+        DebugLog(CoreClientAPI, "leaving world, disposing db connections");
         ClientCartographyService?.Dispose();
         ClientCartographyService = null;
+    }
+
+    public static void DebugLog(ICoreAPI api, string message)
+    {
+        if (Settings.VerboseDebug)
+        {            
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} ${message}");
+        }
     }
 
     [HarmonyPrefix]

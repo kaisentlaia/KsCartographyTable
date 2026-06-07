@@ -39,5 +39,11 @@
   "gamemechanicinfo-pondering-title": "Game Mechanic: Astral Projection",
   "gamemechanicinfo-pondering-text": "<strong>Introduction</strong><br><br>By <hk>rightmouse</hk>-clicking on the map of a <a href=\"handbook://cartographytable\">cartography table</a> or an <a href=\"handbook://advancedcartographytable\">advanced cartography table</a> while holding a <a href=\"handbook://palantir\">palantir</a>, you can travel in spirit to faraway lands, known or unknown.<br><br><strong>Preparing for Travel</strong><br><br>First, craft a <a href=\"handbook://palantir\">palantir</a> and a <a href=\"handbook://cartographytable\">cartography table</a> or an <a href=\"handbook://advancedcartographytable\">advanced cartography table</a>. Place the table and gather some psychedelic mushrooms. Open your map and place palantir travel waypoints (eye icon) in the places you wish to see, then transcribe the new waypoints onto the cartography table map.<br><br><strong>Astral Projection</strong><br><br>Once your preparations are complete, eat a psychedelic mushroom and ponder the cartography table map by <hk>rightmouse</hk>-clicking on it while holding a palantir to begin your journey.",
   "config-setting-immersivemode-name": "Immersive mode",
-  "config-setting-immersivemode-comment": "When immersive mode is enabled, no messages will be displayed in the game chat while using the cartography table."
+  "config-setting-immersivemode-comment": "When immersive mode is enabled, no messages will be displayed in the game chat while using the cartography table.",
+  "config-setting-chunksperpacket-name": "Chunks per packet",
+  "config-setting-chunksperpacket-comment": "How many map chunks to transcribe at once. Increasing this will make the transcription faster but could cause server or client overloads.",
+  "config-setting-packetdelay-name": "Packet delay",
+  "config-setting-packetdelay-comment": "How many seconds to wait between packets. Decreasing this will make the transcription faster but could cause server or client overloads.",
+  "config-setting-verbosedebug-name": "Verbose debug",
+  "config-setting-verbosedebug-comment": "Log additional messages."
 }

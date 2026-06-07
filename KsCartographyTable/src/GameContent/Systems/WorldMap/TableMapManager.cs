@@ -12,7 +12,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		public void UpdateMap(IServerPlayer fromPlayer, MapSyncPacket packet, ServerMapDB mapDB)
         {
-			CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMap with {packet.Pieces.Count} pieces, mapdb exists {mapDB != null}");
+			KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"UpdateMap with {packet.Pieces.Count} pieces, mapdb exists {mapDB != null}");
             if (mapDB != null)
             {
                 mapDB.SetMapPieces(packet.Pieces);

@@ -196,11 +196,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
             if (activeSessions.ContainsKey(sessionId))
             {
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} session already exists");
+                KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"session already exists");
                 return false;
             }
             KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, byPlayer, CartographyTableLangCodes.SESSION_STARTED);
-            CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} starting new session");
+            KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"starting new session");
             MapTransferSession session = new(byPlayer, block, blockPos, action, world, playerMapManager.GetNewMapPieces(blockEntity), CoreClientAPI);
             activeSessions.Add(sessionId, session);
             blockEntity.SetWriting(true);

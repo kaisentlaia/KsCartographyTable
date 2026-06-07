@@ -11,6 +11,41 @@
       "type": "boolean",
       "default": false,
       "weight": 0.1
+    },
+    {
+      "code": "ChunksPerPacket",
+      "name": "ChunksPerPacket",
+      "ingui": "kscartographytable:config-setting-chunksperpacket-name",
+      "comment": "kscartographytable:config-setting-chunksperpacket-comment",
+      "type": "int",
+      "default": 25,
+      "range": {
+        "min": 1,
+        "max": 512
+      },
+      "weight": 0.1
+    },
+    {
+      "code": "PacketDelay",
+      "name": "PacketDelay",
+      "ingui": "kscartographytable:config-setting-packetdelay-name",
+      "comment": "kscartographytable:config-setting-packetdelay-comment",
+      "type": "float",
+      "default": 0.2,
+      "range": {
+        "min": 0.01,
+        "max": 2
+      },
+      "weight": 0.1
+    },
+    {
+      "code": "VerboseDebug",
+      "name": "VerboseDebug",
+      "ingui": "kscartographytable:config-setting-verbosedebug-name",
+      "comment": "kscartographytable:config-setting-verbosedebug-comment",
+      "type": "boolean",
+      "default": false,
+      "weight": 0.1
     }
   ]
 }

@@ -77,13 +77,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             if (tableMapPiecesIds.Count == 0)
             {
                 pieces = PlayerMapDbReader.GetAllMapPieces();
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} no pieces ids on map, uploading all player's map pieces {pieces.Count}");
+                KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"no pieces ids on map, uploading all player's map pieces {pieces.Count}");
             }
             else
             {
                 List<FastVec2i> filteredMapPiecesPositions = tableMapPiecesIds.Count > 0 ? [.. playerMapPiecesIds.Where(id => !tableMapPiecesIds.Contains(id.ToChunkIndex()))] : playerMapPiecesIds;
                 pieces = PlayerMapDbReader.GetMapPiecesFromPositions(filteredMapPiecesPositions);
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} uploading filtered player's map pieces not present on map {pieces.Count}");
+                KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"uploading filtered player's map pieces not present on map {pieces.Count}");
             }
 
             playerMapDbReader?.Dispose();
@@ -99,7 +99,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public void Dispose()
         {
-            CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} disposing playerMapDbReader {playerMapDbReader}");
+            KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"disposing playerMapDbReader {playerMapDbReader}");
             playerMapDb?.Dispose();
             playerMapDb = null;
         }

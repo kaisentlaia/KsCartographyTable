@@ -81,13 +81,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             EnsureMap();
             if (Side == EnumAppSide.Server)
             {
-                CoreServerAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap server - Waypoint count {Map.WaypointCount} - Areas count {Map.ExploredAreasIds.Count}");
+                KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"OnWipeTableMap server - Waypoint count {Map.WaypointCount} - Areas count {Map.ExploredAreasIds.Count}");
                 KsCartographyTableModSystem.ServerCartographyService.WipeTableMap(Block, byPlayer, this);
             }
 
             if (Side == EnumAppSide.Client)
             {
-                CoreClientAPI.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} OnWipeTableMap client");
+                KsCartographyTableModSystem.DebugLog(CoreClientAPI, $"OnWipeTableMap client");
                 CoreClientAPI.World.Player.TriggerFpAnimation(EnumHandInteract.BlockInteract);
             }
 
@@ -137,7 +137,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             EnsureMap();
             Map.ExploredAreasIds = [.. piecesIds.Select(pieceId => pieceId.ToChunkIndex())];
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMapExploredAreasIds {Map.ExploredAreasIds.Count}");
+            KsCartographyTableModSystem.DebugLog(Api, $"UpdateMapExploredAreasIds {Map.ExploredAreasIds.Count}");
             MarkDirty();
         }
 
@@ -145,7 +145,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             EnsureMap();
             Map.WaypointCount = waypointCount;
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdateMapWaypointCount {Map.WaypointCount}");
+            KsCartographyTableModSystem.DebugLog(Api, $"UpdateMapWaypointCount {Map.WaypointCount}");
             MarkDirty();
         }
 
@@ -153,7 +153,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             EnsureMap();
             Map.PalantirWaypoints = palantirWaypoints;
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} UpdatePalantirWaypoints {Map.PalantirWaypoints.Count}");
+            KsCartographyTableModSystem.DebugLog(Api, $"UpdatePalantirWaypoints {Map.PalantirWaypoints.Count}");
             MarkDirty();
         }
 
@@ -252,7 +252,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 bool wasWriting = Map.IsWriting;
                 bool wasPondering = Map.IsPondering;
                 Map.IsWriting = writing;
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetWriting {writing} {Side}");
+                KsCartographyTableModSystem.DebugLog(Api, $"SetWriting {writing} {Side}");
 
                 switch (Side)
                 {
@@ -276,7 +276,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 bool wasWriting = Map.IsWriting;
                 bool wasPondering = Map.IsPondering;
                 Map.IsWiping = wiping;
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetWiping {wiping} {Side}");
+                KsCartographyTableModSystem.DebugLog(Api, $"SetWiping {wiping} {Side}");
 
                 switch (Side)
                 {
@@ -299,7 +299,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 bool wasWriting = Map.IsWriting;
                 bool wasPondering = Map.IsPondering;
                 Map.IsPondering = pondering;
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetPondering {pondering} {Side}");
+                KsCartographyTableModSystem.DebugLog(Api, $"SetPondering {pondering} {Side}");
 
                 switch (Side)
                 {
@@ -316,7 +316,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public void SetWritten(bool written)
         {
             Map.HasWrittenData = written;
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} SetWritten {written} {Side}");
+            KsCartographyTableModSystem.DebugLog(Api, $"SetWritten {written} {Side}");
 
             if (Api.Side == EnumAppSide.Server)
             {
@@ -356,7 +356,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (!recentInteractions.TryGetValue(player.PlayerUID, out var value))
             {
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Registering interaction {action} for {player.PlayerUID}");
+                KsCartographyTableModSystem.DebugLog(Api, $"Registering interaction {action} for {player.PlayerUID}");
             }
             recentInteractions[player.PlayerUID] = (action, Api.World.ElapsedMilliseconds);
         }
@@ -371,13 +371,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 }
                 else
                 {
-                    Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Removing interaction {data.action} for {player.PlayerUID}");
+                    KsCartographyTableModSystem.DebugLog(Api, $"Removing interaction {data.action} for {player.PlayerUID}");
                 }
                 recentInteractions.Remove(player.PlayerUID);
             }
             else
             {
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} No interaction for {player.PlayerUID}");
+                KsCartographyTableModSystem.DebugLog(Api, $"No interaction for {player.PlayerUID}");
             }
             return null;
         }
@@ -386,14 +386,14 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         {
             if (recentInteractions.Keys.Any(uid => uid != player.PlayerUID))
             {
-                Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Another player is interacting, {recentInteractions.Keys}");
+                KsCartographyTableModSystem.DebugLog(Api, $"Another player is interacting, {recentInteractions.Keys}");
             }
             return recentInteractions.Keys.Any(uid => uid != player.PlayerUID);
         }
 
         public void ClearRecentInteraction(IPlayer player)
         {
-            Api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} Clearing interaction for {player.PlayerUID}");
+            KsCartographyTableModSystem.DebugLog(Api, $"Clearing interaction for {player.PlayerUID}");
             recentInteractions.Remove(player.PlayerUID);
         }
     }

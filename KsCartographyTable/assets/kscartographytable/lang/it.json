@@ -39,5 +39,11 @@
   "gamemechanicinfo-pondering-title": "Meccanica di gioco: Proiezione astrale",
   "gamemechanicinfo-pondering-text": "<strong>Introduzione</strong><br><br>Facendo click con <hk>rightmouse</hk> sulla mappa di un <a href=\"handbook://cartographytable\">tavolo da cartografia</a> o di un <a href=\"handbook://advancedcartographytable\">tavolo da cartografia avanzato</a> mentre tieni in mano un <a href=\"handbook://palantir\">palantír</a>, puoi viaggiare in spirito verso terre lontane, conosciute o sconosciute.<br><br><strong>Prepararsi al viaggio</strong><br><br>Per prima cosa, costruisci un <a href=\"handbook://palantir\">palantír</a> e un <a href=\"handbook://cartographytable\">tavolo da cartografia</a> o un <a href=\"handbook://advancedcartographytable\">tavolo da cartografia avanzato</a>. Posiziona il tavolo e raccogli dei funghi psichedelici. Apri la tua mappa e piazza dei punti di viaggio del palantír (icona dell'occhio) nei luoghi che desideri vedere, quindi trascrivi i nuovi punti di riferimento sulla mappa del tavolo da cartografia.<br><br><strong>Proiezione astrale</strong><br><br>Una volta completati i preparativi, mangia un fungo psichedelico e contempla la mappa del tavolo da cartografia facendo click con <hk>rightmouse</hk> su di essa mentre tieni in mano un palantír per iniziare il tuo viaggio.",
   "config-setting-immersivemode-name": "Modalità immersiva",
-  "config-setting-immersivemode-comment": "Quando la modalità immersiva è attiva, non verranno mostrati messaggi nella chat di gioco durante l'uso del tavolo da cartografia."
+  "config-setting-immersivemode-comment": "Quando la modalità immersiva è attiva, non verranno mostrati messaggi nella chat di gioco durante l'uso del tavolo da cartografia.",
+  "config-setting-chunksperpacket-name": "Chunk per pacchetto",
+  "config-setting-chunksperpacket-comment": "Quanti chunk della mappa trascrivere contemporaneamente. Aumentare questo valore renderà la trascrizione più veloce, ma potrebbe causare sovraccarichi del server o del client.",
+  "config-setting-packetdelay-name": "Ritardo tra i pacchetti",
+  "config-setting-packetdelay-comment": "Quanti secondi attendere tra un pacchetto e l'altro. Ridurre questo valore renderà la trascrizione più veloce, ma potrebbe causare sovraccarichi del server o del client.",
+  "config-setting-verbosedebug-name": "Debug dettagliato",
+  "config-setting-verbosedebug-comment": "Registra messaggi aggiuntivi nel log."
 }
