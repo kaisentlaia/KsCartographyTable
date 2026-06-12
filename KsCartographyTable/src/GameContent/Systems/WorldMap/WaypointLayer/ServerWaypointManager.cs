@@ -138,8 +138,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		{
 			return WaypointMapLayer.Waypoints.FindAll(PlayerWaypoint => PlayerWaypoint.OwningPlayerGroupId != -1);
 		}
-		public TextCommandResult ClearAllWaypoints(bool dryRun, IServerPlayer forPlayer)
+		public TextCommandResult ClearAllWaypoints(bool dryRun, IServerPlayer forPlayer, bool mapOnly)
 		{
+            string additionalAction = !mapOnly ? " and mark them to be deleted on the cartography table at the next transcription" : "";
             // TODO localization
             if (forPlayer != null)
             {
@@ -150,13 +151,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 {
                     waypointsToWipe.ForEach(waypoint =>
                     {
-                        WaypointMapLayer.Waypoints.RemoveAll(playerWaypoint => playerWaypoint.Guid == waypoint.Guid);
+                        if (!mapOnly)
+                        {
+                            AddDeletedWaypointId(waypoint, forPlayer);
+                        }
+                        WaypointMapLayer.Waypoints.Remove(waypoint);
                     });
                     ResendWaypointsToPlayer(forPlayer);
-                    CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Deleted {waypointsCount} waypoints belonging to you.", EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Deleted {waypointsCount} waypoints belonging to you{additionalAction}.", EnumChatType.Notification);
                     return TextCommandResult.Success();
                 }
-                CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Will delete {waypointsCount} waypoints belonging to you. Run '.kct waypoints wipe confirm' to confirm.", EnumChatType.Notification);
+                CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Will delete {waypointsCount} waypoints belonging to you{additionalAction}. Run '.kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.", EnumChatType.Notification);
                 return TextCommandResult.Success();
 
             }
@@ -165,11 +170,18 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 int waypointsCount = WaypointMapLayer.Waypoints.Count;
                 if (!dryRun)
                 {
+                    if (!mapOnly)
+                    {
+                        WaypointMapLayer.Waypoints.ForEach(waypoint =>
+                        {
+                            AddDeletedWaypointId(waypoint, CoreServerAPI.World.PlayerByUid(waypoint.OwningPlayerUid));
+                        });
+                    }
                     WaypointMapLayer.Waypoints.Clear();
                     ResendWaypointsToAllPlayers();
-                    return TextCommandResult.Success($"Deleted {waypointsCount} waypoints belonging to all players.");
+                    return TextCommandResult.Success($"Deleted {waypointsCount} waypoints belonging to all players{additionalAction}.");
                 }
-                return TextCommandResult.Success($"Will delete {waypointsCount} waypoints belonging to all players. Run '/kct waypoints wipe confirm' to confirm.");
+                return TextCommandResult.Success($"Will delete {waypointsCount} waypoints belonging to all players{additionalAction}. Run '/kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.");
             }
 		}
 		internal void AddDeletedWaypointId(Waypoint deletedWaypoint, IPlayer byPlayer)

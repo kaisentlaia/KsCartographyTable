@@ -123,13 +123,14 @@ public class KsCartographyTableModSystem : ModSystem
 
         waypointsCommand
             .BeginSubCommand("wipe")
-            .WithDescription("Deletes all waypoints from the maps of all players. Use with caution. Without the 'confirm' arg, does a dry-run only!")
+            .WithDescription("Deletes all waypoints from the maps of all players. Use with caution.<br><br>Running the command with 'maponly' will delete the waypoints from the player's maps, but will allow the players to get them back from the cartography table. Running it with 'mapandtable' will delete them also from the cartography table the next time a player transcribes their waypoints on it.<br><br Without the 'confirm' arg, does a dry-run only!")
             .RequiresPrivilege(Privilege.root)
-            .WithArgs(parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
+            .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
             .HandleWith((args) => {
-                bool confirmed = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
 
-                TextCommandResult result = ServerCartographyService.WipeWaypoints(!confirmed, null);
+                TextCommandResult result = ServerCartographyService.WipeWaypoints(!confirmed, null, mapOnly);
 
                 return result;
             })
@@ -172,13 +173,14 @@ public class KsCartographyTableModSystem : ModSystem
 
         waypointsCommand
             .BeginSubCommand("wipe")
-            .WithDescription("Deletes all waypoints from your map.")
+            .WithDescription("Deletes all waypoints from your map.<br><br>Running the command with 'maponly' will delete the waypoints from your map, but will let you get them back from the cartography table. Running it with 'mapandtable' will let you delete them also from the cartography table the next time you transcribe your waypoints on it.<br><br>Without the 'confirm' arg, does a dry-run only!")
             .RequiresPlayer()
-            .WithArgs(parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
+            .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
             .HandleWith((args) => {
-                bool confirmed = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
 
-                ClientCartographyService.WipeWaypoints(!confirmed);
+                ClientCartographyService.WipeWaypoints(!confirmed, mapOnly);
 
                 return TextCommandResult.Success();
             })

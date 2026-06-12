@@ -148,7 +148,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 						WHERE child.parentGuid = sw.guid
 						AND child.owningPlayerUid = @owningPlayerUid
 					)";
-				// getNewWaypointsForPlayerCmd.CommandText = "SELECT * FROM sharedwaypoints sw WHERE owningPlayerUid!=@owningPlayerUid AND deleted=0 AND NOT EXISTS ( SELECT 1 FROM sharedwaypoints child WHERE child.parentGuid = sw.guid )";
 				getNewWaypointsForPlayerCmd.Parameters.Add("@owningPlayerUid", SqliteType.Text);
 				getNewWaypointsForPlayerCmd.Prepare();
 

@@ -105,9 +105,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                 .RegisterMessageType<KctCommandPacket>();
         }
 
-        public void WipeWaypoints(bool dryRun)
+        public void WipeWaypoints(bool dryRun, bool mapOnly)
         {
-            CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_COMMANDS).SendPacket(new KctCommandPacket(KctCommand.wipe, dryRun));
+            CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_COMMANDS).SendPacket(new KctCommandPacket(KctCommand.wipe, dryRun, mapOnly));
         }
 
         public void OnMapDownloadRequest(MapSyncPacket packet)

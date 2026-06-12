@@ -27,14 +27,18 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		[ProtoMember(2)]
 		public bool DryRun;
 
+		[ProtoMember(3)]
+		public bool MapOnly;
+
 		public KctCommandPacket() 
 		{
 		}
 
-		public KctCommandPacket(KctCommand command, bool dryRun) 
+		public KctCommandPacket(KctCommand command, bool dryRun, bool mapOnly) 
 		{
 			Command = command;
             DryRun = dryRun;
+            MapOnly = mapOnly;
 		}
 	}
 	public class ServerCartographyService : IDisposable
@@ -113,7 +117,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             switch (packet.Command)
             {
                 case KctCommand.wipe:
-                    WipeWaypoints(packet.DryRun, fromPlayer);
+                    WipeWaypoints(packet.DryRun, fromPlayer, packet.MapOnly);
                     break;
             }
         }
@@ -272,9 +276,9 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			serverWaypointManager.AddDeletedWaypointId(deletedWaypoint, fromPlayer);
 		}
 
-        public TextCommandResult WipeWaypoints(bool dryRun, IServerPlayer player)
+        public TextCommandResult WipeWaypoints(bool dryRun, IServerPlayer player, bool mapOnly)
 		{
-			return serverWaypointManager.ClearAllWaypoints(dryRun, player);
+			return serverWaypointManager.ClearAllWaypoints(dryRun, player, mapOnly);
 		}
 
         public void Dispose()
