@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Kaisentlaia.KsCartographyTableMod.GameContent;
+using ProtoBuf;
 using Vintagestory.API.Common;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
@@ -13,10 +14,33 @@ using Vintagestory.GameContent;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Server
 {
+    public enum KctCommand
+    {
+        wipe
+    }
+	[ProtoContract]
+	public class KctCommandPacket
+	{
+		[ProtoMember(1)]
+		public KctCommand Command;
+
+		[ProtoMember(2)]
+		public bool DryRun;
+
+		public KctCommandPacket() 
+		{
+		}
+
+		public KctCommandPacket(KctCommand command, bool dryRun) 
+		{
+			Command = command;
+            DryRun = dryRun;
+		}
+	}
 	public class ServerCartographyService : IDisposable
 	{
 		readonly ICoreServerAPI CoreServerAPI;
-		private readonly ServerWaypointManager tableWaypointManager;
+		private readonly ServerWaypointManager serverWaypointManager;
 		private readonly TableMapManager tableMapManager;
 		WorldMapManager WorldMapManager;
 		WaypointMapLayer waypointMapLayer;
@@ -65,7 +89,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			CoreServerAPI = ServerAPI;
 
 			tableMapManager = new TableMapManager(CoreServerAPI);
-			tableWaypointManager = new ServerWaypointManager(CoreServerAPI);
+			serverWaypointManager = new ServerWaypointManager(CoreServerAPI);
 
 			RegisterChannels();
 		}
@@ -78,7 +102,21 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
 			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_DOWNLOAD_TO_CLIENT)
 				.RegisterMessageType<MapSyncPacket>();
+            
+			CoreServerAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_COMMANDS)
+				.RegisterMessageType<KctCommandPacket>()
+				.SetMessageHandler<KctCommandPacket>(OnKctCommand);
 		}
+
+        private void OnKctCommand(IServerPlayer fromPlayer, KctCommandPacket packet)
+        {
+            switch (packet.Command)
+            {
+                case KctCommand.wipe:
+                    WipeWaypoints(packet.DryRun, fromPlayer);
+                    break;
+            }
+        }
 
         private void OnMapUploadRequest(IServerPlayer fromPlayer, MapSyncPacket packet)
 		{
@@ -116,7 +154,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             uploadedChunks[fromPlayer.PlayerUID] = 0;
-            WaypointSyncResult waypointResult = tableWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
+            WaypointSyncResult waypointResult = serverWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
             
             if (km2 == 0 && blockEntity.IsAdvanced)
             {
@@ -231,12 +269,12 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 			}
 
 			Waypoint deletedWaypoint = playerWaypoints[index];
-			tableWaypointManager.AddDeletedWaypointId(deletedWaypoint, fromPlayer);
+			serverWaypointManager.AddDeletedWaypointId(deletedWaypoint, fromPlayer);
 		}
 
-        public void WipeWaypoints()
+        public TextCommandResult WipeWaypoints(bool dryRun, IServerPlayer player)
 		{
-			tableWaypointManager.ClearAllWaypoints();
+			return serverWaypointManager.ClearAllWaypoints(dryRun, player);
 		}
 
         public void Dispose()
@@ -295,7 +333,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             {
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            WaypointSyncResult waypointSyncResult = tableWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB);
+            WaypointSyncResult waypointSyncResult = serverWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB);
             MapTransferSession session = new(forPlayer, block, blockPos, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
@@ -336,11 +374,6 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
             blockEntity.SetWriting(false);
             blockEntity.ClearRecentInteraction(byPlayer);
-        }
-
-        internal void ResendWaypointsToPlayer(IServerPlayer toPlayer)
-        {
-            tableWaypointManager.ResendWaypointsToPlayer(toPlayer);
         }
 
         internal void CleanupPlayerSessions(IServerPlayer player)

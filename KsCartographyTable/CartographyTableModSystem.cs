@@ -109,16 +109,32 @@ public class KsCartographyTableModSystem : ModSystem
         CoreServerAPI = api;
         ServerCartographyService = new ServerCartographyService(api);
 
-        // TODO add handbook entry
-        CoreServerAPI.ChatCommands.Create("wipewaypoints")
-        .WithDescription("Wipes all the waypoints")
-        .RequiresPrivilege(Privilege.root)
-        .RequiresPlayer()
-        .HandleWith((args) => {
-            ServerCartographyService.WipeWaypoints();
-            ServerCartographyService.ResendWaypointsToPlayer(args.Caller.Player as IServerPlayer);
-            return TextCommandResult.Success("Waypoints wiped");
-        });
+        IChatCommand kctCommand = CoreServerAPI.ChatCommands
+            .Create("kct")
+            .WithDescription("K's Cartography Table commands")
+            .RequiresPrivilege(Privilege.root);
+
+        IChatCommand waypointsCommand = kctCommand
+            .BeginSubCommand("waypoints")
+            .WithDescription("Waypoint management commands")
+            .RequiresPrivilege(Privilege.root);
+
+        var parsers = CoreServerAPI.ChatCommands.Parsers;
+
+        waypointsCommand
+            .BeginSubCommand("wipe")
+            .WithDescription("Deletes all waypoints from the maps of all players. Use with caution. Without the 'confirm' arg, does a dry-run only!")
+            .RequiresPrivilege(Privilege.root)
+            .WithArgs(parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
+            .HandleWith((args) => {
+                bool confirmed = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+
+                TextCommandResult result = ServerCartographyService.WipeWaypoints(!confirmed, null);
+
+                return result;
+            })
+            .EndSubCommand();
+
         if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
             harmony = new Harmony(Mod.Info.ModID);
             harmony.PatchAll(); // Applies all harmony patches
@@ -143,6 +159,30 @@ public class KsCartographyTableModSystem : ModSystem
         ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
         ClientCartographyService = new ClientCartographyService(CoreClientAPI);
         CoreClientAPI.Event.LeaveWorld += OnLeaveWorld;
+
+        var parsers = CoreClientAPI.ChatCommands.Parsers;
+
+        var kctClientCommand = CoreClientAPI.ChatCommands
+            .Create("kct")
+            .WithDescription("K's Cartography Table commands");
+
+        IChatCommand waypointsCommand = kctClientCommand
+            .BeginSubCommand("waypoints")
+            .WithDescription("Waypoint management commands");
+
+        waypointsCommand
+            .BeginSubCommand("wipe")
+            .WithDescription("Deletes all waypoints from your map.")
+            .RequiresPlayer()
+            .WithArgs(parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
+            .HandleWith((args) => {
+                bool confirmed = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+
+                ClientCartographyService.WipeWaypoints(!confirmed);
+
+                return TextCommandResult.Success();
+            })
+            .EndSubCommand();
     }
 
     private void OnLeaveWorld()

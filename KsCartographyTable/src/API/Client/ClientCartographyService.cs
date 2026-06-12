@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
+using Kaisentlaia.KsCartographyTableMod.API.Server;
 using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
 using Vintagestory.API.Client;
@@ -99,6 +100,14 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
                 CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_SEND_TO_PALANTIR)
                     .RegisterMessageType<PalantirTravelPacket>();
             }
+
+            CoreClientAPI.Network.RegisterChannel(CartographyTableConstants.CHANNEL_COMMANDS)
+                .RegisterMessageType<KctCommandPacket>();
+        }
+
+        public void WipeWaypoints(bool dryRun)
+        {
+            CoreClientAPI.Network.GetChannel(CartographyTableConstants.CHANNEL_COMMANDS).SendPacket(new KctCommandPacket(KctCommand.wipe, dryRun));
         }
 
         public void OnMapDownloadRequest(MapSyncPacket packet)
