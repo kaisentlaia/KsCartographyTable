@@ -45,5 +45,9 @@
   "config-setting-packetdelay-name": "Ritardo tra i pacchetti",
   "config-setting-packetdelay-comment": "Quanti secondi attendere tra un pacchetto e l'altro. Ridurre questo valore renderà la trascrizione più veloce, ma potrebbe causare sovraccarichi del server o del client.",
   "config-setting-verbosedebug-name": "Debug dettagliato",
-  "config-setting-verbosedebug-comment": "Registra messaggi aggiuntivi nel log."
+  "config-setting-verbosedebug-comment": "Registra messaggi aggiuntivi nel log.",
+  "config-setting-waypointdownload-name": "Scarica punti di riferimento",
+  "config-setting-waypointdownload-comment": "Se disabilitato non trascriverai i punti di riferimento sulla tua mappa.",
+  "config-setting-waypointupload-name": "Carica punti di riferimento",
+  "config-setting-waypointupload-comment": "Se disabilitato non trascriverai i punti di riferimento sul tavolo da cartografia."
 }

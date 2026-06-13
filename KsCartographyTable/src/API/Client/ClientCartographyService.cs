@@ -143,7 +143,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Client
             {                
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_MAP_UP_TO_DATE);
             }  
-            if (!waypointsUpdated)
+            if (!waypointsUpdated && Settings.WaypointDownload)
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreClientAPI, currentPlayer, CartographyTableLangCodes.PLAYER_WAYPOINTS_UP_TO_DATE);
             }

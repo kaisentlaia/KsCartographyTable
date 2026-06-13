@@ -13,17 +13,6 @@ using Vintagestory.API.Config;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 
-/// <summary>
-/// Represents the settings.json file structure.
-/// </summary>
-public class Settings
-{
-    public bool ImmersiveMode { get; set; } = false;
-    public int ChunksPerPacket { get; set; } = 25;
-    public double PacketDelay { get; set; } = 0.2;
-    public bool VerboseDebug { get; set; } = false;
-}
-
 [HarmonyPatch]
 public class KsCartographyTableModSystem : ModSystem
 {
@@ -51,8 +40,6 @@ public class KsCartographyTableModSystem : ModSystem
     public static ClientCartographyService ClientCartographyService;
     public static ModCompatibilityManager ModCompatibilityManager;
 
-    public static Settings Settings { get; private set; }
-
     public override void Start(ICoreAPI api)
     {
         base.Start(api);
@@ -62,43 +49,10 @@ public class KsCartographyTableModSystem : ModSystem
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
         api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
         api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));
-        ReadSettings(api, Mod.Info.ModID);        
-    }
-
-    public static void ReadSettings(ICoreAPI api, string modId)
-    {
-        string settingsPath = Path.Combine(api.GetOrCreateDataPath("ModConfig"), $"{modId}.json");
-        Settings settingsFile = null;
-        Settings = new();
-        if (File.Exists(settingsPath))
-        {
-            try
-            {
-                string json = File.ReadAllText(settingsPath);
-                settingsFile = JsonUtil.FromString<Settings>(json);
-            }
-            catch (Exception ex)
-            {
-                api.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Failed to load {modId}.json: {ex.Message}. Using defaults.");
-            }
-        }
-
-        // Apply boolean toggles from settings file (or use defaults)
-        if (settingsFile != null)
-        {
-            Settings.ImmersiveMode = settingsFile.ImmersiveMode;
-            Settings.ChunksPerPacket = settingsFile.ChunksPerPacket;
-            Settings.PacketDelay = settingsFile.PacketDelay;
-            Settings.VerboseDebug = settingsFile.VerboseDebug;
-        } else
-        {
-            Settings.ImmersiveMode = false;
-            Settings.ChunksPerPacket = 25;
-            Settings.PacketDelay = 0.2;
-            Settings.VerboseDebug = false;
-            string json = JsonUtil.ToString(Settings);
-            File.WriteAllText(settingsPath, json);
-        }
+        Settings.Init(api, Mod.Info.ModID);
+        Settings.Load();
+        CommandsManager commandsManager = new(api);
+        commandsManager.RegisterCommands();
     }
 
     /// <summary>
@@ -107,34 +61,7 @@ public class KsCartographyTableModSystem : ModSystem
     public override void StartServerSide(ICoreServerAPI api)
     {
         CoreServerAPI = api;
-        ServerCartographyService = new ServerCartographyService(api);
-
-        IChatCommand kctCommand = CoreServerAPI.ChatCommands
-            .Create("kct")
-            .WithDescription("K's Cartography Table commands")
-            .RequiresPrivilege(Privilege.root);
-
-        IChatCommand waypointsCommand = kctCommand
-            .BeginSubCommand("waypoints")
-            .WithDescription("Waypoint management commands")
-            .RequiresPrivilege(Privilege.root);
-
-        var parsers = CoreServerAPI.ChatCommands.Parsers;
-
-        waypointsCommand
-            .BeginSubCommand("wipe")
-            .WithDescription("Deletes all waypoints from the maps of all players. Use with caution.<br><br>Running the command with 'maponly' will delete the waypoints from the player's maps, but will allow the players to get them back from the cartography table. Running it with 'mapandtable' will delete them also from the cartography table the next time a player transcribes their waypoints on it.<br><br Without the 'confirm' arg, does a dry-run only!")
-            .RequiresPrivilege(Privilege.root)
-            .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
-            .HandleWith((args) => {
-                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[1].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
-                bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
-
-                TextCommandResult result = ServerCartographyService.WipeWaypoints(!confirmed, null, mapOnly);
-
-                return result;
-            })
-            .EndSubCommand();
+        ServerCartographyService = new ServerCartographyService(api);        
 
         if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
             harmony = new Harmony(Mod.Info.ModID);
@@ -160,31 +87,6 @@ public class KsCartographyTableModSystem : ModSystem
         ModCompatibilityManager = new ModCompatibilityManager(CoreClientAPI);
         ClientCartographyService = new ClientCartographyService(CoreClientAPI);
         CoreClientAPI.Event.LeaveWorld += OnLeaveWorld;
-
-        var parsers = CoreClientAPI.ChatCommands.Parsers;
-
-        var kctClientCommand = CoreClientAPI.ChatCommands
-            .Create("kct")
-            .WithDescription("K's Cartography Table commands");
-
-        IChatCommand waypointsCommand = kctClientCommand
-            .BeginSubCommand("waypoints")
-            .WithDescription("Waypoint management commands");
-
-        waypointsCommand
-            .BeginSubCommand("wipe")
-            .WithDescription("Deletes all waypoints from your map.<br><br>Running the command with 'maponly' will delete the waypoints from your map, but will let you get them back from the cartography table. Running it with 'mapandtable' will let you delete them also from the cartography table the next time you transcribe your waypoints on it.<br><br>Without the 'confirm' arg, does a dry-run only!")
-            .RequiresPlayer()
-            .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
-            .HandleWith((args) => {
-                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[1].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
-                bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
-
-                ClientCartographyService.WipeWaypoints(!confirmed, mapOnly);
-
-                return TextCommandResult.Success();
-            })
-            .EndSubCommand();
     }
 
     private void OnLeaveWorld()

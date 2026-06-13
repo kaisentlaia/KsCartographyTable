@@ -45,5 +45,9 @@
   "config-setting-packetdelay-name": "Packet delay",
   "config-setting-packetdelay-comment": "How many seconds to wait between packets. Decreasing this will make the transcription faster but could cause server or client overloads.",
   "config-setting-verbosedebug-name": "Verbose debug",
-  "config-setting-verbosedebug-comment": "Log additional messages."
+  "config-setting-verbosedebug-comment": "Log additional messages.",
+  "config-setting-waypointdownload-name": "Waypoint download",
+  "config-setting-waypointdownload-comment": "If disabled you won't transcribe any waypoints to your map.",
+  "config-setting-waypointupload-name": "Waypoint upload",
+  "config-setting-waypointupload-comment": "If disabled you won't transcribe any waypoints to the cartography table."
 }

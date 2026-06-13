@@ -46,6 +46,24 @@
       "type": "boolean",
       "default": false,
       "weight": 0.1
+    },
+    {
+      "code": "WaypointDownload",
+      "name": "WaypointDownload",
+      "ingui": "kscartographytable:config-setting-waypointdownload-name",
+      "comment": "kscartographytable:config-setting-waypointdownload-comment",
+      "type": "boolean",
+      "default": true,
+      "weight": 0.1
+    },
+    {
+      "code": "WaypointUpload",
+      "name": "WaypointUpload",
+      "ingui": "kscartographytable:config-setting-waypointupload-name",
+      "comment": "kscartographytable:config-setting-waypointupload-comment",
+      "type": "boolean",
+      "default": true,
+      "weight": 0.1
     }
   ]
 }

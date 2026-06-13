@@ -31,6 +31,18 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Common
         public readonly static string WIPE_STARTED = GetLangCode("message-wipe-started");
         public readonly static string FAILURE_UPDATE_FIRST = GetLangCode("mapfailure-updatefirst");
         public readonly static string FAILURE_BUSY = GetLangCode("mapfailure-busy");
+        public readonly static string CONFIG_IMMERSIVE_MODE_NAME = GetLangCode("config-setting-immersivemode-name");
+        public readonly static string CONFIG_IMMERSIVE_MODE_COMMENT = GetLangCode("config-setting-immersivemode-comment");
+        public readonly static string CONFIG_CHUNKS_PER_PACKET_NAME = GetLangCode("config-setting-chunksperpacket-name");
+        public readonly static string CONFIG_CHUNKS_PER_PACKET_COMMENT = GetLangCode("config-setting-chunksperpacket-comment");
+        public readonly static string CONFIG_PACKET_DELAY_NAME = GetLangCode("config-setting-packetdelay-name");
+        public readonly static string CONFIG_PACKET_DELAY_COMMENT = GetLangCode("config-setting-packetdelay-comment");
+        public readonly static string CONFIG_VERBOSE_DEBUG_NAME = GetLangCode("config-setting-verbosedebug-name");
+        public readonly static string CONFIG_VERBOSE_DEBUG_COMMENT = GetLangCode("config-setting-verbosedebug-comment");
+        public readonly static string CONFIG_WAYPOINT_DOWNLOAD_NAME = GetLangCode("config-setting-waypointdownload-name");
+        public readonly static string CONFIG_WAYPOINT_DOWNLOAD_COMMENT = GetLangCode("config-setting-waypointdownload-comment");
+        public readonly static string CONFIG_WAYPOINT_UPLOAD_NAME = GetLangCode("config-setting-waypointupload-name");
+        public readonly static string CONFIG_WAYPOINT_UPLOAD_COMMENT = GetLangCode("config-setting-waypointupload-comment");
 
 		private static string GetLangCode(string code)
 		{

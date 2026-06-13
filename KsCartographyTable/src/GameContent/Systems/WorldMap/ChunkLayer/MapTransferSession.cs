@@ -1,4 +1,3 @@
-using System;
 using System.Collections.Generic;
 using System.Linq;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
@@ -86,9 +85,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
             var piecesList = MapPieces.ToList();
 
-            for (int i = 0; i < piecesList.Count; i += KsCartographyTableModSystem.Settings.ChunksPerPacket)
+            for (int i = 0; i < piecesList.Count; i += Settings.ChunksPerPacket)
             {
-                var batch = piecesList.Skip(i).Take(KsCartographyTableModSystem.Settings.ChunksPerPacket).ToDictionary(
+                var batch = piecesList.Skip(i).Take(Settings.ChunksPerPacket).ToDictionary(
                     kvp => kvp.Key,
                     kvp => kvp.Value
                 );
@@ -100,7 +99,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public bool TrySendNextBatch(double currentSeconds)
         {
             // Only send if 1/4 second has passed since last send
-            if (currentSeconds - lastSendTime < KsCartographyTableModSystem.Settings.PacketDelay)
+            if (currentSeconds - lastSendTime < Settings.PacketDelay)
             {
                 return true; // Still alive, just not sending yet
             }
@@ -134,16 +133,27 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public bool SendFinalBatch()
         {
             if (IsComplete) return false;
+
+            bool includeWaypoints = false;
+            switch(Action)
+            {
+                case CartographyAction.UploadMap:
+                    includeWaypoints = Settings.WaypointUpload;
+                    break;
+                case CartographyAction.DownloadMap:
+                    includeWaypoints = Settings.WaypointDownload;
+                    break;
+            }
             
             MapSyncPacket packet;
             if (remainingBatches.Count > 0)
             {
                 var batch = remainingBatches.Dequeue();
-                packet = new MapSyncPacket(batch, Block, Position, true, WaypointSyncResult);
+                packet = new MapSyncPacket(batch, Block, Position, true, WaypointSyncResult, includeWaypoints);
             }
             else
             {
-                packet = new MapSyncPacket([], Block, Position, true, WaypointSyncResult);
+                packet = new MapSyncPacket([], Block, Position, true, WaypointSyncResult, includeWaypoints);
             }
             SendPacket(packet);
             IsComplete = true;

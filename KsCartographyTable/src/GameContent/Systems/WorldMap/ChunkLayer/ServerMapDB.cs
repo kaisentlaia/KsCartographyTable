@@ -28,15 +28,29 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
 		[ProtoMember(5)]
 		public WaypointSyncResult WaypointSyncResult { get; set; } = null;
+
+		[ProtoMember(6)]
+		public bool IncludeWaypoints { get; set; }
 		public MapSyncPacket() { }
 
-		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch = false, WaypointSyncResult waypointSyncResult = null) 
+		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos) 
+		{
+			Pieces = pieces;
+			BlockId = block.Id.ToString();
+			BlockPos = blockPos;
+			IsFinalBatch = false;
+            WaypointSyncResult = null;
+			IncludeWaypoints = false;
+		}
+
+		public MapSyncPacket(Dictionary<FastVec2i, MapPieceDB> pieces, Block block, BlockPos blockPos, bool isFinalBatch, WaypointSyncResult waypointSyncResult, bool includeWaypoints) 
 		{
 			Pieces = pieces;
 			BlockId = block.Id.ToString();
 			BlockPos = blockPos;
 			IsFinalBatch = isFinalBatch;
             WaypointSyncResult = waypointSyncResult;
+			IncludeWaypoints = includeWaypoints;
 		}
 	}
 

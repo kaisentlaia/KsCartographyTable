@@ -158,13 +158,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             double km2 = uploadedChunks.TryGetValue(fromPlayer.PlayerUID, out var chunkCount) ? chunkCount * 0.001024 : 0;
             uploadedChunks[fromPlayer.PlayerUID] = 0;
-            WaypointSyncResult waypointResult = serverWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB);
+            WaypointSyncResult waypointResult = packet.IncludeWaypoints ? serverWaypointManager.UpdateTableWaypoints(fromPlayer, packet.BlockPos, mapDB) : new WaypointSyncResult(0,0,0,0);
             
             if (km2 == 0 && blockEntity.IsAdvanced)
             {
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UP_TO_DATE);
             }  
-            if (!waypointResult.Synced)
+            if (!waypointResult.Synced && packet.IncludeWaypoints)
             {
                 if (waypointResult.Rejected > 0)
                 {
@@ -179,7 +179,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (km2 == 0 && !waypointResult.Synced)
             {
-                KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"Setting written to false and writing to false");
+                KsCartographyTableModSystem.DebugLog(CoreServerAPI, "Setting written to false and writing to false");
                 blockEntity.SetWritten(false);
                 blockEntity.SetWriting(false);
                 return;
@@ -187,13 +187,13 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
             if (km2 > 0 && blockEntity.IsAdvanced)
             {
-                KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"Setting written to true");
+                KsCartographyTableModSystem.DebugLog(CoreServerAPI, "Setting written to true");
                 blockEntity.SetWritten(true);
                 KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_MAP_UPDATED, $"{km2:F1}");
             }
             if (waypointResult.Synced)
             {
-                KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"Setting written to true");
+                KsCartographyTableModSystem.DebugLog(CoreServerAPI, "Setting written to true");
                 blockEntity.SetWritten(true);
                 if (waypointResult.Added > 0)
                 {
@@ -208,7 +208,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                     KsCartographyTableModSystem.ShowChatMessage(CoreServerAPI, fromPlayer, CartographyTableLangCodes.TABLE_WAYPOINTS_DELETED, waypointResult.Deleted.ToString());
                 }
             }
-            KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"Setting writing to false");
+            KsCartographyTableModSystem.DebugLog(CoreServerAPI, "Setting writing to false");
             blockEntity.SetWriting(false);
             blockEntity.UpdateMapWaypointCount(mapDB.GetSharedWaypointsCount());
             blockEntity.SetPalantirWaypointPositions(mapDB.GetPalantirWaypointPositions());
@@ -225,7 +225,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 hadData = mapDB.GetMapPieceCount() > 0 || mapDB.GetSharedWaypointsCount() > 0;
                 if (hadData)
                 {
-                    KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"map had data, wiping");
+                    KsCartographyTableModSystem.DebugLog(CoreServerAPI, "map had data, wiping");
                     mapDB.Wipe();
                 }
             }
