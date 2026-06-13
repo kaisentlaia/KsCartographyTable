@@ -335,6 +335,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             ServerMapDB mapDB = GetBlockMapDB(block.Id.ToString());
             if (blockEntity.IsAdvanced)
             {
+                // TODO start the session with a list of the current player's chunk ids, and exclude them from the download
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
             WaypointSyncResult waypointSyncResult = serverWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB);

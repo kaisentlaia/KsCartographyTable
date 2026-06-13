@@ -64,6 +64,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         public void EnsureParent(IWorldAccessor world, BlockPos pos)
         {
+            // BUG on a server with two advanced tables side by side (separated by a couple of blocks), the client sees the blockInfo of the first table on the second table
             if (Parent == null)
             {
                 Parent = new Parent(world, pos);

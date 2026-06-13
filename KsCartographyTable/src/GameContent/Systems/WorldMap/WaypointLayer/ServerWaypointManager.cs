@@ -140,7 +140,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 		}
 		public TextCommandResult ClearAllWaypoints(bool dryRun, IServerPlayer forPlayer, bool mapOnly)
 		{
-            string additionalAction = !mapOnly ? " and mark them to be deleted on the cartography table at the next transcription" : "";
+            string additionalAction = !mapOnly ? $" and mark{(dryRun?"":"ed")} them to be deleted on the cartography table at the next transcription" : "";
             // TODO localization
             if (forPlayer != null)
             {
