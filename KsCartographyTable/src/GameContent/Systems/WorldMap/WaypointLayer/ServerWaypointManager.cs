@@ -158,10 +158,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                         WaypointMapLayer.Waypoints.Remove(waypoint);
                     });
                     ResendWaypointsToPlayer(forPlayer);
-                    CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Deleted {waypointsCount} waypoints belonging to you{additionalAction}.", EnumChatType.Notification);
+                    CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Deleted {waypointsCount} waypoints from your map{additionalAction}.", EnumChatType.Notification);
                     return TextCommandResult.Success();
                 }
-                CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Will delete {waypointsCount} waypoints belonging to you{additionalAction}. Run '.kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.", EnumChatType.Notification);
+                CoreServerAPI.SendMessage(forPlayer, GlobalConstants.GeneralChatGroup, $"Will delete {waypointsCount} waypoints from your map{additionalAction}. Run '.kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.", EnumChatType.Notification);
                 return TextCommandResult.Success();
 
             }
@@ -179,9 +179,9 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     }
                     WaypointMapLayer.Waypoints.Clear();
                     ResendWaypointsToAllPlayers();
-                    return TextCommandResult.Success($"Deleted {waypointsCount} waypoints belonging to all players{additionalAction}.");
+                    return TextCommandResult.Success($"Deleted {waypointsCount} waypoints from all players' maps{additionalAction}.");
                 }
-                return TextCommandResult.Success($"Will delete {waypointsCount} waypoints belonging to all players{additionalAction}. Run '/kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.");
+                return TextCommandResult.Success($"Will delete {waypointsCount} waypoints from all players' maps{additionalAction}. Run '/kct waypoints wipe {(mapOnly ? "maponly" : "mapandtable")} confirm' to confirm.");
             }
 		}
 		internal void AddDeletedWaypointId(Waypoint deletedWaypoint, IPlayer byPlayer)
@@ -365,6 +365,28 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                     }
                 });
 
+                int createdCount = newSharedWaypoints.Count;
+
+                playerSharedWaypoints.ForEach(sharedWaypoint =>
+                {
+                    Waypoint existing = currentPlayerWaypoints.Find(playerWaypoint => playerWaypoint.Guid == sharedWaypoint.Guid);
+                    if (existing == null)
+                    {
+					    KsCartographyTableModSystem.DebugLog(CoreServerAPI, $"Restoring player waypoint: {sharedWaypoint.Guid} {sharedWaypoint.Title} {sharedWaypoint.Icon}");
+                        Waypoint newWaypoint = new()
+                        {
+                            Color = sharedWaypoint.Color,
+                            Position = sharedWaypoint.Position,
+                            Guid = sharedWaypoint.Guid,
+                            Icon = sharedWaypoint.Icon,
+                            OwningPlayerUid = sharedWaypoint.OwningPlayerUid,
+                            Title = sharedWaypoint.Title
+                        };
+                        WaypointMapLayer.Waypoints.Add(newWaypoint);
+                        createdCount++;
+                    }
+                });
+
                 mapDB.CreateWaypoints(matchingPlayerWaypoints);
                 mapDB.CreateWaypoints(newSharedWaypoints);
 
@@ -399,7 +421,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
                 ResendWaypointsToPlayer(forPlayer as IServerPlayer);
                 
-                return new WaypointSyncResult(newSharedWaypoints.Count, updatedCount, 0, deletedCount);
+                return new WaypointSyncResult(createdCount, updatedCount, 0, deletedCount);
                 
             }
             return new WaypointSyncResult(0, 0, 0, 0);

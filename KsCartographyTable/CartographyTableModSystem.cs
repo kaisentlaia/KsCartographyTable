@@ -127,7 +127,7 @@ public class KsCartographyTableModSystem : ModSystem
             .RequiresPrivilege(Privilege.root)
             .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
             .HandleWith((args) => {
-                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[1].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
                 bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
 
                 TextCommandResult result = ServerCartographyService.WipeWaypoints(!confirmed, null, mapOnly);
@@ -177,7 +177,7 @@ public class KsCartographyTableModSystem : ModSystem
             .RequiresPlayer()
             .WithArgs(parsers.WordRange("mode", ["maponly", "mapandtable"]), parsers.OptionalWordRange("confirm", ["confirm", "dryrun"]))
             .HandleWith((args) => {
-                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
+                bool confirmed = !args.Parsers[1].IsMissing && ((string)args.Parsers[1].GetValue()).Equals("confirm", StringComparison.OrdinalIgnoreCase);
                 bool mapOnly = !args.Parsers[0].IsMissing && ((string)args.Parsers[0].GetValue()).Equals("maponly", StringComparison.OrdinalIgnoreCase);
 
                 ClientCartographyService.WipeWaypoints(!confirmed, mapOnly);
@@ -198,7 +198,7 @@ public class KsCartographyTableModSystem : ModSystem
     {
         if (Settings.VerboseDebug)
         {            
-            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} ${message}");
+            api.Logger.Debug($"{CartographyTableConstants.MAP_EVENT} {message}");
         }
     }
 
