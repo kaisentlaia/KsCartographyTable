@@ -353,13 +353,13 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return true;
             }
             CartographyAction currentAction = GetPerformedAction(world, byPlayer, blockSel);
-            CartographyAction action = beTable.GetRecentInteraction(byPlayer) ?? CartographyAction.None;
-            Block newSelectedBlock = byPlayer.CurrentBlockSelection.Block;
+            CartographyAction action = beTable?.GetRecentInteraction(byPlayer) ?? CartographyAction.None;
+            Block newSelectedBlock = byPlayer.CurrentBlockSelection?.Block;
             bool isAdvancedBlock = newSelectedBlock is BlockAdvancedCartographyTable || newSelectedBlock is BlockAdvancedCartographyTablePart;
             bool preserveSession = cancelReason == EnumItemUseCancelReason.MovedAway 
                 && isAdvancedBlock 
                 && (action == CartographyAction.UploadMap || action == CartographyAction.DownloadMap)
-                && byPlayer.CurrentBlockSelection.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea;
+                && byPlayer.CurrentBlockSelection?.SelectionBoxIndex == CartographyTableSelectionBoxesEnum.MapArea;
             
             if (preserveSession)
             {
