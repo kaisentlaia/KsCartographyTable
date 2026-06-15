@@ -62,7 +62,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return waypointMapLayer;
 			}
 		}
-		string modDataPath;
+		public string modDataPath;
 
 		public ServerWaypointManager(ICoreServerAPI api)
 		{
@@ -191,9 +191,17 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             SaveDeletedWaypointsIds(deletedWaypoints, byPlayer);
 		}
 
-        private List<string> GetDeletedWaypointsIds(IPlayer byPlayer)
+        private string GetWaypointsFilePath(IPlayer byPlayer)
         {
-            string deletedWaypointsFilePath = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            return Path.Combine(modDataPath, Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(byPlayer.PlayerUID)
+            ).TrimEnd('=') + ".json");
+        }
+
+        public List<string> GetDeletedWaypointsIds(IPlayer byPlayer)
+        {
+            RenameWaypointsFile(byPlayer);
+            string deletedWaypointsFilePath = GetWaypointsFilePath(byPlayer);
             if (!File.Exists(deletedWaypointsFilePath)) return [];
 
             try
@@ -212,10 +220,25 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
                 return [];
             }
         }
+
+        private void RenameWaypointsFile(IPlayer byPlayer)
+        {
+            string oldWaypointsFile = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            string newWaypointsFile = GetWaypointsFilePath(byPlayer);
+            if (Path.Exists(oldWaypointsFile) && !Path.Exists(newWaypointsFile))
+            {
+                File.Move(oldWaypointsFile, newWaypointsFile);
+            }
+            if (Path.Exists(oldWaypointsFile))
+            {
+                File.Delete(oldWaypointsFile);
+            }
+        }
 		
         private void SaveDeletedWaypointsIds(List<string> deletedWaypointIds, IPlayer byPlayer)
         {
-            string deletedWaypointsFilePath = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            RenameWaypointsFile(byPlayer);
+            string deletedWaypointsFilePath = GetWaypointsFilePath(byPlayer);
             try
             {
                 string json = JsonUtil.ToString(deletedWaypointIds.ToList());

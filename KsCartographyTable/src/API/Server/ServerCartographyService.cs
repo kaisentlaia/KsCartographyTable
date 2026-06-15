@@ -80,7 +80,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 					WorldMapManager = CoreServerAPI.ModLoader.GetModSystem<WorldMapManager>();
 					if (WorldMapManager != null)
 					{
-						waypointMapLayer = WorldMapManager.MapLayers.FirstOrDefault((MapLayer ml) => ml is WaypointMapLayer) as WaypointMapLayer;
+						waypointMapLayer = WorldMapManager.MapLayers.FirstOrDefault(ml => ml is WaypointMapLayer) as WaypointMapLayer;
 					}
 				}
 
