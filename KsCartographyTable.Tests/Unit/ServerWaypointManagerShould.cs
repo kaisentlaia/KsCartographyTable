@@ -8,7 +8,7 @@ using System.Linq;
 
 namespace KsCartographyTable.test.Unit;
 
-public class ServeWaypointManagerShould
+public class ServerWaypointManagerShould
 {
     private ServerWaypointManager serverWaypointManager;
     private FakeCoreServerApi fakeCoreServerApi;
