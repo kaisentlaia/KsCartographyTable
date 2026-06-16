@@ -62,7 +62,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 				return waypointMapLayer;
 			}
 		}
-		public string modDataPath;
+		internal string modDataPath;
 
 		public ServerWaypointManager(ICoreServerAPI api)
 		{
@@ -191,11 +191,15 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             SaveDeletedWaypointsIds(deletedWaypoints, byPlayer);
 		}
 
-        private string GetWaypointsFilePath(IPlayer byPlayer)
+        internal string GetWaypointsFilePath(IPlayer byPlayer)
         {
-            return Path.Combine(modDataPath, Convert.ToBase64String(
-                System.Text.Encoding.UTF8.GetBytes(byPlayer.PlayerUID)
-            ).TrimEnd('=') + ".json");
+            return Path
+                .Combine(modDataPath, Convert.ToBase64String(
+                    System.Text.Encoding.UTF8.GetBytes(byPlayer.PlayerUID)
+                )
+                .Replace("+", "-")
+                .Replace("/", "_")
+                .TrimEnd('=') + ".json");
         }
 
         public List<string> GetDeletedWaypointsIds(IPlayer byPlayer)
@@ -223,15 +227,26 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 
         private void RenameWaypointsFile(IPlayer byPlayer)
         {
-            string oldWaypointsFile = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
-            string newWaypointsFile = GetWaypointsFilePath(byPlayer);
-            if (Path.Exists(oldWaypointsFile) && !Path.Exists(newWaypointsFile))
+            string filenameV1 = Path.Combine(modDataPath, byPlayer.PlayerUID + ".json");
+            string filenameV2 = Path.Combine(modDataPath, Convert.ToBase64String(
+                System.Text.Encoding.UTF8.GetBytes(byPlayer.PlayerUID)
+            ).TrimEnd('=') + ".json");
+            string filenameV3 = GetWaypointsFilePath(byPlayer);
+            if (Path.Exists(filenameV1))
             {
-                File.Move(oldWaypointsFile, newWaypointsFile);
+                if (!Path.Exists(filenameV3))
+                {
+                    File.Move(filenameV1, filenameV3);  
+                }
+                File.Delete(filenameV1);
             }
-            if (Path.Exists(oldWaypointsFile))
+            if (filenameV2 != filenameV3 && Path.Exists(filenameV2))
             {
-                File.Delete(oldWaypointsFile);
+                if (!Path.Exists(filenameV3))
+                {
+                    File.Move(filenameV2, filenameV3);  
+                }
+                File.Delete(filenameV2);
             }
         }
 		

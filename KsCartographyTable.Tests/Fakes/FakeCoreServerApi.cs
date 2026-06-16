@@ -54,9 +54,9 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     INetworkAPI ICoreAPI.Network => Network;
 
-    public FakeCoreServerApi()
+    public FakeCoreServerApi(string savegameIdentifier)
     {
-        world = new FakeServerWorldAccessor();
+        world = new FakeServerWorldAccessor(savegameIdentifier);
     }
 
     public void BroadcastMessageToAllGroups(string message, EnumChatType chatType, string data = null)

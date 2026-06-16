@@ -5,139 +5,181 @@ using Vintagestory.GameContent;
 using Vintagestory.API.Common;
 using System.IO;
 using System.Linq;
+using Vintagestory.API.Config;
 
 namespace KsCartographyTable.test.Unit;
 
+[TestFixture("test valid playeruid", "RbeoiIPDZi9wTxVqQNIHVEVe", true, true)]
+[TestFixture("test invalid playeruid", "invalid characters in guid<>:\"/\\|?*", false, true)]
+[TestFixture("test invalid base64 playeruid", "ab?oiIPDZi9wTxVqQNIHVEVe", true, false)]
 public class ServerWaypointManagerShould
 {
     private ServerWaypointManager serverWaypointManager;
     private FakeCoreServerApi fakeCoreServerApi;
-    private FakePlayer fakePlayer1;
-    private FakePlayer fakePlayer2;
-    private Waypoint fakeWaypoint1;
-    private Waypoint fakeWaypoint2;
+
+    private readonly FakePlayer player;
+    private readonly Waypoint waypoint;
+
+    private readonly bool fileV1ExpectedToExist;
+    private readonly bool fileV2ExpectedToExist;
+
+    public ServerWaypointManagerShould(string savegameIdentifier, string playerUID, bool testFileV1ExpectedToExist, bool testFileV2ExpectedToExist)
+    {
+        player = new FakePlayer(playerUID);
+        waypoint = new Waypoint
+        {
+            Color = 1,
+            Position = new Vintagestory.API.MathTools.Vec3d(),
+            Guid = Guid.NewGuid().ToString(),
+            Icon = "star",
+            OwningPlayerUid = player.PlayerUID,
+            Title = "test waypoint"
+        };
+        fileV1ExpectedToExist = testFileV1ExpectedToExist;
+        fileV2ExpectedToExist = testFileV2ExpectedToExist;
+        fakeCoreServerApi = new FakeCoreServerApi(savegameIdentifier);
+    }
+
     
     [SetUp]
     public void Setup()
     {
-        fakePlayer1 = new FakePlayer(Guid.NewGuid().ToString());
-        fakePlayer2 = new FakePlayer(@"invalid+characters/in\guid");
-        fakeCoreServerApi = new FakeCoreServerApi();
         serverWaypointManager = new ServerWaypointManager(fakeCoreServerApi);
-        fakeWaypoint1 = new()
-        {
-            Color = 1,
-            Position = new Vintagestory.API.MathTools.Vec3d(),
-            Guid = Guid.NewGuid().ToString(),
-            Icon = "star",
-            OwningPlayerUid = fakePlayer1.PlayerUID,
-            Title = "test waypoint"
-        };
-        fakeWaypoint2 = new()
-        {
-            Color = 1,
-            Position = new Vintagestory.API.MathTools.Vec3d(),
-            Guid = Guid.NewGuid().ToString(),
-            Icon = "star",
-            OwningPlayerUid = fakePlayer2.PlayerUID,
-            Title = "test waypoint"
-        };
     }
 
     [Test]
     public void ReturnEmptyListIfFileDoesntExist()
     {
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer1);
+        List<string> ids = [];
+        try
+        {
+            ids = serverWaypointManager.GetDeletedWaypointsIds(player);
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Exception while recovering deleted waypoints: " + ex.Message);
+        }
         Assert.That(ids, Is.Empty);
-
-        List<string> ids2 = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer2);
-        Assert.That(ids2, Is.Empty);
     }
 
     [Test]
     public void SaveDeletedWaypointIdsOnFile()
     {
-        
-        serverWaypointManager.AddDeletedWaypointId(fakeWaypoint1, fakePlayer1);
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer1);
+        List<string> ids = [];
+        try
+        {
+            serverWaypointManager.AddDeletedWaypointId(waypoint, player);
+            ids = serverWaypointManager.GetDeletedWaypointsIds(player);
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Exception while adding deleted waypoints: " + ex.Message);
+        }
         Assert.That(ids, Is.Not.Empty);
-        Assert.That(ids, Does.Contain(fakeWaypoint1.Guid));
+        Assert.That(ids, Does.Contain(waypoint.Guid));
         Assert.That(ids, Has.Count.EqualTo(1));
     }
 
     [Test]
-    public void ReadDeletedWaypointIdsFromFileAfterSaving()
-    {
-        serverWaypointManager.AddDeletedWaypointId(fakeWaypoint1, fakePlayer1);
-
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer1);
-        Assert.That(ids, Is.Not.Empty);
-        Assert.That(ids, Does.Contain(fakeWaypoint1.Guid));
-        Assert.That(ids, Has.Count.EqualTo(1));
-    }
-
-    [Test]
-    public void HandleInvalidCharactersInPlayerUID()
-    {
-        serverWaypointManager.AddDeletedWaypointId(fakeWaypoint2, fakePlayer2);
-
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer2);
-        Assert.That(ids, Is.Not.Empty);
-        Assert.That(ids, Does.Contain(fakeWaypoint2.Guid));
-        Assert.That(ids, Has.Count.EqualTo(1));
-    }
-
-    [Test]
-    public void ReadWaypointIdsFromUnescapedFilenameIfPresent()
+    public void RenameV1FilenameIfPresent()
     {
         List<string> testIds = [Guid.NewGuid().ToString(), Guid.NewGuid().ToString()];
-        string filePath = Path.Combine(serverWaypointManager.modDataPath, fakePlayer1.PlayerUID + ".json");
+        string filePath = Path.Combine(serverWaypointManager.modDataPath, player.PlayerUID + ".json");
+
+        if (!fileV1ExpectedToExist)
+        {
+            Assert.Pass();
+        }
+
         try
         {
             string json = JsonUtil.ToString(testIds.ToList());
             File.WriteAllText(filePath, json);
         }
-        catch
+        catch (Exception ex)
         {
-            Assert.Fail();
+            Assert.Fail("Exception while writing test ids file to disk: " + ex.Message);
         }
 
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer1);
+        List<string> ids = [];
+        try
+        {
+            serverWaypointManager.AddDeletedWaypointId(waypoint, player);
+            ids = serverWaypointManager.GetDeletedWaypointsIds(player);
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Exception while adding deleted waypoints: " + ex.Message);
+        }
 
-        Assert.That(ids, Is.Not.Empty);
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(File.Exists(serverWaypointManager.GetWaypointsFilePath(player)), Is.True);
+            Assert.That(ids, Is.Not.Empty);
+        }
+
         Assert.That(ids, Does.Contain(testIds[0]));
         Assert.That(ids, Does.Contain(testIds[1]));
-        Assert.That(ids, Has.Count.EqualTo(2));        
+        Assert.That(ids, Does.Contain(waypoint.Guid));
+        Assert.That(ids, Has.Count.EqualTo(3));
     }
 
     [Test]
-    public void AddWaypointIdsToUnescapedFilenameIfPresent()
+    public void RenameV2FilenameIfPresent()
     {
         List<string> testIds = [Guid.NewGuid().ToString(), Guid.NewGuid().ToString()];
-        string filePath = Path.Combine(serverWaypointManager.modDataPath, fakePlayer1.PlayerUID + ".json");
+        string filePath = Path.Combine(
+            serverWaypointManager.modDataPath,
+            Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes(player.PlayerUID)).TrimEnd('=') + ".json"
+        );
+
+        if (!fileV2ExpectedToExist)
+        {
+            Assert.Pass();
+        }
+
         try
         {
             string json = JsonUtil.ToString(testIds.ToList());
             File.WriteAllText(filePath, json);
         }
-        catch
+        catch (Exception ex)
         {
-            Assert.Fail();
+            Assert.Fail("Exception while writing test ids file to disk: " + ex.Message);
         }
 
-        serverWaypointManager.AddDeletedWaypointId(fakeWaypoint1, fakePlayer1);
-        List<string> ids = serverWaypointManager.GetDeletedWaypointsIds(fakePlayer1);
 
-        Assert.That(ids, Is.Not.Empty);
+        List<string> ids = [];
+        try
+        {
+            serverWaypointManager.AddDeletedWaypointId(waypoint, player);
+            ids = serverWaypointManager.GetDeletedWaypointsIds(player);
+        }
+        catch (Exception ex)
+        {
+            Assert.Fail("Exception while adding deleted waypoints: " + ex.Message);
+        }
+
+        using (Assert.EnterMultipleScope())
+        {
+            Assert.That(File.Exists(serverWaypointManager.GetWaypointsFilePath(player)), Is.True);
+            Assert.That(ids, Is.Not.Empty);
+        }
+
         Assert.That(ids, Does.Contain(testIds[0]));
         Assert.That(ids, Does.Contain(testIds[1]));
-        Assert.That(ids, Does.Contain(fakeWaypoint1.Guid));
-        Assert.That(ids, Has.Count.EqualTo(3));        
+        Assert.That(ids, Does.Contain(waypoint.Guid));
+        Assert.That(ids, Has.Count.EqualTo(3));
     }
 
     [TearDown]
     public void CleanUp()
     {
-        Directory.Delete(serverWaypointManager.modDataPath, true);
+        string path =  Path.Combine(
+            GamePaths.DataPath,
+            "ModData",
+            fakeCoreServerApi.World.SavegameIdentifier
+        );
+        Directory.Delete(path, true);
     }
 }

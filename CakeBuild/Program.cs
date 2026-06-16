@@ -98,16 +98,40 @@ public sealed class PackageTask : FrostingTask<BuildContext>
         context.EnsureDirectoryExists("../Releases");
         context.CleanDirectory("../Releases");
         context.EnsureDirectoryExists($"../Releases/{context.Name}");
-        context.CopyFiles($"../{BuildContext.ProjectName}/bin/{context.BuildConfiguration}/Mods/mod/publish/*", $"../Releases/{context.Name}");
+        
+        var publishPath = $"../{BuildContext.ProjectName}/bin/{context.BuildConfiguration}/Mods/mod/publish";
+        
+        // Only copy YOUR mod's files, not test dependencies
+        var modFiles = new[] 
+        {
+            $"{publishPath}/{BuildContext.ProjectName}.dll",
+            $"{publishPath}/{BuildContext.ProjectName}.pdb",
+            $"{publishPath}/{BuildContext.ProjectName}.deps.json",
+            $"{publishPath}/modinfo.json",
+            $"{publishPath}/modicon.png"
+        };
+        
+        foreach (var file in modFiles)
+        {
+            if (context.FileExists(file))
+            {
+                context.CopyFile(file, $"../Releases/{context.Name}/{System.IO.Path.GetFileName(file)}");
+            }
+        }
+        
+        // Copy assets directory if it exists
         if (context.DirectoryExists($"../{BuildContext.ProjectName}/assets"))
         {
             context.CopyDirectory($"../{BuildContext.ProjectName}/assets", $"../Releases/{context.Name}/assets");
         }
+        
+        // Always copy modinfo and modicon from source (not publish)
         context.CopyFile($"../{BuildContext.ProjectName}/modinfo.json", $"../Releases/{context.Name}/modinfo.json");
         if (context.FileExists($"../{BuildContext.ProjectName}/modicon.png"))
         {
             context.CopyFile($"../{BuildContext.ProjectName}/modicon.png", $"../Releases/{context.Name}/modicon.png");
         }
+        
         context.Zip($"../Releases/{context.Name}", $"../Releases/{BuildContext.ProjectName}_v{context.Version}.zip");
     }
 }

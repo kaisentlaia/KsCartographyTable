@@ -44,7 +44,8 @@ public class FakeServerWorldAccessor : IServerWorldAccessor
 
     public int Seed => throw new NotImplementedException();
 
-    public string SavegameIdentifier { get { return "testsavegameid"; } }
+    private string savegameIdentifier;
+    public string SavegameIdentifier { get { return savegameIdentifier; } }
 
     public int SunBrightness => throw new NotImplementedException();
 
@@ -91,6 +92,11 @@ public class FakeServerWorldAccessor : IServerWorldAccessor
     public AABBIntersectionTest InteresectionTester => throw new NotImplementedException();
 
     public System.Collections.Generic.OrderedDictionary<IRecipeIngredientBase, List<IRecipeBase>> FastSearchRecipesByIngredient => throw new NotImplementedException();
+
+    public FakeServerWorldAccessor(string fakeSavegameIdentifier)
+    {
+        savegameIdentifier = fakeSavegameIdentifier;
+    }
 
     public void CreateExplosion(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, float blockDropChanceMultiplier = 1, string ignitedByPlayerUid = null)
     {
