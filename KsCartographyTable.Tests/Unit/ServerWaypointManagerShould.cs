@@ -11,7 +11,7 @@ namespace KsCartographyTable.test.Unit;
 
 [TestFixture("test valid playeruid", "RbeoiIPDZi9wTxVqQNIHVEVe", true, true)]
 [TestFixture("test invalid playeruid", "invalid characters in guid<>:\"/\\|?*", false, true)]
-[TestFixture("test invalid base64 playeruid", "ab?oiIPDZi9wTxVqQNIHVEVe", true, false)]
+[TestFixture("test invalid base64 playeruid", "ab?oiIPDZi9wTxVqQNIHVEVe", false, false)]
 public class ServerWaypointManagerShould
 {
     private ServerWaypointManager serverWaypointManager;
