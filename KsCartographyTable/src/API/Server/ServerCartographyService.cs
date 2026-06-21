@@ -351,7 +351,7 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 // TODO start the session with a list of the current player's chunk ids, and exclude them from the download
                 newMapPiecesForPlayer = mapDB.GetNewMapPiecesForPlayer(forPlayer);
             }
-            WaypointSyncResult waypointSyncResult = serverWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB);
+            WaypointSyncResult waypointSyncResult = Settings.WaypointDownload ? serverWaypointManager.UpdatePlayerWaypoints(forPlayer, blockEntity, mapDB) : new WaypointSyncResult(0,0,0,0);
             MapTransferSession session = new(forPlayer, block, blockPos, action, world, newMapPiecesForPlayer, CoreServerAPI, waypointSyncResult, mapDB);
             activeSessions.Add(sessionId, session);
             session.SendFirstBatch();
@@ -382,16 +382,25 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 
         internal void EndCartographyDownloadSession(IPlayer byPlayer, Block block, BlockEntityCartographyTable blockEntity)
         {
-            string sessionId = block.Id.ToString() + byPlayer.PlayerUID;
+            MapTransferSession session = GetMapTransferSession(byPlayer, block);
 
-            if (activeSessions.ContainsKey(sessionId))
+            if (session != null)
             {
-                MapTransferSession session = activeSessions.Get(sessionId);
                 session.Dispose();
-                activeSessions.Remove(sessionId);
+                activeSessions.Remove(GetMapTransferSessionId(byPlayer, block));
             }
             blockEntity.SetWriting(false);
             blockEntity.ClearRecentInteraction(byPlayer);
+        }
+
+        internal static string GetMapTransferSessionId(IPlayer byPlayer, Block block)
+        {
+            return block.Id.ToString() + byPlayer.PlayerUID;
+        }
+
+        internal MapTransferSession GetMapTransferSession(IPlayer byPlayer, Block block)
+        {
+            return activeSessions.Get(GetMapTransferSessionId(byPlayer, block));
         }
 
         internal void CleanupPlayerSessions(IServerPlayer player)

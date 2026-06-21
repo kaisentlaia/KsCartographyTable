@@ -9,6 +9,7 @@ using Kaisentlaia.KsCartographyTableMod.GameContent;
 using NSubstitute;
 using Vintagestory.API.Config;
 using Vintagestory.API.MathTools;
+using Vintagestory.API.Server;
 using Vintagestory.GameContent;
 
 namespace KsCartographyTable.test.Unit;
@@ -19,7 +20,8 @@ public class ServerCartographyServiceShould(string savegameIdentifier)
     private ServerCartographyService serverCartographyService;
     private FakeCoreServerApi fakeCoreServerApi;
     private FakeBlockAccessor fakeBlockAccessor;
-    private FakePlayer fakePlayer;
+    private FakePlayer fakePlayer1;
+    private FakePlayer fakePlayer2;
     private BlockAdvancedCartographyTable fakeTable;
     private BlockEntityCartographyTable fakeBlockEntity;
 
@@ -46,7 +48,8 @@ public class ServerCartographyServiceShould(string savegameIdentifier)
         PropertyInfo assetsPathProp = typeof(GamePaths).GetProperty("AssetsPath");
         assetsPathProp.GetSetMethod(true).Invoke(null, [Path.Combine(vsPath, "assets")]);
 
-        fakePlayer = new FakePlayer(Guid.NewGuid().ToString());
+        fakePlayer1 = new FakePlayer(Guid.NewGuid().ToString());
+        fakePlayer2 = new FakePlayer(Guid.NewGuid().ToString());
         fakeTable = Substitute.For<BlockAdvancedCartographyTable>();
         fakeBlockEntity = Substitute.For<BlockEntityCartographyTable>();
         fakeBlockEntity.Pos = new BlockPos(0, 0, 128);
@@ -76,6 +79,8 @@ public class ServerCartographyServiceShould(string savegameIdentifier)
         KsCartographyTableModSystem ksCartographyTableModSystem = new(true, true);
         ksCartographyTableModSystem.Start(fakeCoreServerApi);
         ksCartographyTableModSystem.StartServerSide(fakeCoreServerApi);
+        Settings.WaypointDownload = false;
+        Settings.WaypointUpload = false;
         Lang.Load(fakeCoreServerApi.Logger, fakeCoreServerApi.Assets);
 
         SQLitePCL.Batteries.Init();
@@ -87,12 +92,32 @@ public class ServerCartographyServiceShould(string savegameIdentifier)
     {
         packets.ForEach(packet =>
         {
-            serverCartographyService.OnMapUploadRequest(fakePlayer, packet);
+            serverCartographyService.OnMapUploadRequest(fakePlayer1, packet);
         });
 
         Assert.That(fakeBlockEntity.Map?.ExploredAreasIds, Is.Not.Null);
-        Assert.That(fakeBlockEntity.Map?.ExploredAreasIds, Has.Count.EqualTo(chunkIds.Count));
         Assert.That(fakeBlockEntity.Map?.ExploredAreasIds, Is.EqualTo(chunkIds));
+    }
+
+    [Test]
+    public void SendMapDataToClient()
+    {
+        packets.ForEach(packet =>
+        {
+            serverCartographyService.OnMapUploadRequest(fakePlayer1, packet);
+        });
+        
+        serverCartographyService.StartCartographyDownloadSession(CartographyAction.DownloadMap, fakeCoreServerApi.World, fakePlayer2, fakeTable, fakeBlockEntity.Pos, fakeBlockEntity);
+        float seconds = 0.0f;
+        while (seconds < 1.5)
+        {
+            seconds += 0.1f;
+            serverCartographyService.ContinueCartographyDownloadSession(fakePlayer2, seconds, fakeTable, fakeBlockEntity);
+        }
+        MapTransferSession downloadSession = serverCartographyService.GetMapTransferSession(fakePlayer2, fakeTable);
+        Assert.That(downloadSession.IsComplete, Is.True);
+        Assert.That(downloadSession.SentChunkCount, Is.EqualTo(chunkIds.Count));
+        serverCartographyService.EndCartographyDownloadSession(fakePlayer2, fakeTable, fakeBlockEntity);
     }
 
     [TearDown]
