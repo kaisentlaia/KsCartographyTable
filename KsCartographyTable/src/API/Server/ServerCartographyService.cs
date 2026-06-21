@@ -2,6 +2,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Threading;
 using Kaisentlaia.KsCartographyTableMod.API.Common;
 using Kaisentlaia.KsCartographyTableMod.GameContent;
 using ProtoBuf;
@@ -48,11 +49,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
 		private readonly TableMapManager tableMapManager;
 		WorldMapManager WorldMapManager;
 		WaypointMapLayer waypointMapLayer;
-        private Dictionary<string, MapTransferSession> activeSessions = [];
+        private readonly Dictionary<string, MapTransferSession> activeSessions = [];
 
-        private Dictionary<string, int> uploadedChunks = [];
+        private readonly Dictionary<string, int> uploadedChunks = [];
 
-		Dictionary<string, ServerMapDB> tableDBConnections = new Dictionary<string, ServerMapDB>();
+		readonly Dictionary<string, ServerMapDB> tableDBConnections = new Dictionary<string, ServerMapDB>();
         
         private ServerMapDB GetBlockMapDB(string blockId) {
             if (!tableDBConnections.ContainsKey(blockId)) {
@@ -122,8 +123,15 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
             }
         }
 
-        private void OnMapUploadRequest(IServerPlayer fromPlayer, MapSyncPacket packet)
+        private void OnUploadThreadStart()
+        {
+            
+        }
+
+        internal void OnMapUploadRequest(IServerPlayer fromPlayer, MapSyncPacket packet)
 		{
+            // Thread thread = TyronThreadPool.CreateDedicatedThread(new ThreadStart(OnUploadThreadStart), $"{CartographyTableConstants.MOD_ID}_{packet.BlockId}");
+            // thread.Start();
             if (!uploadedChunks.ContainsKey(fromPlayer.PlayerUID))
             {
                 uploadedChunks[fromPlayer.PlayerUID] = 0;
@@ -137,6 +145,11 @@ namespace Kaisentlaia.KsCartographyTableMod.API.Server
                 return;
             }
             ServerMapDB mapDB = GetBlockMapDB(packet.BlockId);
+            if (mapDB == null)
+            {
+                CoreServerAPI.Logger.Error($"{CartographyTableConstants.MAP_EVENT} Error while initializing server mapDB!");
+                return;
+            }
             blockEntity.SetWriting(true);
             if (blockEntity.IsAdvanced)
             {

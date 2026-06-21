@@ -7,14 +7,12 @@ using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Server;
 using Vintagestory.GameContent;
-using System.IO;
-using System;
 using Vintagestory.API.Config;
 
 namespace Kaisentlaia.KsCartographyTableMod.API.Common;
 
 [HarmonyPatch]
-public class KsCartographyTableModSystem : ModSystem
+public class KsCartographyTableModSystem(bool disableCommands = false, bool disableHarmony = false) : ModSystem
 {
 
     // TODO adjust collision boxes
@@ -44,15 +42,18 @@ public class KsCartographyTableModSystem : ModSystem
     {
         base.Start(api);
         CoreAPI = api;
-        api.RegisterBlockEntityClass(Mod.Info.ModID + ".cartography-table-entity", typeof(BlockEntityCartographyTable));
-        api.RegisterBlockClass(Mod.Info.ModID + ".cartography-table", typeof(BlockCartographyTable));
-        api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
-        api.RegisterBlockClass(Mod.Info.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
-        api.RegisterItemClass(Mod.Info.ModID + ".item-quill", typeof(ItemQuill));
-        Settings.Init(api, Mod.Info.ModID);
+        api.RegisterBlockEntityClass(Mod?.Info?.ModID + ".cartography-table-entity", typeof(BlockEntityCartographyTable));
+        api.RegisterBlockClass(Mod?.Info?.ModID + ".cartography-table", typeof(BlockCartographyTable));
+        api.RegisterBlockClass(Mod?.Info?.ModID + ".advanced-cartography-table", typeof(BlockAdvancedCartographyTable));
+        api.RegisterBlockClass(Mod?.Info?.ModID + ".advanced-cartography-table-part", typeof(BlockAdvancedCartographyTablePart));
+        api.RegisterItemClass(Mod?.Info?.ModID + ".item-quill", typeof(ItemQuill));
+        Settings.Init(api, Mod?.Info?.ModID);
         Settings.Load();
-        CommandsManager commandsManager = new(api);
-        commandsManager.RegisterCommands();
+        if (!disableCommands)
+        {
+            CommandsManager commandsManager = new(api);
+            commandsManager.RegisterCommands();
+        }
     }
 
     /// <summary>
@@ -63,9 +64,12 @@ public class KsCartographyTableModSystem : ModSystem
         CoreServerAPI = api;
         ServerCartographyService = new ServerCartographyService(api);        
 
-        if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
-            harmony = new Harmony(Mod.Info.ModID);
-            harmony.PatchAll(); // Applies all harmony patches
+        if (!disableHarmony)
+        {
+            if (!Harmony.HasAnyPatches(Mod.Info.ModID)) {
+                harmony = new Harmony(Mod.Info.ModID);
+                harmony.PatchAll(); // Applies all harmony patches
+            }
         }
 
         CoreServerAPI.Event.PlayerDisconnect += OnPlayerDisconnect;

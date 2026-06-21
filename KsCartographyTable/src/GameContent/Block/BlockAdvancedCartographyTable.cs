@@ -14,10 +14,10 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
         public override void OnLoaded(ICoreAPI api)
         {
             base.OnLoaded(api);
-            initRotations();
+            InitRotations();
         }
 
-        internal void initRotations()
+        internal void InitRotations()
         {
             for (int i = 0; i < 4; i++)
             {

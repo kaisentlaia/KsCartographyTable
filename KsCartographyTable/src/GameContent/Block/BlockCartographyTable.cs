@@ -8,7 +8,6 @@ using Vintagestory.API.Datastructures;
 using Vintagestory.API.Config;
 using System.Linq;
 using System.Collections.Generic;
-using Vintagestory.API.Server;
 
 namespace Kaisentlaia.KsCartographyTableMod.GameContent
 {
@@ -386,31 +385,6 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
             KsCartographyTableModSystem.DebugLog(api, $"OnBlockInteractCancel {currentAction}, {canCancel}, {cancelReason}");
             
             return true;
-        }
-
-        private bool IsCompanionBlock(BlockPos targetPos, BlockPos fromPos, IWorldAccessor world)
-        {
-            if (targetPos == null) return false;
-            
-            Block targetBlock = world.BlockAccessor.GetBlock(targetPos);
-            Block fromBlock = world.BlockAccessor.GetBlock(fromPos);
-            
-            // From main to part
-            if (fromBlock is BlockAdvancedCartographyTable advancedTable)
-            {
-                BlockPos expectedCompanion = advancedTable.GetCompanionPosition(fromPos);
-                return targetPos.Equals(expectedCompanion) && targetBlock is BlockAdvancedCartographyTablePart;
-            }
-            
-            // From part to main
-            if (fromBlock is BlockAdvancedCartographyTablePart part)
-            {
-                part.EnsureParent(world, fromPos);
-                return part.Parent?.Position != null && targetPos.Equals(part.Parent.Position) 
-                    && targetBlock is BlockAdvancedCartographyTable;
-            }
-            
-            return false;
         }
 
         private static CartographyAction GetPerformedAction(IWorldAccessor world, IPlayer byPlayer, BlockSelection blockSel)

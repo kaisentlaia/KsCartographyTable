@@ -15,7 +15,7 @@ namespace KsCartographyTable.test.Unit;
 public class ServerWaypointManagerShould
 {
     private ServerWaypointManager serverWaypointManager;
-    private FakeCoreServerApi fakeCoreServerApi;
+    private readonly FakeCoreServerApi fakeCoreServerApi;
 
     private readonly FakePlayer player;
     private readonly Waypoint waypoint;

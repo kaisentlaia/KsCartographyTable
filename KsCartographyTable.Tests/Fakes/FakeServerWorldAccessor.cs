@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Concurrent;
 using System.Collections.Generic;
+using NSubstitute;
 using Vintagestory.API.Client;
 using Vintagestory.API.Common;
 using Vintagestory.API.Common.Entities;
@@ -10,7 +11,7 @@ using Vintagestory.API.Server;
 
 namespace KsCartographyTable.test.Unit;
 
-public class FakeServerWorldAccessor : IServerWorldAccessor
+public class FakeServerWorldAccessor(string fakeSavegameIdentifier, IBlockAccessor fakeBlockAccessor) : IServerWorldAccessor
 {
     public ConcurrentDictionary<long, Entity> LoadedEntities => throw new NotImplementedException();
 
@@ -20,83 +21,79 @@ public class FakeServerWorldAccessor : IServerWorldAccessor
 
     public string WorldName => throw new NotImplementedException();
 
-    public ITreeAttribute Config => throw new NotImplementedException();
+    public ITreeAttribute Config => Substitute.For<ITreeAttribute>();
 
-    public EntityPos DefaultSpawnPosition => throw new NotImplementedException();
+    public EntityPos DefaultSpawnPosition => Substitute.For<EntityPos>();
 
-    public FrameProfilerUtil FrameProfiler => throw new NotImplementedException();
+    public FrameProfilerUtil FrameProfiler => Substitute.For<FrameProfilerUtil>();
 
-    public ICoreAPI Api => throw new NotImplementedException();
+    public ICoreAPI Api => Substitute.For<ICoreAPI>();
 
-    public IChunkProvider ChunkProvider => throw new NotImplementedException();
+    public IChunkProvider ChunkProvider => Substitute.For<IChunkProvider>();
 
-    public ILandClaimAPI Claims => throw new NotImplementedException();
+    public ILandClaimAPI Claims => Substitute.For<ILandClaimAPI>();
 
-    public long[] LoadedChunkIndices => throw new NotImplementedException();
+    public long[] LoadedChunkIndices => Substitute.For<long[]>();
 
-    public long[] LoadedMapChunkIndices => throw new NotImplementedException();
+    public long[] LoadedMapChunkIndices => Substitute.For<long[]>();
 
-    public float[] BlockLightLevels => throw new NotImplementedException();
+    public float[] BlockLightLevels => Substitute.For<float[]>();
 
-    public float[] SunLightLevels => throw new NotImplementedException();
+    public float[] SunLightLevels => Substitute.For<float[]>();
 
     public int SeaLevel => throw new NotImplementedException();
 
     public int Seed => throw new NotImplementedException();
 
-    private string savegameIdentifier;
+    private readonly string savegameIdentifier = fakeSavegameIdentifier;
     public string SavegameIdentifier { get { return savegameIdentifier; } }
 
     public int SunBrightness => throw new NotImplementedException();
 
     public bool EntityDebugMode => throw new NotImplementedException();
 
-    public IAssetManager AssetManager => throw new NotImplementedException();
+    public IAssetManager AssetManager => Substitute.For<IAssetManager>();
 
-    public ILogger Logger => throw new NotImplementedException();
+    public ILogger Logger => Substitute.For<ILogger>();
 
     public EnumAppSide Side => throw new NotImplementedException();
 
-    public IBlockAccessor BlockAccessor => throw new NotImplementedException();
+    private readonly IBlockAccessor blockAccessor = fakeBlockAccessor;
+    public IBlockAccessor BlockAccessor { get { return blockAccessor; } }
 
-    public IBulkBlockAccessor BulkBlockAccessor => throw new NotImplementedException();
+    public IBulkBlockAccessor BulkBlockAccessor => Substitute.For<IBulkBlockAccessor>();
 
-    public IClassRegistryAPI ClassRegistry => throw new NotImplementedException();
+    public IClassRegistryAPI ClassRegistry => Substitute.For<IClassRegistryAPI>();
 
-    public IGameCalendar Calendar => throw new NotImplementedException();
+    public IGameCalendar Calendar => Substitute.For<IGameCalendar>();
 
-    public CollisionTester CollisionTester => throw new NotImplementedException();
+    public CollisionTester CollisionTester => Substitute.For<CollisionTester>();
 
-    public Random Rand => throw new NotImplementedException();
+    public Random Rand => Substitute.For<Random>();
 
     public long ElapsedMilliseconds => throw new NotImplementedException();
 
-    public List<CollectibleObject> Collectibles => throw new NotImplementedException();
+    public List<CollectibleObject> Collectibles => Substitute.For<List<CollectibleObject>>();
 
-    public IList<Block> Blocks => throw new NotImplementedException();
+    public IList<Block> Blocks => Substitute.For<IList<Block>>();
 
-    public IList<Item> Items => throw new NotImplementedException();
+    public IList<Item> Items => Substitute.For<IList<Item>>();
 
-    public List<EntityProperties> EntityTypes => throw new NotImplementedException();
+    public List<EntityProperties> EntityTypes => Substitute.For<List<EntityProperties>>();
 
-    public List<string> EntityTypeCodes => throw new NotImplementedException();
+    public List<string> EntityTypeCodes => Substitute.For<List<string>>();
 
-    public List<GridRecipe> GridRecipes => throw new NotImplementedException();
+    public List<GridRecipe> GridRecipes => Substitute.For<List<GridRecipe>>();
 
     public int DefaultEntityTrackingRange => throw new NotImplementedException();
 
-    public IPlayer[] AllOnlinePlayers => throw new NotImplementedException();
+    public IPlayer[] AllOnlinePlayers => Substitute.For<IPlayer[]>();
 
-    public IPlayer[] AllPlayers => throw new NotImplementedException();
+    public IPlayer[] AllPlayers => Substitute.For<IPlayer[]>();
 
-    public AABBIntersectionTest InteresectionTester => throw new NotImplementedException();
+    public AABBIntersectionTest InteresectionTester => Substitute.For<AABBIntersectionTest>();
 
     public System.Collections.Generic.OrderedDictionary<IRecipeIngredientBase, List<IRecipeBase>> FastSearchRecipesByIngredient => throw new NotImplementedException();
-
-    public FakeServerWorldAccessor(string fakeSavegameIdentifier)
-    {
-        savegameIdentifier = fakeSavegameIdentifier;
-    }
 
     public void CreateExplosion(BlockPos pos, EnumBlastType blastType, double destructionRadius, double injureRadius, float blockDropChanceMultiplier = 1, string ignitedByPlayerUid = null)
     {

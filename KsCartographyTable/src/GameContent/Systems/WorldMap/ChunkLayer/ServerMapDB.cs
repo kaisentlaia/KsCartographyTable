@@ -205,7 +205,7 @@ namespace Kaisentlaia.KsCartographyTableMod.GameContent
 			}
 		}
 
-		private FastVec2i ChunkIdToFastVect2i(ulong chunkId)
+		internal static FastVec2i ChunkIdToFastVect2i(ulong chunkId)
 		{
 
 			int x = (int)(chunkId & 0x7FFFFFF);           // Lower 27 bits

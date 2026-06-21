@@ -36,7 +36,7 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     public IClassRegistryAPI ClassRegistry => Substitute.For<IClassRegistryAPI>();
 
-    public IAssetManager Assets => Substitute.For<IAssetManager>();
+    public IAssetManager Assets { get { return new FakeAssetManager(); } }
 
     public IModLoader ModLoader => Substitute.For<IModLoader>();
 
@@ -54,29 +54,33 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     INetworkAPI ICoreAPI.Network => Network;
 
-    public FakeCoreServerApi(string savegameIdentifier)
+    public FakeCoreServerApi(string savegameIdentifier, IBlockAccessor blockAccessor = null)
     {
-        world = new FakeServerWorldAccessor(savegameIdentifier);
+        if (blockAccessor == null)
+        {
+            blockAccessor = Substitute.For<IBlockAccessor>();
+        }
+        world = new FakeServerWorldAccessor(savegameIdentifier, blockAccessor);
     }
 
     public void BroadcastMessageToAllGroups(string message, EnumChatType chatType, string data = null)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public string GetOrCreateDataPath(string foldername)
     {
-        throw new NotImplementedException();
+        return @"C:\Users\Kaisentlaia\AppData\Roaming\VintagestoryData";
     }
 
     public void HandleCommand(IServerPlayer player, string message)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void InjectConsole(string message)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public T LoadModConfig<T>(string filename)
@@ -91,37 +95,37 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     public void RegisterBlock(Block block)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterBlockBehaviorClass(string className, Type blockBehaviorType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterBlockClass(string className, Type blockType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterBlockEntityBehaviorClass(string className, Type blockEntityBehaviorType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterBlockEntityClass(string className, Type blockentityType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterCollectibleBehaviorClass(string className, Type blockBehaviorType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterColorMap(ColorMap map)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public bool RegisterCommand(ServerChatCommand chatcommand)
@@ -136,42 +140,42 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     public void RegisterCraftingRecipe(GridRecipe recipe)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterCropBehavior(string className, Type type)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterEntity(string className, Type entity)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterEntityBehaviorClass(string className, Type entityBehavior)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterEntityClass(string entityClassName, EntityProperties config)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterItem(Item item)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterItemClass(string className, Type itemType)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterMountable(string className, GetMountableDelegate mountableInstancer)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public T RegisterRecipeRegistry<T>(string recipeRegistryCode) where T : RecipeRegistryBase
@@ -181,46 +185,46 @@ public class FakeCoreServerApi : ICoreServerAPI
 
     public void RegisterTreeGenerator(AssetLocation generatorCode, ITreeGenerator gen)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void RegisterTreeGenerator(AssetLocation generatorCode, GrowTreeDelegate genhandler)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void SendIngameDiscovery(IServerPlayer player, string discoveryCode, string text = null, params object[] langparams)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void SendIngameError(IServerPlayer player, string errorCode, string text = null, params object[] langparams)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void SendMessage(IPlayer player, int groupId, string message, EnumChatType chatType, string data = null)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void SendMessageToGroup(int groupid, string message, EnumChatType chatType, string data = null)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void StoreModConfig<T>(T jsonSerializeableData, string filename)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void StoreModConfig(JsonObject jobj, string filename)
     {
-        throw new NotImplementedException();
+        return;
     }
 
     public void TriggerOnAssetsFirstLoaded()
     {
-        throw new NotImplementedException();
+        return;
     }
 }

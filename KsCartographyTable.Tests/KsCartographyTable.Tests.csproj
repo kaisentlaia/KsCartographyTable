@@ -53,6 +53,7 @@
 
     <ItemGroup>
         <ProjectReference Include="..\KsCartographyTable\KsCartographyTable.csproj" />
+        <PackageReference Include="SQLitePCLRaw.bundle_e_sqlite3" Version="2.1.10" />
     </ItemGroup>
 
 </Project>
